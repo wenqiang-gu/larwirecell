@@ -47,9 +47,9 @@ cet_set_compiler_flags(DIAGS CAUTIOUS
 cet_report_compiler_flags()
 
 # these are minimum required versions, not the actual product versions
-find_ups_product( lardata v5_09_00 )
-find_ups_product( art v1_17_07 )
-find_ups_product( cetbuildtools v4_18_01 )
+find_ups_product( lardata )
+find_ups_product( art )
+find_ups_product( cetbuildtools )
 
 #art_make( BASENAME_ONLY MODULE_LIBRARIES HitFinderLBNE )
 
@@ -59,7 +59,7 @@ include(ArtMake)
 include(BuildPlugins)
 
 # sources
-add_subdirectory(LArInterface)
+add_subdirectory(larwirecell)
 
 # ups - table and config files
 add_subdirectory(ups)

@@ -12,17 +12,17 @@ defaultqual	e9
 #fcldir product_dir job
 #
 product         version
-larsoft 	v05_13_00
+lardata 	v05_09_00
 gcc		v4_9_3
-cetbuildtools   v4_18_01 - only_for_build
+cetbuildtools   v4_19_04 - only_for_build
 end_product_list
   
 # e9  - with gcc 4.9.3
-#qualifier	dunetpc 	gcc	notes
-#e9:debug	e9:debug	-nq-
-#e9:opt		e9:opt  	-nq-
-#e9:prof		e9:prof  	-nq-
-#end_qualifier_list
+qualifier	lardata 	gcc	notes
+e9:debug	e9:debug	-nq-
+e9:opt		e9:opt  	-nq-
+e9:prof		e9:prof  	-nq-
+end_qualifier_list
 
 # Preserve tabs and formatting in emacs and vi / vim:
 
