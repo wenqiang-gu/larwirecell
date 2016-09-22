@@ -14,7 +14,7 @@
 
 #include "lardataobj/RawData/RawDigit.h"
 
-#include "wirecell/master/Linux64bit+2.6-2.12/include/WireCellSigProc/OmnibusNoiseFilter.h"
+#include "WireCellSigProc/OmnibusNoiseFilter.h"
 
 namespace testalg {
 

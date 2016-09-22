@@ -51,6 +51,9 @@ find_ups_product( lardata )
 find_ups_product( art )
 find_ups_product( cetbuildtools )
 
+find_ups_product( wirecell ) 
+cet_find_library( WIRECELL NAMES WireCellSigProc WireCellIface WireCellUtil PATHS ENV WIRECELL_LIB NO_DEFAULT_PATH )
+
 #art_make( BASENAME_ONLY MODULE_LIBRARIES HitFinderLBNE )
 
 # macros for dictionary and simple_plugin
