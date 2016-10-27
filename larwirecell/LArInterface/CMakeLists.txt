@@ -7,6 +7,8 @@
 
 cet_enable_asserts()
 
+message("WIRECELL_LIBS variable is ${WIRECELL_LIBS}")
+
 art_make( BASENAME_ONLY
           LIBRARY_NAME  larwirecell_larinterface
           LIB_LIBRARIES
@@ -19,6 +21,7 @@ art_make( BASENAME_ONLY
                         ${ROOT_BASIC_LIB_LIST}
           MODULE_LIBRARIES
           lardata_Utilities
+	  lardataobj_RawData
           SignalShapingServiceMicroBooNE_service
           ${ART_FRAMEWORK_CORE}
           ${ART_FRAMEWORK_PRINCIPAL}
@@ -37,7 +40,7 @@ art_make( BASENAME_ONLY
           ${ROOT_GDML}
           ${ROOT_BASIC_LIB_LIST}
 	  #LArWireCellNoiseFilterService_service
-          wirecell
+	  ${WIRECELL_LIBS}
 )
 
 install_headers()

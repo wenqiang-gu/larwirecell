@@ -1,5 +1,5 @@
-#ifndef TEST_H
-#define TEST_H
+#ifndef TESTMODULE_H
+#define TESTMODULE_H
 
 #include <string>
 #include <vector>
@@ -10,21 +10,26 @@
 //#include "fhiclcpp/ParameterSet.h"
 
 #include "art/Framework/Core/ModuleMacros.h" 
-#include "art/Framework/Core/EDAnalyzer.h"
+#include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Principal/Handle.h" 
 #include "art/Framework/Services/Optional/TFileService.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include "lardataobj/RawData/RawDigit.h"
+#include "lardataobj/RawData/raw.h"
+
 #include <numeric>		// iota
 #include "WireCellIface/SimpleFrame.h"
 #include "WireCellIface/SimpleTrace.h"
 //#include "TestTrace.h"
+//#include "TestFrame.h"
 #include "WireCellSigProc/OmnibusNoiseFilter.h"
 #include "WireCellSigProc/OneChannelNoise.h"
 #include "WireCellSigProc/CoherentNoiseSub.h"
 #include "WireCellSigProc/SimpleChannelNoiseDB.h"
+
+//#include "WireCellUtil/ExecMon.h"
 
 using namespace WireCell;
 //using namespace WireCellIFace;
@@ -34,24 +39,18 @@ using namespace std;
 
 namespace testalg {
 
-  class Test : public art::EDAnalyzer {
+  class Test : public art::EDProducer {
 
   public:
     explicit Test(fhicl::ParameterSet const& pset);
     virtual ~Test();
 
-    void analyze(art::Event const& evt);
+    void produce(art::Event & evt);
     void reconfigure(fhicl::ParameterSet const& pset);
     
     void beginJob();
     void endJob();
 
-    //likely we will need begin/end run and subrun functions
-    void beginRun(art::Run const& run);
-    void endRun(art::Run const& run);
-    void beginSubRun(art::SubRun const& subrun);
-    void endSubRun(art::SubRun const& subrun);
-    
   private:
 
     //******************************
@@ -62,8 +61,9 @@ namespace testalg {
 
   //-------------------------------------------------------------------
   Test::Test(fhicl::ParameterSet const& pset)
-    : EDAnalyzer(pset){ 
+    : EDProducer(){ 
     this->reconfigure(pset); 
+    produces<std::vector<raw::RawDigit> >();
   }
 
   //-------------------------------------------------------------------
@@ -76,7 +76,7 @@ namespace testalg {
 
   //-------------------------------------------------------------------
   void Test::beginJob(){
-    //art::ServiceHandle<art::TFileService> tfs;
+    art::ServiceHandle<art::TFileService> tfs;
     //int fMaxTicks = 9594;
     //    art::ServiceHandle<util::SignalShapingServiceMicroBooNE> sss;
     //    art::ServiceHandle<util::LArWireCellNoiseFilterService> larWireCellNF;
@@ -85,29 +85,11 @@ namespace testalg {
 
   //-------------------------------------------------------------------
   void Test::endJob(){
-  }
-
-  //-------------------------------------------------------------------
-  void Test::beginRun(art::Run const& run){
-    //art::ServiceHandle<art::TFileService> tfs;
-  }
-
-  //-------------------------------------------------------------------
-  void Test::endRun(art::Run const& run){
-    //art::ServiceHandle<art::TFileService> tfs;
-    //return;
-  }
-
-  //-------------------------------------------------------------------
-  void Test::beginSubRun(art::SubRun const& subrun){
-  }
-
-  //-------------------------------------------------------------------
-  void Test::endSubRun(art::SubRun const& subrun){
+    art::ServiceHandle<art::TFileService> tfs;
   }
   
   //-------------------------------------------------------------------
-  void Test::analyze(art::Event const& evt){
+  void Test::produce(art::Event & evt){
     std::cout << evt.event() << std::endl;
     art::Handle< std::vector<raw::RawDigit> > rawDigitHandle;
     evt.getByLabel("daq",rawDigitHandle);
@@ -117,7 +99,7 @@ namespace testalg {
 
     // S&C microboone sampling parameter database
     const double tick = 0.5*units::microsecond;
-    const int nsamples = 9594;
+    const int nsamples = 9595;
 
     // Q&D microboone channel map
     std::vector<int> uchans(2400), vchans(2400), wchans(3456);
@@ -219,6 +201,7 @@ namespace testalg {
     //load waveforms
     ITrace::vector traces;
     for(unsigned int ich=0; ich<n_channels; ich++){
+    //for(unsigned int ich=0; ich<48; ich++){
         const size_t n_samp = rawDigitVector.at(ich).NADC();
         //std::cout << n_samp << std::endl;
         if( n_samp == 0 )
@@ -233,27 +216,52 @@ namespace testalg {
 	    //charges.ChargeSequence.push_back(q);
 	    charges.push_back(q);
 	}
-	//TestTrace* st = new TestTrace(int(ich), 0.0, charges);
+	//WireCell::TestTrace* st = new WireCell::TestTrace(int(ich), 0.0, charges);
 	WireCell::SimpleTrace* st = new WireCell::SimpleTrace(int(ich), 0.0, charges);
 	traces.push_back(ITrace::pointer(st));
 	//std::cout <<  charges.ChargeSequence.size() << std::endl;
     }
     std::cout << traces.size() << std::endl;
 
-    /*
+    //ExecMon em("starting");
+
     WireCell::SimpleFrame* sf = new WireCell::SimpleFrame(0, 0, traces);
+    //WireCell::TestFrame* sf = new WireCell::TestFrame(0, 0, traces);
     IFrame::pointer frame = IFrame::pointer(sf);
     
     IFrame::pointer quiet;
     
-    cerr << "Removing noise" << endl;
+    //cerr << em("Removing noise") << endl;
     bus(frame, quiet);
-    cerr << "...done" << endl;
-    */
+    //cerr << em("...done") << endl;
+
+    //cerr << em.summary() << endl;  
+
+    std::unique_ptr<std::vector<raw::RawDigit> > filteredRawDigit(new std::vector<raw::RawDigit>);
+    std::vector< short > waveform;
+
+    auto quiet_traces = quiet->traces();
+    for (auto quiet_trace : *quiet_traces.get()) {
+    	//int tbin = quiet_trace->tbin();
+    	unsigned int ch = quiet_trace->channel();
+    	auto quiet_charges = quiet_trace->charge();
+	int counter = 0;
+	waveform.clear();
+      	for (auto q : quiet_charges) {
+	//	std::cout << tbin << "\t" << ch << "\t" << counter << "\t" << q << std::endl;
+		waveform.push_back(q);
+		counter++;
+	}
+	unsigned int n_samp = waveform.size();
+	filteredRawDigit->emplace_back( raw::RawDigit( ch , n_samp, waveform, raw::kNone) );
+    }
+
+    //filtered raw digits	
+    evt.put(std::move(filteredRawDigit));
   }
   
   DEFINE_ART_MODULE(Test)
 
 } //end namespace testalg
 
-#endif //TEST_H
+#endif //TESTMODULE_H
