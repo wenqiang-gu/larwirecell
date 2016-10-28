@@ -12,7 +12,7 @@ defaultqual	e10
 #fcldir product_dir job
 #
 product         version
-wirecell	master
+wirecell	0.0.2
 lardata 	v06_03_00
 gcc		v4_9_3a
 cetbuildtools   v4_19_04 - only_for_build

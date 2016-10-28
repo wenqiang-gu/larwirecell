@@ -22,17 +22,12 @@
 #include <numeric>		// iota
 #include "WireCellIface/SimpleFrame.h"
 #include "WireCellIface/SimpleTrace.h"
-//#include "TestTrace.h"
-//#include "TestFrame.h"
 #include "WireCellSigProc/OmnibusNoiseFilter.h"
 #include "WireCellSigProc/OneChannelNoise.h"
 #include "WireCellSigProc/CoherentNoiseSub.h"
 #include "WireCellSigProc/SimpleChannelNoiseDB.h"
 
-//#include "WireCellUtil/ExecMon.h"
-
 using namespace WireCell;
-//using namespace WireCellIFace;
 using namespace std;
 
 //class TestTrace;
@@ -71,16 +66,13 @@ namespace testalg {
 
   //-------------------------------------------------------------------
   void Test::reconfigure(fhicl::ParameterSet const& pset){
-    //fRawDigitModuleLabel = pset.get<std::string>("RawDigitModuleLabel");
   }
 
   //-------------------------------------------------------------------
   void Test::beginJob(){
     art::ServiceHandle<art::TFileService> tfs;
-    //int fMaxTicks = 9594;
-    //    art::ServiceHandle<util::SignalShapingServiceMicroBooNE> sss;
-    //    art::ServiceHandle<util::LArWireCellNoiseFilterService> larWireCellNF;
-    //  larWireCellNF->print(17);
+    //art::ServiceHandle<util::LArWireCellNoiseFilterService> larWireCellNF;
+    //larWireCellNF->print(17);
   }
 
   //-------------------------------------------------------------------
@@ -90,12 +82,14 @@ namespace testalg {
   
   //-------------------------------------------------------------------
   void Test::produce(art::Event & evt){
-    std::cout << evt.event() << std::endl;
     art::Handle< std::vector<raw::RawDigit> > rawDigitHandle;
     evt.getByLabel("daq",rawDigitHandle);
     std::vector<raw::RawDigit> const& rawDigitVector(*rawDigitHandle);
     const unsigned int n_channels = rawDigitVector.size();
-    std::cout << n_channels << std::endl;
+
+    //skip empty events
+    if( n_channels == 0 )
+        return;
 
     // S&C microboone sampling parameter database
     const double tick = 0.5*units::microsecond;
@@ -152,7 +146,6 @@ namespace testalg {
     hspecial.push_back(hspkHz);
 
     // do the coherent subtraction
-    
     std::vector< std::vector<int> > channel_groups;
     for (unsigned int i=0;i!=172;i++){
     //for (int i=150;i!=151;i++){
@@ -180,63 +173,47 @@ namespace testalg {
     noise->set_filter(harmonicchans,hharmonic);
     noise->set_filter(special_chans,hspecial);
     noise->set_channel_groups(channel_groups);
-    
+    //Define database object    
     shared_ptr<WireCell::IChannelNoiseDatabase> noise_sp(noise);
 
     auto one = new WireCellSigProc::OneChannelNoise;
     one->set_channel_noisedb(noise_sp);
     shared_ptr<WireCell::IChannelFilter> one_sp(one);
-
     auto many = new WireCellSigProc::CoherentNoiseSub;
     shared_ptr<WireCell::IChannelFilter> many_sp(many);
 
+    //define noisefilter object
     WireCellSigProc::OmnibusNoiseFilter bus;
     bus.set_channel_filters({one_sp});
     bus.set_grouped_filters({many_sp});
     bus.set_channel_noisedb(noise_sp);
 
-    if( n_channels == 0 )
-        return;
-
-    //load waveforms
+    //load waveforms into traces
     ITrace::vector traces;
     for(unsigned int ich=0; ich<n_channels; ich++){
-    //for(unsigned int ich=0; ich<48; ich++){
         const size_t n_samp = rawDigitVector.at(ich).NADC();
-        //std::cout << n_samp << std::endl;
         if( n_samp == 0 )
           continue;
 
 	ITrace::ChargeSequence charges;
-	//std::vector<float> charges;
-	//ITrace charges = new ITrace();
-	//charges.channel() = int(ich);
 	for( unsigned int s = 0 ; s < n_samp ; s++ ){
 	    float q = (float)rawDigitVector.at(ich).ADCs().at(s);
-	    //charges.ChargeSequence.push_back(q);
 	    charges.push_back(q);
 	}
-	//WireCell::TestTrace* st = new WireCell::TestTrace(int(ich), 0.0, charges);
-	WireCell::SimpleTrace* st = new WireCell::SimpleTrace(int(ich), 0.0, charges);
+	unsigned int chan = rawDigitVector.at(ich).Channel();
+	WireCell::SimpleTrace* st = new WireCell::SimpleTrace(chan, 0.0, charges);
 	traces.push_back(ITrace::pointer(st));
-	//std::cout <<  charges.ChargeSequence.size() << std::endl;
     }
-    std::cout << traces.size() << std::endl;
 
-    //ExecMon em("starting");
-
+    //Load traces into frame
     WireCell::SimpleFrame* sf = new WireCell::SimpleFrame(0, 0, traces);
-    //WireCell::TestFrame* sf = new WireCell::TestFrame(0, 0, traces);
     IFrame::pointer frame = IFrame::pointer(sf);
-    
     IFrame::pointer quiet;
-    
-    //cerr << em("Removing noise") << endl;
+
+    //Do filtering
     bus(frame, quiet);
-    //cerr << em("...done") << endl;
 
-    //cerr << em.summary() << endl;  
-
+    //Output results
     std::unique_ptr<std::vector<raw::RawDigit> > filteredRawDigit(new std::vector<raw::RawDigit>);
     std::vector< short > waveform;
 
@@ -248,7 +225,6 @@ namespace testalg {
 	int counter = 0;
 	waveform.clear();
       	for (auto q : quiet_charges) {
-	//	std::cout << tbin << "\t" << ch << "\t" << counter << "\t" << q << std::endl;
 		waveform.push_back(q);
 		counter++;
 	}
