@@ -14,17 +14,15 @@ defaultqual	e10
 product         version
 lardata 	v06_09_00
 wirecell	v0_0_3
-jsoncpp		v1_7_2
-eigen		v3_2_9a
 gcc             v4_9_3a
 
 cetbuildtools	v5_06_00   -   only_for_build
 end_product_list
   
-qualifier	lardata		wirecell	jsoncpp		eigen	gcc	notes
-e10:debug	e10:debug	e10:debug	e10:debug	-nq-	-nq-
-e10:opt		e10:opt		e10:opt		e10:opt		-nq-	-nq-
-e10:prof	e10:prof	e10:prof	e10:prof	-nq-	-nq-
+qualifier	lardata		wirecell	gcc	notes
+e10:debug	e10:debug	e10:debug	-nq-
+e10:opt		e10:opt		e10:opt		-nq-
+e10:prof	e10:prof	e10:prof	-nq-
 end_qualifier_list
 
 # Preserve tabs and formatting in emacs and vi / vim:

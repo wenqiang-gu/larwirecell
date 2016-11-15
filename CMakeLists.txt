@@ -51,7 +51,13 @@ find_ups_product( lardata )
 find_ups_product( art )
 find_ups_product( cetbuildtools )
 
-#art_make( BASENAME_ONLY MODULE_LIBRARIES HitFinderLBNE )
+find_ups_product( wirecell ) 
+find_ups_product( jsoncpp )
+
+cet_find_library( WIRECELL_SIGPROC_LIB NAMES WireCellSigProc PATHS ENV WIRECELL_LIB NO_DEFAULT_PATH )
+cet_find_library( WIRECELL_IFACE_LIB NAMES WireCellIface PATHS ENV WIRECELL_LIB NO_DEFAULT_PATH )
+cet_find_library( WIRECELL_UTIL_LIB NAMES WireCellUtil PATHS ENV WIRECELL_LIB NO_DEFAULT_PATH )
+set(WIRECELL_LIBS ${WIRECELL_SIGPROC_LIB} ${WIRECELL_IFACE_LIB} ${WIRECELL_UTIL_LIB})
 
 # macros for dictionary and simple_plugin
 include(ArtDictionary)
@@ -66,3 +72,4 @@ add_subdirectory(ups)
 
 # packaging utility
 include(UseCPack)
+
