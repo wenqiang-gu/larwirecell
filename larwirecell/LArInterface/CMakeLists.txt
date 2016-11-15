@@ -5,12 +5,7 @@
 #
 # CMake instructions for larsoft service interface classes.
 
-cet_enable_asserts()
-
-message("WIRECELL_LIBS variable is ${WIRECELL_LIBS}")
-
-art_make( BASENAME_ONLY
-          LIBRARY_NAME  larwirecell_larinterface
+art_make( LIBRARY_NAME  larwirecell_larinterface
           LIB_LIBRARIES
                         ${ART_FRAMEWORK_CORE}
                         art_Utilities canvas_Utilities
@@ -38,7 +33,6 @@ art_make( BASENAME_ONLY
           ${ROOT_XMLIO}
           ${ROOT_GDML}
           ${ROOT_BASIC_LIB_LIST}
-	  #LArWireCellNoiseFilterService_service
 	  ${WIRECELL_LIBS}
 )
 
