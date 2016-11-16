@@ -5,7 +5,7 @@
 #
 # CMake instructions for larsoft service interface classes.
 
-art_make( LIBRARY_NAME  larwirecell_larinterface
+art_make( 
           LIB_LIBRARIES
                         ${ART_FRAMEWORK_CORE}
                         art_Utilities canvas_Utilities

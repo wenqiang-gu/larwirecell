@@ -48,6 +48,7 @@ cet_report_compiler_flags()
 
 # these are minimum required versions, not the actual product versions
 find_ups_product( lardata )
+find_ups_product( lardataobj )
 find_ups_product( art )
 find_ups_product( cetbuildtools )
 
