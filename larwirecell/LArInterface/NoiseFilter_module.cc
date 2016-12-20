@@ -1,5 +1,5 @@
-#ifndef TESTMODULE_H
-#define TESTMODULE_H
+#ifndef NOISEFILTERMODULE_H
+#define NOISEFILTERMODULE_H
 
 #include <string>
 #include <vector>
@@ -30,15 +30,13 @@
 using namespace WireCell;
 using namespace std;
 
-//class TestTrace;
+namespace noisefilteralg {
 
-namespace testalg {
-
-  class Test : public art::EDProducer {
+  class NoiseFilter : public art::EDProducer {
 
   public:
-    explicit Test(fhicl::ParameterSet const& pset);
-    virtual ~Test();
+    explicit NoiseFilter(fhicl::ParameterSet const& pset);
+    virtual ~NoiseFilter();
 
     void produce(art::Event & evt);
     void reconfigure(fhicl::ParameterSet const& pset);
@@ -55,33 +53,33 @@ namespace testalg {
 
 
   //-------------------------------------------------------------------
-  Test::Test(fhicl::ParameterSet const& pset)
+  NoiseFilter::NoiseFilter(fhicl::ParameterSet const& pset)
     : EDProducer(){ 
     this->reconfigure(pset); 
     produces<std::vector<raw::RawDigit> >();
   }
 
   //-------------------------------------------------------------------
-  Test::~Test(){}
+  NoiseFilter::~NoiseFilter(){}
 
   //-------------------------------------------------------------------
-  void Test::reconfigure(fhicl::ParameterSet const& pset){
+  void NoiseFilter::reconfigure(fhicl::ParameterSet const& pset){
   }
 
   //-------------------------------------------------------------------
-  void Test::beginJob(){
+  void NoiseFilter::beginJob(){
     art::ServiceHandle<art::TFileService> tfs;
     //art::ServiceHandle<util::LArWireCellNoiseFilterService> larWireCellNF;
     //larWireCellNF->print(17);
   }
 
   //-------------------------------------------------------------------
-  void Test::endJob(){
+  void NoiseFilter::endJob(){
     art::ServiceHandle<art::TFileService> tfs;
   }
   
   //-------------------------------------------------------------------
-  void Test::produce(art::Event & evt){
+  void NoiseFilter::produce(art::Event & evt){
     art::Handle< std::vector<raw::RawDigit> > rawDigitHandle;
     evt.getByLabel("daq",rawDigitHandle);
     std::vector<raw::RawDigit> const& rawDigitVector(*rawDigitHandle);
@@ -236,8 +234,8 @@ namespace testalg {
     evt.put(std::move(filteredRawDigit));
   }
   
-  DEFINE_ART_MODULE(Test)
+  DEFINE_ART_MODULE(NoiseFilter)
 
-} //end namespace testalg
+} //end namespace noisefilteralg
 
-#endif //TESTMODULE_H
+#endif //NOISEFILTERMODULE_H
