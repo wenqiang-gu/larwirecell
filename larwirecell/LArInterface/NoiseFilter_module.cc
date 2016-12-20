@@ -1,5 +1,5 @@
-#ifndef NOISEFILTERMODULE_H
-#define NOISEFILTERMODULE_H
+#ifndef WIRECELLNOISEFILTERMODULE_H
+#define WIRECELLNOISEFILTERMODULE_H
 
 #include <string>
 #include <vector>
@@ -32,11 +32,11 @@ using namespace std;
 
 namespace noisefilteralg {
 
-  class NoiseFilter : public art::EDProducer {
+  class WireCellNoiseFilter : public art::EDProducer {
 
   public:
-    explicit NoiseFilter(fhicl::ParameterSet const& pset);
-    virtual ~NoiseFilter();
+    explicit WireCellNoiseFilter(fhicl::ParameterSet const& pset);
+    virtual ~WireCellNoiseFilter();
 
     void produce(art::Event & evt);
     void reconfigure(fhicl::ParameterSet const& pset);
@@ -53,33 +53,33 @@ namespace noisefilteralg {
 
 
   //-------------------------------------------------------------------
-  NoiseFilter::NoiseFilter(fhicl::ParameterSet const& pset)
+  WireCellNoiseFilter::WireCellNoiseFilter(fhicl::ParameterSet const& pset)
     : EDProducer(){ 
     this->reconfigure(pset); 
     produces<std::vector<raw::RawDigit> >();
   }
 
   //-------------------------------------------------------------------
-  NoiseFilter::~NoiseFilter(){}
+  WireCellNoiseFilter::~WireCellNoiseFilter(){}
 
   //-------------------------------------------------------------------
-  void NoiseFilter::reconfigure(fhicl::ParameterSet const& pset){
+  void WireCellNoiseFilter::reconfigure(fhicl::ParameterSet const& pset){
   }
 
   //-------------------------------------------------------------------
-  void NoiseFilter::beginJob(){
+  void WireCellNoiseFilter::beginJob(){
     art::ServiceHandle<art::TFileService> tfs;
     //art::ServiceHandle<util::LArWireCellNoiseFilterService> larWireCellNF;
     //larWireCellNF->print(17);
   }
 
   //-------------------------------------------------------------------
-  void NoiseFilter::endJob(){
+  void WireCellNoiseFilter::endJob(){
     art::ServiceHandle<art::TFileService> tfs;
   }
   
   //-------------------------------------------------------------------
-  void NoiseFilter::produce(art::Event & evt){
+  void WireCellNoiseFilter::produce(art::Event & evt){
     art::Handle< std::vector<raw::RawDigit> > rawDigitHandle;
     evt.getByLabel("daq",rawDigitHandle);
     std::vector<raw::RawDigit> const& rawDigitVector(*rawDigitHandle);
@@ -234,8 +234,8 @@ namespace noisefilteralg {
     evt.put(std::move(filteredRawDigit));
   }
   
-  DEFINE_ART_MODULE(NoiseFilter)
+  DEFINE_ART_MODULE(WireCellNoiseFilter)
 
-} //end namespace noisefilteralg
+} //end namespace WireCellNoiseFilteralg
 
-#endif //NOISEFILTERMODULE_H
+#endif //WireCellNoiseFilterMODULE_H
