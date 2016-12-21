@@ -8,7 +8,6 @@ wirecellnoisefilter:
   module_type:         "WireCellNoiseFilter"
   DigitModuleLabel:    "daq"                  # RawDigit producer
   DoNoiseFiltering:    true                   # Filter noise, false = pass through
-  TruncateTicks:       false                  # Truncate the waveoforms?
   WindowSize:          9600                   # Total size of waveform
   NumTicksToDropFront: 0                      # Number ticks to drop from front
 }

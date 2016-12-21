@@ -11,10 +11,22 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
+#include "larevt/CalibrationDBI/Interface/DetPedestalService.h"
+#include "larevt/CalibrationDBI/Interface/DetPedestalProvider.h"
+#include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
+#include "larevt/CalibrationDBI/Interface/ChannelStatusProvider.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "larcore/Geometry/Geometry.h"
+
 #include "lardataobj/RawData/RawDigit.h"
 #include "lardataobj/RawData/raw.h"
 
-#include <numeric>		// iota
+// The following suggested by Brett to deal with the def clashes
+namespace
+{
+    #undef HEP_SYSTEM_OF_UNITS_H
+    #include "WireCellUtil/Units.h"
+}
 #include "WireCellUtil/Units.h"
 #include "WireCellIface/SimpleFrame.h"
 #include "WireCellIface/SimpleTrace.h"
@@ -23,17 +35,7 @@
 #include "WireCellSigProc/CoherentNoiseSub.h"
 #include "WireCellSigProc/SimpleChannelNoiseDB.h"
 
-// Undefine the def in WireCellUtil/Units.h so we can regain the CLHEP definitions in the below header files
-// They don't have the "units" namespace...
-#undef HEP_SYSTEM_OF_UNITS_H
-
-#include "larevt/CalibrationDBI/Interface/DetPedestalService.h"
-#include "larevt/CalibrationDBI/Interface/DetPedestalProvider.h"
-#include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
-#include "larevt/CalibrationDBI/Interface/ChannelStatusProvider.h"
-#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "larcore/Geometry/Geometry.h"
-
+#include <numeric>		// iota
 #include <string>
 #include <vector>
 #include <iostream>
@@ -58,11 +60,10 @@ private:
 
     //******************************
     //Variables Taken from FHICL File
-    std::string       fDigitModuleLabel;   //label for rawdigit module
-    bool              fDoNoiseFiltering;
-    bool              fTruncateTicks;
-    size_t            fWindowSize;
-    size_t            fNumTicksToDropFront;
+    std::string fDigitModuleLabel;     // label for rawdigit module
+    bool        fDoNoiseFiltering;     // Allows for a "pass through" mode
+    size_t      fWindowSize;           // Define the size of the output buffers
+    size_t      fNumTicksToDropFront;  // If we are truncating then this is non-zero
     
     // services
 }; //end class Noise
@@ -83,7 +84,6 @@ WireCellNoiseFilter::~WireCellNoiseFilter(){}
 void WireCellNoiseFilter::reconfigure(fhicl::ParameterSet const& pset){
     fDigitModuleLabel    = pset.get<std::string>("DigitModuleLabel",    "daq");
     fDoNoiseFiltering    = pset.get<bool>       ("DoNoiseFiltering",    true );
-    fTruncateTicks       = pset.get<bool>       ("TruncateTicks",       true );
     fWindowSize          = pset.get<size_t>     ("WindowSize",          6400 );
     fNumTicksToDropFront = pset.get<size_t>     ("NumTicksToDropFront", 2400 );
 }
@@ -121,14 +121,9 @@ void WireCellNoiseFilter::produce(art::Event & evt)
         else
         {
             // Enable truncation
-            size_t startBin(0);
-            size_t stopBin(detectorProperties.NumberTimeSamples());
-            
-            if (fTruncateTicks)
-            {
-                startBin = fNumTicksToDropFront;
-                stopBin  = fNumTicksToDropFront + fWindowSize;
-            }
+            size_t startBin(fNumTicksToDropFront);
+            size_t windowSize(std::min(fWindowSize,rawDigitVector.at(0).NADC()));
+            size_t stopBin(startBin + windowSize);
             
             raw::RawDigit::ADCvector_t outputVector(detectorProperties.NumberTimeSamples());
             
@@ -164,8 +159,9 @@ void WireCellNoiseFilter::DoNoiseFilter(const std::vector<raw::RawDigit>& inputW
     const unsigned int n_channels = inputWaveforms.size();
     
     // S&C microboone sampling parameter database
-    const double tick     = detectorProperties.SamplingRate(); // 0.5 * units::microsecond;
-    const size_t nsamples = detectorProperties.NumberTimeSamples();
+    const double tick       = detectorProperties.SamplingRate(); // 0.5 * units::microsecond;
+    const size_t nsamples   = inputWaveforms.at(0).NADC();
+    const size_t windowSize = std::min(fWindowSize,nsamples);
     
     // Q&D microboone channel map
     std::vector<int> uchans(geometry.Nwires(0)), vchans(geometry.Nwires(1)), wchans(geometry.Nwires(2));
@@ -224,7 +220,7 @@ void WireCellNoiseFilter::DoNoiseFilter(const std::vector<raw::RawDigit>& inputW
     
     auto noise = new WireCellSigProc::SimpleChannelNoiseDB;
     // initialize
-    noise->set_sampling(tick, fWindowSize);
+    noise->set_sampling(tick, windowSize);
     // set nominal baseline
     noise->set_nominal_baseline(uchans, unombl);
     noise->set_nominal_baseline(vchans, vnombl);
@@ -255,14 +251,8 @@ void WireCellNoiseFilter::DoNoiseFilter(const std::vector<raw::RawDigit>& inputW
     bus.set_channel_noisedb(noise_sp);
     
     // Enable truncation
-    size_t startBin(0);
-    size_t stopBin(nsamples);
-    
-    if (fTruncateTicks)
-    {
-        startBin = fNumTicksToDropFront;
-        stopBin  = fNumTicksToDropFront + fWindowSize;
-    }
+    size_t startBin(fNumTicksToDropFront);
+    size_t stopBin(startBin + windowSize);
     
     //load waveforms into traces
     WireCell::ITrace::vector traces;
