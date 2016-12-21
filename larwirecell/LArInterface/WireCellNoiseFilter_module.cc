@@ -28,7 +28,7 @@
 #include "WireCellIface/SimpleFrame.h"
 #include "WireCellIface/SimpleTrace.h"
 #include "WireCellSigProc/OmnibusNoiseFilter.h"
-#include "WireCellSigProc/OneChannelnoise.h"
+#include "WireCellSigProc/OneChannelNoise.h"
 #include "WireCellSigProc/CoherentNoiseSub.h"
 #include "WireCellSigProc/SimpleChannelNoiseDB.h"
 
