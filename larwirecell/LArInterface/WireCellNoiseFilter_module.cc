@@ -256,6 +256,7 @@ void WireCellNoiseFilter::produce(art::Event & evt)
         std::transform(quiet_charges.begin(), quiet_charges.end(), waveform.begin(), [pedestal](auto charge){return std::round(charge+pedestal);});
         
         filteredRawDigit->emplace_back( raw::RawDigit( channel , waveform.size(), waveform, raw::kNone) );
+        filteredRawDigit->back().SetPedestal(pedestal,2.0);
     }
 
     //filtered raw digits	
