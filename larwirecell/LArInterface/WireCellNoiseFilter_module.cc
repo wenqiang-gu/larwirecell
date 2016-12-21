@@ -264,7 +264,7 @@ void WireCellNoiseFilter::DoNoiseFilter(const std::vector<raw::RawDigit>& inputW
         
         WireCell::ITrace::ChargeSequence charges;
         
-        charges.resize(fWindowSize);
+        charges.resize(windowSize);
         
         std::transform(rawAdcVec.begin() + startBin, rawAdcVec.begin() + stopBin, charges.begin(), [](auto& adcVal){return float(adcVal);});
         
@@ -282,7 +282,7 @@ void WireCellNoiseFilter::DoNoiseFilter(const std::vector<raw::RawDigit>& inputW
     bus(frame, quiet);
     
     //Output results
-    std::vector< short > waveform(fWindowSize);
+    std::vector< short > waveform(windowSize);
     
     auto quiet_traces = quiet->traces();
     for (auto quiet_trace : *quiet_traces.get()) {
@@ -296,7 +296,7 @@ void WireCellNoiseFilter::DoNoiseFilter(const std::vector<raw::RawDigit>& inputW
         std::transform(quiet_charges.begin(), quiet_charges.end(), waveform.begin(), [pedestal](auto charge){return std::round(charge+pedestal);});
         
         outputWaveforms.emplace_back( raw::RawDigit( channel , waveform.size(), waveform, raw::kNone) );
-        outputWaveforms.back().SetPedestal(pedestal,2.0);
+        outputWaveforms.back().SetPedestal(pedestal,0.);
     }
     
     return;
