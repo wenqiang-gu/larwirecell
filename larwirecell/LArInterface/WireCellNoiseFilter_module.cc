@@ -1,4 +1,4 @@
-#ifndef WIRECELLNOISEFILTERMODULE_H
+#ifndef WIRECELLNOISEFILTERMODULE_H   // <--- this is not necessary since this file is not included...
 #define WIRECELLNOISEFILTERMODULE_H
 
 #include <string>
@@ -16,6 +16,11 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
+#include "larevt/CalibrationDBI/Interface/DetPedestalService.h"
+#include "larevt/CalibrationDBI/Interface/DetPedestalProvider.h"
+#include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
+#include "larevt/CalibrationDBI/Interface/ChannelStatusProvider.h"
+
 #include "lardataobj/RawData/RawDigit.h"
 #include "lardataobj/RawData/raw.h"
 
@@ -23,7 +28,7 @@
 #include "WireCellIface/SimpleFrame.h"
 #include "WireCellIface/SimpleTrace.h"
 #include "WireCellSigProc/OmnibusNoiseFilter.h"
-#include "WireCellSigProc/OneChannelNoise.h"
+#include "WireCellSigProc/OneChannelnoise.h"
 #include "WireCellSigProc/CoherentNoiseSub.h"
 #include "WireCellSigProc/SimpleChannelNoiseDB.h"
 
@@ -32,9 +37,9 @@ using namespace std;
 
 namespace noisefilteralg {
 
-  class WireCellNoiseFilter : public art::EDProducer {
+class WireCellNoiseFilter : public art::EDProducer {
 
-  public:
+public:
     explicit WireCellNoiseFilter(fhicl::ParameterSet const& pset);
     virtual ~WireCellNoiseFilter();
 
@@ -44,44 +49,59 @@ namespace noisefilteralg {
     void beginJob();
     void endJob();
 
-  private:
+private:
 
     //******************************
     //Variables Taken from FHICL File
-    //std::string       fRawDigitModuleLabel;   //label for rawdigit module
-  }; //end class Noise
+    std::string       fDigitModuleLabel;   //label for rawdigit module
+    bool              fTruncateTicks;
+    size_t            fWindowSize;
+    size_t            fNumTicksToDropFront;
+    
+    // services
+}; //end class Noise
 
 
-  //-------------------------------------------------------------------
-  WireCellNoiseFilter::WireCellNoiseFilter(fhicl::ParameterSet const& pset)
-    : EDProducer(){ 
-    this->reconfigure(pset); 
+//-------------------------------------------------------------------
+WireCellNoiseFilter::WireCellNoiseFilter(fhicl::ParameterSet const& pset)
+    : EDProducer()
+{
+    this->reconfigure(pset);
     produces<std::vector<raw::RawDigit> >();
-  }
+}
 
-  //-------------------------------------------------------------------
-  WireCellNoiseFilter::~WireCellNoiseFilter(){}
+//-------------------------------------------------------------------
+WireCellNoiseFilter::~WireCellNoiseFilter(){}
 
-  //-------------------------------------------------------------------
-  void WireCellNoiseFilter::reconfigure(fhicl::ParameterSet const& pset){
-  }
+//-------------------------------------------------------------------
+void WireCellNoiseFilter::reconfigure(fhicl::ParameterSet const& pset){
+    fDigitModuleLabel    = pset.get<std::string>("DigitModuleLabel",    "daq");
+    fTruncateTicks       = pset.get<bool>       ("TruncateTicks",       true);
+    fWindowSize          = pset.get<size_t>     ("WindowSize",          6400);
+    fNumTicksToDropFront = pset.get<size_t>     ("NumTicksToDropFront", 2400);
+}
 
-  //-------------------------------------------------------------------
-  void WireCellNoiseFilter::beginJob(){
+//-------------------------------------------------------------------
+void WireCellNoiseFilter::beginJob(){
     art::ServiceHandle<art::TFileService> tfs;
     //art::ServiceHandle<util::LArWireCellNoiseFilterService> larWireCellNF;
     //larWireCellNF->print(17);
-  }
+}
 
-  //-------------------------------------------------------------------
-  void WireCellNoiseFilter::endJob(){
+//-------------------------------------------------------------------
+void WireCellNoiseFilter::endJob(){
     art::ServiceHandle<art::TFileService> tfs;
-  }
+}
   
-  //-------------------------------------------------------------------
-  void WireCellNoiseFilter::produce(art::Event & evt){
+//-------------------------------------------------------------------
+void WireCellNoiseFilter::produce(art::Event & evt)
+{
+    // Recover services we will need
+    const lariov::ChannelStatusProvider& channelStatus  = art::ServiceHandle<lariov::ChannelStatusService>()->GetProvider();
+    const lariov::DetPedestalProvider&   pedestalValues = art::ServiceHandle<lariov::DetPedestalService>()->GetPedestalProvider();
+    
     art::Handle< std::vector<raw::RawDigit> > rawDigitHandle;
-    evt.getByLabel("daq",rawDigitHandle);
+    evt.getByLabel(fDigitModuleLabel,rawDigitHandle);
     std::vector<raw::RawDigit> const& rawDigitVector(*rawDigitHandle);
     const unsigned int n_channels = rawDigitVector.size();
 
@@ -109,16 +129,11 @@ namespace noisefilteralg {
 	from_shaping=1.0*units::microsecond, to_shaping=2.0*units::microsecond;
     for (int ind=2016; ind<= 2095; ++ind) { miscfgchan.push_back(ind); }
     for (int ind=2192; ind<= 2303; ++ind) { miscfgchan.push_back(ind); }
-    for (int ind=2352; ind< 2400; ++ind) { miscfgchan.push_back(ind); }
+    for (int ind=2352; ind< 2400; ++ind)  { miscfgchan.push_back(ind); }
 
     // hard-coded bad channels
     vector<int> bad_channels;
-    for (unsigned int i=0;i!=wchans.size();i++){
-      if (i>=7136 - 4800 && i <=7263 - 4800){
-	if (i != 7200- 4800 && i!=7215 - 4800)
-	  bad_channels.push_back(i+4800);
-      }
-    }
+    for(int channelIdx=0; channelIdx<nchans; channelIdx++) if (channelStatus.IsBad(channelIdx)) bad_channels.push_back(channelIdx);
 
     // Q&D RC+RC time constant - all have same.
     const double rcrc = 1.0*units::millisecond;
@@ -146,17 +161,17 @@ namespace noisefilteralg {
     // do the coherent subtraction
     std::vector< std::vector<int> > channel_groups;
     for (unsigned int i=0;i!=172;i++){
-    //for (int i=150;i!=151;i++){
-      std::vector<int> channel_group;
-      for (int j=0;j!=48;j++){
-	channel_group.push_back(i*48+j);
-      }
-      channel_groups.push_back(channel_group);
+        //for (int i=150;i!=151;i++){
+        std::vector<int> channel_group;
+        for (int j=0;j!=48;j++){
+            channel_group.push_back(i*48+j);
+        }
+        channel_groups.push_back(channel_group);
     }
 
     auto noise = new WireCellSigProc::SimpleChannelNoiseDB;
     // initialize
-    noise->set_sampling(tick, nsamples);
+    noise->set_sampling(tick, fWindowSize);
     // set nominal baseline
     noise->set_nominal_baseline(uchans, unombl);
     noise->set_nominal_baseline(vchans, vnombl);
@@ -186,21 +201,35 @@ namespace noisefilteralg {
     bus.set_grouped_filters({many_sp});
     bus.set_channel_noisedb(noise_sp);
 
+    // Enable truncation
+    size_t startBin(0);
+    size_t stopBin(nsamples);
+    
+    if (fTruncateTicks)
+    {
+        startBin = fNumTicksToDropFront;
+        stopBin  = fNumTicksToDropFront + fWindowSize;
+    }
+    
     //load waveforms into traces
     ITrace::vector traces;
-    for(unsigned int ich=0; ich<n_channels; ich++){
+    for(unsigned int ich=0; ich<n_channels; ich++)
+    {
         const size_t n_samp = rawDigitVector.at(ich).NADC();
-        if( n_samp == 0 )
-          continue;
+        
+        if( n_samp != nsamples ) continue;
+        
+        const raw::RawDigit::ADCvector_t& rawAdcVec = rawDigitVector.at(ich).ADCs();
 
-	ITrace::ChargeSequence charges;
-	for( unsigned int s = 0 ; s < n_samp ; s++ ){
-	    float q = (float)rawDigitVector.at(ich).ADCs().at(s);
-	    charges.push_back(q);
-	}
-	unsigned int chan = rawDigitVector.at(ich).Channel();
-	WireCell::SimpleTrace* st = new WireCell::SimpleTrace(chan, 0.0, charges);
-	traces.push_back(ITrace::pointer(st));
+        ITrace::ChargeSequence charges;
+        
+        charges.resize(fWindowSize);
+        
+        std::transform(rawAdcVec.begin() + startBin, rawAdcVec.begin() + stopBin, charges.begin(), [](auto& adcVal){return float(adcVal);});
+
+        unsigned int chan = rawDigitVector.at(ich).Channel();
+        WireCell::SimpleTrace* st = new WireCell::SimpleTrace(chan, 0.0, charges);
+        traces.push_back(ITrace::pointer(st));
     }
 
     //Load traces into frame
@@ -213,21 +242,20 @@ namespace noisefilteralg {
 
     //Output results
     std::unique_ptr<std::vector<raw::RawDigit> > filteredRawDigit(new std::vector<raw::RawDigit>);
-    std::vector< short > waveform;
+    std::vector< short > waveform(fWindowSize);
 
     auto quiet_traces = quiet->traces();
     for (auto quiet_trace : *quiet_traces.get()) {
     	//int tbin = quiet_trace->tbin();
-    	unsigned int ch = quiet_trace->channel();
+    	unsigned int channel = quiet_trace->channel();
     	auto quiet_charges = quiet_trace->charge();
-	int counter = 0;
-	waveform.clear();
-      	for (auto q : quiet_charges) {
-		waveform.push_back(q);
-		counter++;
-	}
-	unsigned int n_samp = waveform.size();
-	filteredRawDigit->emplace_back( raw::RawDigit( ch , n_samp, waveform, raw::kNone) );
+        
+        // Recover the database version of the pedestal, we'll offset the waveforms so it matches
+        float pedestal = pedestalValues.PedMean(channel);
+       
+        std::transform(quiet_charges.begin(), quiet_charges.end(), waveform.begin(), [pedestal](auto charge){return std::round(charge+pedestal);});
+        
+        filteredRawDigit->emplace_back( raw::RawDigit( channel , waveform.size(), waveform, raw::kNone) );
     }
 
     //filtered raw digits	
