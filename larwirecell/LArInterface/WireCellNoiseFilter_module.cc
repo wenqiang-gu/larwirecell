@@ -38,9 +38,6 @@
 #include <vector>
 #include <iostream>
 
-using namespace WireCell;
-//using namespace std;
-
 namespace noisefilteralg {
 
 class WireCellNoiseFilter : public art::EDProducer {
@@ -268,14 +265,14 @@ void WireCellNoiseFilter::DoNoiseFilter(const std::vector<raw::RawDigit>& inputW
     }
     
     //load waveforms into traces
-    ITrace::vector traces;
+    WireCell::ITrace::vector traces;
     for(unsigned int ich=0; ich<n_channels; ich++)
     {
         if( inputWaveforms.at(ich).NADC() < nsamples ) continue;
         
         const raw::RawDigit::ADCvector_t& rawAdcVec = inputWaveforms.at(ich).ADCs();
         
-        ITrace::ChargeSequence charges;
+        WireCell::ITrace::ChargeSequence charges;
         
         charges.resize(fWindowSize);
         
@@ -283,13 +280,13 @@ void WireCellNoiseFilter::DoNoiseFilter(const std::vector<raw::RawDigit>& inputW
         
         unsigned int chan = inputWaveforms.at(ich).Channel();
         WireCell::SimpleTrace* st = new WireCell::SimpleTrace(chan, 0.0, charges);
-        traces.push_back(ITrace::pointer(st));
+        traces.push_back(WireCell::ITrace::pointer(st));
     }
     
     //Load traces into frame
-    WireCell::SimpleFrame* sf = new WireCell::SimpleFrame(0, 0, traces);
-    IFrame::pointer frame = IFrame::pointer(sf);
-    IFrame::pointer quiet;
+    WireCell::SimpleFrame*    sf    = new WireCell::SimpleFrame(0, 0, traces);
+    WireCell::IFrame::pointer frame = WireCell::IFrame::pointer(sf);
+    WireCell::IFrame::pointer quiet;
     
     //Do filtering
     bus(frame, quiet);
