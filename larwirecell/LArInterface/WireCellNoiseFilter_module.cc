@@ -296,7 +296,7 @@ void WireCellNoiseFilter::DoNoiseFilter(const std::vector<raw::RawDigit>& inputW
         std::transform(quiet_charges.begin(), quiet_charges.end(), waveform.begin(), [pedestal](auto charge){return std::round(charge+pedestal);});
         
         outputWaveforms.emplace_back( raw::RawDigit( channel , waveform.size(), waveform, raw::kNone) );
-        outputWaveforms.back().SetPedestal(pedestal,0.);
+        outputWaveforms.back().SetPedestal(pedestal,1.75);
     }
     
     return;
