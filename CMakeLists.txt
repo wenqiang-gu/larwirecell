@@ -47,6 +47,7 @@ cet_set_compiler_flags(DIAGS CAUTIOUS
 cet_report_compiler_flags()
 
 # these are minimum required versions, not the actual product versions
+find_ups_product( larcore )
 find_ups_product( lardata )
 find_ups_product( larevt )
 find_ups_product( lardataobj )
