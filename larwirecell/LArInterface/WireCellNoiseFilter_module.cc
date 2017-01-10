@@ -62,7 +62,6 @@ private:
     //Variables Taken from FHICL File
     std::string fDigitModuleLabel;     // label for rawdigit module
     bool        fDoNoiseFiltering;     // Allows for a "pass through" mode
-    size_t      fWindowSize;           // Define the size of the output buffers
     size_t      fNumTicksToDropFront;  // If we are truncating then this is non-zero
     
     // services
@@ -84,7 +83,6 @@ WireCellNoiseFilter::~WireCellNoiseFilter(){}
 void WireCellNoiseFilter::reconfigure(fhicl::ParameterSet const& pset){
     fDigitModuleLabel    = pset.get<std::string>("DigitModuleLabel",    "daq");
     fDoNoiseFiltering    = pset.get<bool>       ("DoNoiseFiltering",    true );
-    fWindowSize          = pset.get<size_t>     ("WindowSize",          6400 );
     fNumTicksToDropFront = pset.get<size_t>     ("NumTicksToDropFront", 2400 );
 }
 
@@ -117,19 +115,25 @@ void WireCellNoiseFilter::produce(art::Event & evt)
     {
         const std::vector<raw::RawDigit>& rawDigitVector(*rawDigitHandle);
         
+        // Do a consistency check
+        size_t numberTimeSamples(detectorProperties.NumberTimeSamples());
+        size_t windowSize(std::min(numberTimeSamples,rawDigitVector.at(0).NADC()));
+        
+        if (fNumTicksToDropFront + numberTimeSamples > rawDigitVector.at(0).NADC())
+            throw cet::exception("WireCellNoiseFilter") << "Ticks to drop + windowsize larger than input buffer\n";
+        
         if (fDoNoiseFiltering) DoNoiseFilter(rawDigitVector, *filteredRawDigit);
         else
         {
             // Enable truncation
             size_t startBin(fNumTicksToDropFront);
-            size_t windowSize(std::min(fWindowSize,rawDigitVector.at(0).NADC()));
             size_t stopBin(startBin + windowSize);
             
             raw::RawDigit::ADCvector_t outputVector(detectorProperties.NumberTimeSamples());
             
             for(const auto& rawDigit : rawDigitVector)
             {
-                if (rawDigit.NADC() < detectorProperties.NumberTimeSamples()) continue;
+                if (rawDigit.NADC() < numberTimeSamples) continue;
                 
                 const raw::RawDigit::ADCvector_t& rawAdcVec = rawDigit.ADCs();
                 
@@ -159,9 +163,10 @@ void WireCellNoiseFilter::DoNoiseFilter(const std::vector<raw::RawDigit>& inputW
     const unsigned int n_channels = inputWaveforms.size();
     
     // S&C microboone sampling parameter database
-    const double tick       = detectorProperties.SamplingRate(); // 0.5 * units::microsecond;
-    const size_t nsamples   = inputWaveforms.at(0).NADC();
-    const size_t windowSize = std::min(fWindowSize,nsamples);
+    const double tick              = detectorProperties.SamplingRate(); // 0.5 * units::microsecond;
+    const size_t nsamples          = inputWaveforms.at(0).NADC();
+    const size_t numberTimeSamples = detectorProperties.NumberTimeSamples();
+    const size_t windowSize        = std::min(numberTimeSamples,nsamples);
     
     // Q&D microboone channel map
     std::vector<int> uchans(geometry.Nwires(0)), vchans(geometry.Nwires(1)), wchans(geometry.Nwires(2));
