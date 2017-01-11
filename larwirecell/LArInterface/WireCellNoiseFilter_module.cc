@@ -262,7 +262,7 @@ void WireCellNoiseFilter::DoNoiseFilter(const std::vector<raw::RawDigit>& inputW
     WireCell::ITrace::vector traces;
     for(unsigned int ich=0; ich<n_channels; ich++)
     {
-        if( inputWaveforms.at(ich).NADC() < nsamples ) continue;
+        if( inputWaveforms.at(ich).NADC() < windowSize ) continue;
         
         const raw::RawDigit::ADCvector_t& rawAdcVec = inputWaveforms.at(ich).ADCs();
         
