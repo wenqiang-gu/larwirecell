@@ -5,5 +5,6 @@ BEGIN_PROLOG
 microboone_wirecellnoisefilter:                     @local::wirecellnoisefilter
 microboone_wirecellnoisefilter.DoNoiseFiltering:    true
 microboone_wirecellnoisefilter.NumTicksToDropFront: 2400
+microboone_wirecellnoisefilter.WindowSize:          6400
 
 END_PROLOG

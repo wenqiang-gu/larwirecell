@@ -63,6 +63,7 @@ private:
     std::string fDigitModuleLabel;     // label for rawdigit module
     bool        fDoNoiseFiltering;     // Allows for a "pass through" mode
     size_t      fNumTicksToDropFront;  // If we are truncating then this is non-zero
+    size_t      fWindowSize;           // Number of ticks in the output RawDigit
     
     // services
 }; //end class Noise
@@ -84,6 +85,7 @@ void WireCellNoiseFilter::reconfigure(fhicl::ParameterSet const& pset){
     fDigitModuleLabel    = pset.get<std::string>("DigitModuleLabel",    "daq");
     fDoNoiseFiltering    = pset.get<bool>       ("DoNoiseFiltering",    true );
     fNumTicksToDropFront = pset.get<size_t>     ("NumTicksToDropFront", 2400 );
+    fWindowSize          = pset.get<size_t>     ("WindowSize",          6400 );
 }
 
 //-------------------------------------------------------------------
@@ -102,8 +104,7 @@ void WireCellNoiseFilter::endJob(){
 void WireCellNoiseFilter::produce(art::Event & evt)
 {
     // Recover services we will need
-    const lariov::DetPedestalProvider&   pedestalValues     = art::ServiceHandle<lariov::DetPedestalService>()->GetPedestalProvider();
-    const detinfo::DetectorProperties&   detectorProperties = *lar::providerFrom<detinfo::DetectorPropertiesService>();
+    const lariov::DetPedestalProvider& pedestalValues = art::ServiceHandle<lariov::DetPedestalService>()->GetPedestalProvider();
     
     art::Handle< std::vector<raw::RawDigit> > rawDigitHandle;
     evt.getByLabel(fDigitModuleLabel,rawDigitHandle);
@@ -115,11 +116,10 @@ void WireCellNoiseFilter::produce(art::Event & evt)
     {
         const std::vector<raw::RawDigit>& rawDigitVector(*rawDigitHandle);
         
-        // Do a consistency check
-        size_t numberTimeSamples(detectorProperties.NumberTimeSamples());
-        size_t windowSize(std::min(numberTimeSamples,rawDigitVector.at(0).NADC()));
+        // Make sure we have the correct window size (e.g. window size = 9600 but data is 9595)
+        size_t windowSize(std::min(fWindowSize,rawDigitVector.at(0).NADC()));
         
-        if (fNumTicksToDropFront + numberTimeSamples > rawDigitVector.at(0).NADC())
+        if (fNumTicksToDropFront + windowSize > rawDigitVector.at(0).NADC())
             throw cet::exception("WireCellNoiseFilter") << "Ticks to drop + windowsize larger than input buffer\n";
         
         if (fDoNoiseFiltering) DoNoiseFilter(rawDigitVector, *filteredRawDigit);
@@ -129,11 +129,11 @@ void WireCellNoiseFilter::produce(art::Event & evt)
             size_t startBin(fNumTicksToDropFront);
             size_t stopBin(startBin + windowSize);
             
-            raw::RawDigit::ADCvector_t outputVector(detectorProperties.NumberTimeSamples());
+            raw::RawDigit::ADCvector_t outputVector(windowSize);
             
             for(const auto& rawDigit : rawDigitVector)
             {
-                if (rawDigit.NADC() < numberTimeSamples) continue;
+                if (rawDigit.NADC() < windowSize) continue;
                 
                 const raw::RawDigit::ADCvector_t& rawAdcVec = rawDigit.ADCs();
                 
@@ -163,10 +163,9 @@ void WireCellNoiseFilter::DoNoiseFilter(const std::vector<raw::RawDigit>& inputW
     const unsigned int n_channels = inputWaveforms.size();
     
     // S&C microboone sampling parameter database
-    const double tick              = detectorProperties.SamplingRate(); // 0.5 * units::microsecond;
-    const size_t nsamples          = inputWaveforms.at(0).NADC();
-    const size_t numberTimeSamples = detectorProperties.NumberTimeSamples();
-    const size_t windowSize        = std::min(numberTimeSamples,nsamples);
+    const double tick       = detectorProperties.SamplingRate(); // 0.5 * units::microsecond;
+    const size_t nsamples   = inputWaveforms.at(0).NADC();
+    const size_t windowSize = std::min(fWindowSize,nsamples);
     
     // Q&D microboone channel map
     std::vector<int> uchans(geometry.Nwires(0)), vchans(geometry.Nwires(1)), wchans(geometry.Nwires(2));
@@ -183,7 +182,7 @@ void WireCellNoiseFilter::DoNoiseFilter(const std::vector<raw::RawDigit>& inputW
     const double from_gain_mVfC=7.8, to_gain_mVfC=14.0,from_shaping=1.0*units::microsecond, to_shaping=2.0*units::microsecond;
     for (int ind=2016; ind<= 2095; ++ind) { miscfgchan.push_back(ind); }
     for (int ind=2192; ind<= 2303; ++ind) { miscfgchan.push_back(ind); }
-    for (int ind=2352; ind< 2400; ++ind)  { miscfgchan.push_back(ind); }
+    for (int ind=2352; ind<  2400; ++ind) { miscfgchan.push_back(ind); }
     
     // Recover bad channels from the database
     std::vector<int> bad_channels;
