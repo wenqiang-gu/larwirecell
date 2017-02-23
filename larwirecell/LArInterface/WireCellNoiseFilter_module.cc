@@ -56,7 +56,7 @@ public:
 
 private:
     
-    void DoNoiseFilter(const std::vector<raw::RawDigit>&, std::vector<raw::RawDigit>&) const;
+    void DoNoiseFilter(unsigned int runNum, const std::vector<raw::RawDigit>&, std::vector<raw::RawDigit>&) const;
 
     //******************************
     //Variables Taken from FHICL File
@@ -122,7 +122,7 @@ void WireCellNoiseFilter::produce(art::Event & evt)
         if (fNumTicksToDropFront + windowSize > rawDigitVector.at(0).NADC())
             throw cet::exception("WireCellNoiseFilter") << "Ticks to drop + windowsize larger than input buffer\n";
         
-        if (fDoNoiseFiltering) DoNoiseFilter(rawDigitVector, *filteredRawDigit);
+        if (fDoNoiseFiltering) DoNoiseFilter(evt.run(), rawDigitVector, *filteredRawDigit);
         else
         {
             // Enable truncation
@@ -152,7 +152,7 @@ void WireCellNoiseFilter::produce(art::Event & evt)
     evt.put(std::move(filteredRawDigit));
 }
     
-void WireCellNoiseFilter::DoNoiseFilter(const std::vector<raw::RawDigit>& inputWaveforms, std::vector<raw::RawDigit>& outputWaveforms) const
+void WireCellNoiseFilter::DoNoiseFilter(unsigned int runNum, const std::vector<raw::RawDigit>& inputWaveforms, std::vector<raw::RawDigit>& outputWaveforms) const
 {
     // Recover services we will need
     const lariov::ChannelStatusProvider& channelStatus      = art::ServiceHandle<lariov::ChannelStatusService>()->GetProvider();
@@ -179,11 +179,19 @@ void WireCellNoiseFilter::DoNoiseFilter(const std::vector<raw::RawDigit>& inputW
     
     // Q&D miss-configured channel database
     std::vector<int> miscfgchan;
-    const double from_gain_mVfC=7.8, to_gain_mVfC=14.0,from_shaping=1.0*units::microsecond, to_shaping=2.0*units::microsecond;
-    for (int ind=2016; ind<= 2095; ++ind) { miscfgchan.push_back(ind); }
-    for (int ind=2192; ind<= 2303; ++ind) { miscfgchan.push_back(ind); }
-    for (int ind=2352; ind<  2400; ++ind) { miscfgchan.push_back(ind); }
+    const double from_gain_mVfC=4.7, to_gain_mVfC=14.0,from_shaping=1.0*units::microsecond, to_shaping=2.0*units::microsecond;
     
+    //hardcoded run periods, channel ranges for now
+    bool isMisconfig = 0;
+    if( runNum < 5114 ) isMisconfig = 1;
+    if( runNum > 5281 && runNum <= 6700 ) isMisconfig = 1;
+
+    if( isMisconfig == 1 ){
+    	for (int ind=2016; ind<= 2095; ++ind) { miscfgchan.push_back(ind); }
+    	for (int ind=2192; ind<= 2303; ++ind) { miscfgchan.push_back(ind); }
+    	for (int ind=2352; ind<  2400; ++ind) { miscfgchan.push_back(ind); }
+    }
+
     // Recover bad channels from the database
     std::vector<int> bad_channels;
     for(int channelIdx=0; channelIdx<nchans; channelIdx++) if (channelStatus.IsBad(channelIdx)) bad_channels.push_back(channelIdx);
