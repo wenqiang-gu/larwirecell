@@ -184,7 +184,7 @@ void WireCellNoiseFilter::DoNoiseFilter(unsigned int runNum, const std::vector<r
     //hardcoded run periods, channel ranges for now
     bool isMisconfig = 0;
     if( runNum < 5114 ) isMisconfig = 1;
-    if( runNum > 5281 && runNum <= 6700 ) isMisconfig = 1;
+    if( runNum > 5281 && runNum < 6710 ) isMisconfig = 1;
 
     if( isMisconfig == 1 ){
     	for (int ind=2016; ind<= 2095; ++ind) { miscfgchan.push_back(ind); }
