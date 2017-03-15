@@ -11,6 +11,8 @@
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
+#include "larevt/CalibrationDBI/Interface/ElectronicsCalibService.h"
+#include "larevt/CalibrationDBI/Interface/ElectronicsCalibProvider.h"
 #include "larevt/CalibrationDBI/Interface/DetPedestalService.h"
 #include "larevt/CalibrationDBI/Interface/DetPedestalProvider.h"
 #include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
@@ -157,6 +159,7 @@ void WireCellNoiseFilter::DoNoiseFilter(unsigned int runNum, const std::vector<r
     // Recover services we will need
     const lariov::ChannelStatusProvider& channelStatus      = art::ServiceHandle<lariov::ChannelStatusService>()->GetProvider();
     const lariov::DetPedestalProvider&   pedestalValues     = art::ServiceHandle<lariov::DetPedestalService>()->GetPedestalProvider();
+    const lariov::ElectronicsCalibProvider& elec_provider = art::ServiceHandle<lariov::ElectronicsCalibService>()->GetProvider();
     const geo::GeometryCore&             geometry           = *lar::providerFrom<geo::Geometry>();
     const detinfo::DetectorProperties&   detectorProperties = *lar::providerFrom<detinfo::DetectorPropertiesService>();
     
@@ -179,19 +182,14 @@ void WireCellNoiseFilter::DoNoiseFilter(unsigned int runNum, const std::vector<r
     
     // Q&D miss-configured channel database
     std::vector<int> miscfgchan;
+    for(int channelIdx=0; channelIdx<nchans; channelIdx++) {
+      if (elec_provider.ExtraInfo(channelIdx).GetBoolData("is_misconfigured")) {
+        miscfgchan.push_back(channelIdx);
+      }
+    }
+    
     const double from_gain_mVfC=4.7, to_gain_mVfC=14.0,from_shaping=1.0*units::microsecond, to_shaping=2.0*units::microsecond;
     
-    //hardcoded run periods, channel ranges for now
-    bool isMisconfig = 0;
-    if( runNum < 5114 ) isMisconfig = 1;
-    if( runNum > 5281 && runNum < 6710 ) isMisconfig = 1;
-
-    if( isMisconfig == 1 ){
-    	for (int ind=2016; ind<= 2095; ++ind) { miscfgchan.push_back(ind); }
-    	for (int ind=2192; ind<= 2303; ++ind) { miscfgchan.push_back(ind); }
-    	for (int ind=2352; ind<  2400; ++ind) { miscfgchan.push_back(ind); }
-    }
-
     // Recover bad channels from the database
     std::vector<int> bad_channels;
     for(int channelIdx=0; channelIdx<nchans; channelIdx++) if (channelStatus.IsBad(channelIdx)) bad_channels.push_back(channelIdx);
