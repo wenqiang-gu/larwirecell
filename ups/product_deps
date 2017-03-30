@@ -12,7 +12,7 @@ defaultqual	e10
 #fcldir product_dir job
 #
 product         version
-larevt          v06_07_09
+larevt          v06_08_00
 wirecell	v0_5_2
 gcc             v4_9_3a
 
