@@ -12,8 +12,8 @@ defaultqual	e10
 #fcldir product_dir job
 #
 product         version
-larevt          v06_07_09
-wirecell	v0_5_2
+larevt          v06_08_00
+wirecell	v0_0_3
 gcc             v4_9_3a
 
 cetbuildtools	v5_06_07   -   only_for_build

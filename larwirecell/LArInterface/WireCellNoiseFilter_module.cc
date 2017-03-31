@@ -33,7 +33,8 @@ namespace
 #include "WireCellIface/SimpleFrame.h"
 #include "WireCellIface/SimpleTrace.h"
 #include "WireCellSigProc/OmnibusNoiseFilter.h"
-#include "WireCellSigProc/Microboone.h"
+#include "WireCellSigProc/OneChannelNoise.h"
+#include "WireCellSigProc/CoherentNoiseSub.h"
 #include "WireCellSigProc/SimpleChannelNoiseDB.h"
 
 #include <numeric>		// iota
@@ -205,13 +206,13 @@ void WireCellNoiseFilter::DoNoiseFilter(unsigned int runNum, const std::vector<r
     std::vector<int> special_chans;
     special_chans.push_back(2240);
     
-    WireCell::SigProc::SimpleChannelNoiseDB::mask_t h36kHz(0,169,173);
-    WireCell::SigProc::SimpleChannelNoiseDB::mask_t h108kHz(0,513,516);
-    WireCell::SigProc::SimpleChannelNoiseDB::mask_t hspkHz(0,17,19);
-    WireCell::SigProc::SimpleChannelNoiseDB::multimask_t hharmonic;
+    WireCellSigProc::SimpleChannelNoiseDB::mask_t h36kHz(0,169,173);
+    WireCellSigProc::SimpleChannelNoiseDB::mask_t h108kHz(0,513,516);
+    WireCellSigProc::SimpleChannelNoiseDB::mask_t hspkHz(0,17,19);
+    WireCellSigProc::SimpleChannelNoiseDB::multimask_t hharmonic;
     hharmonic.push_back(h36kHz);
     hharmonic.push_back(h108kHz);
-    WireCell::SigProc::SimpleChannelNoiseDB::multimask_t hspecial;
+    WireCellSigProc::SimpleChannelNoiseDB::multimask_t hspecial;
     hspecial.push_back(h36kHz);
     hspecial.push_back(h108kHz);
     hspecial.push_back(hspkHz);
@@ -227,7 +228,7 @@ void WireCellNoiseFilter::DoNoiseFilter(unsigned int runNum, const std::vector<r
         channel_groups.push_back(channel_group);
     }
     
-    auto noise = new WireCell::SigProc::SimpleChannelNoiseDB;
+    auto noise = new WireCellSigProc::SimpleChannelNoiseDB;
     // initialize
     noise->set_sampling(tick, windowSize);
     // set nominal baseline
@@ -247,14 +248,14 @@ void WireCellNoiseFilter::DoNoiseFilter(unsigned int runNum, const std::vector<r
     //Define database object
     std::shared_ptr<WireCell::IChannelNoiseDatabase> noise_sp(noise);
     
-    auto one = new WireCell::SigProc::Microboone::OneChannelNoise;
+    auto one = new WireCellSigProc::OneChannelNoise;
     one->set_channel_noisedb(noise_sp);
     std::shared_ptr<WireCell::IChannelFilter> one_sp(one);
-    auto many = new WireCell::SigProc::Microboone::CoherentNoiseSub;
+    auto many = new WireCellSigProc::CoherentNoiseSub;
     std::shared_ptr<WireCell::IChannelFilter> many_sp(many);
     
     //define noisefilter object
-    WireCell::SigProc::OmnibusNoiseFilter bus;
+    WireCellSigProc::OmnibusNoiseFilter bus;
     bus.set_channel_filters({one_sp});
     bus.set_grouped_filters({many_sp});
     bus.set_channel_noisedb(noise_sp);
