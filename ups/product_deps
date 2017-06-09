@@ -13,9 +13,9 @@ defaultqual	e14
 #
 product         version
 larevt          v06_13_04
-wirecell	v0_5_2b
+wirecell	v0_5_2c
 
-cetbuildtools	v5_06_07   -   only_for_build
+cetbuildtools	v5_09_01   -   only_for_build
 end_product_list
   
 qualifier	larevt		wirecell	notes
