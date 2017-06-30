@@ -1,0 +1,212 @@
+#+TITLE: WCT/LS Integration Branch
+
+* Overview
+
+The =features/integration= branch holds work for integrating WCT into
+LS.  It is a special branch in that it requires a non-standard
+developer environment.  The changes to =CMakeLists.txt= and
+=ups/products_deps= must not be merged into =master= branch.
+
+This branch builds against UPS binaries for everything except WCT
+itself (it, no =wirecell= UPS product).  Instead it builds against a
+vanilla install of WCT built from its git, and any additional external
+packages which have not yet been built as UPS products.
+
+* Developer preparation
+
+
+** UPS products
+
+This branch builds against a particular =larsoft= version:
+
+#+BEGIN_EXAMPLE
+v06_42_00
+#+END_EXAMPLE
+
+All developers must use this version.  If your workstation lacks the
+required UPS products for this version and it runs a supported OS you
+can get them from [[http://scisoft.fnal.gov/scisoft/bundles/larsoft/v06_42_00/larsoft-v06_42_00.html][FNAL scisoft server]] with a command like:
+
+#+BEGIN_EXAMPLE
+$ ./pullProducts products u16 larsoft-v06_42_00 s50-e14 prof
+#+END_EXAMPLE
+
+On your OS you may need to change the "u16" to something fitting.
+
+** Initial developer setup
+
+*** Directories
+
+Pick directories to hold:
+
+1) vanilla source code packages (WCT and Jsonnet)
+2) installation of the above
+3) source code packages and local build area for the =mrb= / UPS based packages
+
+What's here are just examples.  
+Here is where vanilla packages will be installed:
+#+BEGIN_EXAMPLE
+  $ mkdir -p ~/dev/wcls/externals/{bin,lib,include}
+#+END_EXAMPLE
+
+Here's where the =mrb= built source will live
+#+BEGIN_EXAMPLE
+  $ mkdir -p ~/dev/wcls/src
+#+END_EXAMPLE
+
+*** Basic environment variables
+
+The starting point for several things is to set up your environment
+for everything needed for =larsoft= *except* for the =wirecell= UPS
+product.
+
+#+BEGIN_EXAMPLE
+  $ source /opt/fnal/products/setup
+  $ setup larsoft v06_42_00 -q e14:prof
+  $ unsetup wirecell
+#+END_EXAMPLE
+
+** Build and Install Jsonnet
+
+#+BEGIN_EXAMPLE
+  $ wget https://github.com/google/jsonnet/archive/v0.9.4.tar.gz
+  $ tar -xf v0.9.4.tar.gz 
+  $ cd jsonnet-0.9.4/
+  $ make
+  $ make libjsonnet.so
+  $ make libjsonnet++.so
+  $ cp libjsonnet*.so ~/dev/wcls/externals/lib/
+  $ cp include/*.h ~/dev/wcls/externals/include/
+  $ cp jsonnet ~/dev/wcls/externals/bin
+#+END_EXAMPLE
+
+** Build WCT 
+
+#+BEGIN_EXAMPLE
+  $ cd ~/dev/wcls
+  $ git clone --recursive git@github.com:WireCell/wire-cell-build.git wct
+  $ git clone git@github.com:WireCell/wire-cell-data.git wct-data
+  $ cd wct
+  $ ./wcb --help
+
+  $ ./wcb configure \
+    --prefix=$HOME/dev/wcls/externals \
+    --with-jsonnet=$HOME/dev/wcls/externals \
+    --with-tbb=$TBB_FQ_DIR \
+    --with-fftw=$FFTW_FQ_DIR \
+    --boost-libs=$BOOST_LIB --boost-includes=$BOOST_INC \
+    --with-jsoncpp=$JSONCPP_FQ_DIR
+#+END_EXAMPLE
+
+Be sure that the output of =configure= is such that:
+
+- no OS packages are picked up.
+- in particular the C++ compiler is from UPS
+- our Jsonnet install is picked up
+- Boost version is not the system boost
+
+Now build and install
+
+#+BEGIN_EXAMPLE
+  $ ./wcb build install
+#+END_EXAMPLE
+
+If needing to rebuild starting from a fresh shell:
+
+#+BEGIN_EXAMPLE
+  $ source /opt/fnal/products/setup
+  $ setup larsoft v06_42_00 -q e14:prof
+  $ unsetup wirecell
+  $ ./wcb build install
+#+END_EXAMPLE
+
+** Get =larwirecell= source
+
+Starting from a fresh shell, 
+
+#+BEGIN_EXAMPLE
+  $ source /opt/fnal/products/setup
+  $ setup larsoft v06_42_00 -q e14:prof
+  $ export MRB_PROJECT=larsoft
+  $ setup mrb
+
+  $ mkdir -p ~/dev/wcls/src
+  $ cd ~/dev/wcls/src
+  $ mrb newDev
+  $ source ~/dev/wcls/src/localProducts_larsoft_v06_42_00_e14_prof/setup
+
+  $ kinit bv@FNAL.GOV
+
+  $ cd srcs
+  $ mrb g -b feature/integration larwirecell
+
+#+END_EXAMPLE
+
+** Build =larwirecell=
+
+Now, build the =feature/integration= branch of =larwirecell= against
+the above binaries.  Starting from a fresh shell,
+
+#+BEGIN_EXAMPLE
+  $ source /opt/fnal/products/setup
+  $ setup larsoft v06_42_00 -q e14:prof
+  $ export MRB_PROJECT=larsoft
+  $ setup mrb
+
+  $ source ~/dev/wcls/src/localProducts_larsoft_v06_42_00_e14_prof/setup
+  $ cd ~/dev/wcls/src/build_u16.x86_64
+  $ mrbsetenv
+
+  $ cd ~/dev/wcls/externals/
+  $ PATH=$(pwd)/bin:$PATH
+  $ LD_LIBRARY_PATH=$(pwd)/lib:$LD_LIBRARY_PATH
+  $ CMAKE_PREFIX_PATH=$(pwd):$CMAKE_PREFIX_PATH
+
+  $ cd ~/dev/wcls/src/build_u16.x86_64
+  $ mrb build
+#+END_EXAMPLE
+
+* Running
+
+After the above initial build/installation then to run =wire-cell= and =lar= do:
+
+#+BEGIN_EXAMPLE
+  $ source /opt/fnal/products/setup
+  $ setup larsoft v06_42_00 -q e14:prof
+  $ unsetup wirecell
+
+  $ cd ~/dev/wcls/externals/
+  $ PATH=$(pwd)/bin:$PATH
+  $ LD_LIBRARY_PATH=$(pwd)/lib:$LD_LIBRARY_PATH
+  $ export WIRECELL_PATH=~/dev/wcls/wct/cfg:~/dev/wcls/wct-data
+
+  $ wire-cell --help
+  $ ldd `which wire-cell` 
+  $ lar --help
+#+END_EXAMPLE
+
+* Ongoing development of =larwirecell= or WCT
+
+From a fresh shell, set things as above
+
+#+BEGIN_EXAMPLE
+  $ source /opt/fnal/products/setup
+  $ setup larsoft v06_42_00 -q e14:prof
+  $ export MRB_PROJECT=larsoft
+  $ setup mrb
+
+  $ source ~/dev/wcls/src/localProducts_larsoft_v06_42_00_e14_prof/setup
+  $ cd ~/dev/wcls/src/build_u16.x86_64
+  $ mrbsetenv
+
+  $ cd ~/dev/wcls/externals/
+  $ PATH=$(pwd)/bin:$PATH
+  $ LD_LIBRARY_PATH=$(pwd)/lib:$LD_LIBRARY_PATH
+  $ CMAKE_PREFIX_PATH=$(pwd):$CMAKE_PREFIX_PATH
+
+  $ cd ~/dev/wcls/wct
+  $ ./wcb install
+
+  $ cd ~/dev/wcls/src/build_u16.x86_64
+  $ mrb build
+#+END_EXAMPLE
