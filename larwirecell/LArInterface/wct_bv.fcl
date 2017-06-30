@@ -1,0 +1,23 @@
+
+
+BEGIN_PROLOG
+
+bv:
+{
+  module_type:         "BV"
+}
+
+END_PROLOG
+
+physics :{
+    producers: {
+        hi : {
+            module_type : BV
+        }
+    }
+
+    e1        : [ hi ]
+    end_paths : [ e1 ]
+
+}
+
