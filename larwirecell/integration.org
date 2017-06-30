@@ -63,7 +63,6 @@ product.
 #+BEGIN_EXAMPLE
   $ source /opt/fnal/products/setup
   $ setup larsoft v06_42_00 -q e14:prof
-  $ unsetup wirecell
 #+END_EXAMPLE
 
 ** Build and Install Jsonnet
@@ -116,7 +115,6 @@ If needing to rebuild starting from a fresh shell:
 #+BEGIN_EXAMPLE
   $ source /opt/fnal/products/setup
   $ setup larsoft v06_42_00 -q e14:prof
-  $ unsetup wirecell
   $ ./wcb build install
 #+END_EXAMPLE
 
@@ -173,7 +171,6 @@ After the above initial build/installation then to run =wire-cell= and =lar= do:
 #+BEGIN_EXAMPLE
   $ source /opt/fnal/products/setup
   $ setup larsoft v06_42_00 -q e14:prof
-  $ unsetup wirecell
 
   $ cd ~/dev/wcls/externals/
   $ PATH=$(pwd)/bin:$PATH
