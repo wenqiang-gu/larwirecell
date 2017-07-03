@@ -103,7 +103,7 @@ Now, build:
 
 * Get =larwirecell= source 
 
-Next, get larwirecell built from source.
+Next, get =larwirecell= branch =feature/integration=.
 
  #+BEGIN_EXAMPLE
    $ source /opt/fnal/products/setup
@@ -127,5 +127,34 @@ That last line should return a version under your local products area if you bui
 
    $ cd srcs
    $ mrb g -b feature/integration larwirecell
+
+#+END_EXAMPLE
+
+* Set =larwirecell= environment
+
+#+BEGIN_EXAMPLE
+   $ source /opt/fnal/products/setup
+   $ setup larsoft v06_42_00 -q e14:prof
+   $ export MRB_PROJECT=larsoft
+   $ setup mrb
+
+   $ source ~/dev/wcls/devel/localProducts_larsoft_v06_42_00_e14_prof/setup
+   $ cd ~/dev/wcls/devel/build_u16.x86_64
+   $ mrbsetenv
+
+#+END_EXAMPLE
+
+This fails with:
+
+#+BEGIN_EXAMPLE
+$ mrbsetenv
+The working build directory is /home/bviren/dev/wcls/devel/build_u16.x86_64
+The source code directory is /home/bviren/dev/wcls/devel/srcs
+----------- check this block for errors -----------------------
+ERROR: Version conflict -- dependency tree requires versions conflicting with current setup of product wirecell: version v0_6_0dev vs v0_5_2c
+ERROR: setup -B wirecell v0_6_0dev -q +e14:+prof failed
+ERROR: For more information, type "ups depend wirecell v0_6_0dev -q +e14:+prof"
+                             or "ups list -aK+ wirecell v0_6_0dev"
+ERROR: setup of required products has failed
 
 #+END_EXAMPLE
