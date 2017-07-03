@@ -56,25 +56,15 @@ find_ups_product( art )
 find_ups_product( cetbuildtools )
 
 find_ups_product( jsoncpp )
+find_ups_product( jsonnet )
 find_ups_product( eigen )
-# find_ups_product( wirecell ) 
+find_ups_product( wirecell ) 
 
 
-# Assume Jsonnet and devoloper wirecell is in same place
-find_library( ZOMBIE_JSONNET_LIB NAMES jsonnet )
-find_path(ZOMBIE_INCS libjsonnet++.h)
-include_directories(${ZOMBIE_INCS})
-find_library( ZOMBIE_SIGPROC_LIB NAMES WireCellSigProc )
-find_library( ZOMBIE_IFACE_LIB NAMES WireCellIface )
-find_library( ZOMBIE_UTIL_LIB NAMES WireCellUtil )
-find_library( ZOMBIE_GEN_LIB NAMES WireCellGen )
-set(ZOMBIE_LIBS ${ZOMBIE_SIGPROC_LIB} ${ZOMBIE_IFACE_LIB} ${ZOMBIE_UTIL_LIB} ${ZOMBIE_UTIL_LIB} ${ZOMBIE_JSONNET_LIB})
-
-
-#cet_find_library( WIRECELL_SIGPROC_LIB NAMES WireCellSigProc PATHS ENV WIRECELL_LIB NO_DEFAULT_PATH )
-#cet_find_library( WIRECELL_IFACE_LIB NAMES WireCellIface PATHS ENV WIRECELL_LIB NO_DEFAULT_PATH )
-#cet_find_library( WIRECELL_UTIL_LIB NAMES WireCellUtil PATHS ENV WIRECELL_LIB NO_DEFAULT_PATH )
-#set(WIRECELL_LIBS ${WIRECELL_SIGPROC_LIB} ${WIRECELL_IFACE_LIB} ${WIRECELL_UTIL_LIB})
+cet_find_library( WIRECELL_SIGPROC_LIB NAMES WireCellSigProc PATHS ENV WIRECELL_LIB NO_DEFAULT_PATH )
+cet_find_library( WIRECELL_IFACE_LIB NAMES WireCellIface PATHS ENV WIRECELL_LIB NO_DEFAULT_PATH )
+cet_find_library( WIRECELL_UTIL_LIB NAMES WireCellUtil PATHS ENV WIRECELL_LIB NO_DEFAULT_PATH )
+set(WIRECELL_LIBS ${WIRECELL_SIGPROC_LIB} ${WIRECELL_IFACE_LIB} ${WIRECELL_UTIL_LIB})
 
 
 # macros for dictionary and simple_plugin
