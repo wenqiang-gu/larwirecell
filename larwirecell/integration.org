@@ -148,3 +148,39 @@ That last line should return a version under your local products area if you bui
 #+END_EXAMPLE
 
 Success should greet you.
+
+* Speed up WCT rebuilding
+
+In the steps that build WCT into the =wirecell= UPS product above, the tip of the =master= branch is taken.  With that method you can edit-commit-push-build-test which is rather a slow loop.  Here describes how to have a tighter loop.
+
+The basic idea is to set up our own source area but use the environment and =wcb configure= command that =build_wirecell.sh= does.  Redo the above
+#+BEGIN_EXAMPLE
+  $ source /opt/fnal/products/setup
+  $ ./build_wirecell.sh ~/dev/wcls/products e14 prof
+#+END_EXAMPLE
+
+Check the output to capture the full hairy =wcb configure= line:
+
+#+BEGIN_EXAMPLE
+  env CC=gcc CXX=g++ FC=gfortran ./wcb configure --with-jsoncpp=/home/bviren/dev/wcls/products/jsoncpp/v1_7_7/Linux64bit+4.4-2.23-e14-prof --with-jsonnet=/home/bviren/dev/wcls/products/jsonnet/v0_9_3/Linux64bit+4.4-2.23-e14-prof --with-tbb=/home/bviren/dev/wcls/products/tbb/v2017_3c/Linux64bit+4.4-2.23-e14-prof --with-eigen=/home/bviren/dev/wcls/products/eigen/v3_3_3 --with-root=/home/bviren/dev/wcls/products/root/v6_08_06g/Linux64bit+4.4-2.23-e14-nu-prof --with-fftw=/home/bviren/dev/wcls/products/fftw/v3_3_6_pl2/Linux64bit+4.4-2.23-prof --with-fftw-include=/home/bviren/dev/wcls/products/fftw/v3_3_6_pl2/Linux64bit+4.4-2.23-prof/include --with-fftw-lib=/home/bviren/dev/wcls/products/fftw/v3_3_6_pl2/Linux64bit+4.4-2.23-prof/lib --boost-includes=/home/bviren/dev/wcls/products/boost/v1_63_0b/Linux64bit+4.4-2.23-e14-prof/include --boost-libs=/home/bviren/dev/wcls/products/boost/v1_63_0b/Linux64bit+4.4-2.23-e14-prof/lib --boost-mt --prefix=/home/bviren/dev/wcls/products/wirecell/v0_6_0dev/Linux64bit+4.4-2.23-e14-prof
+#+END_EXAMPLE
+
+Now find some new place to clone:
+
+#+BEGIN_EXAMPLE
+  $ cd ~/dev/wcls/build
+  $ git clone --recursive git@github.com:WireCell/wire-cell-build.git wct
+  $ cd wct
+#+END_EXAMPLE
+
+Now set up environment and copy-paste that big, hairy =wcb configure= script
+
+#+BEGIN_EXAMPLE
+  $ PRODUCTS=$HOME/dev/wcls/products:$PRODUCTS
+  $ setup wirecell v0_6_0dev -q +e14:+prof
+  $ env CC=gcc CXX=g++ FC=gfortran ./wcb configure ...
+  $ ./wcb build install
+#+END_EXAMPLE
+
+Now, you can return that last command whenever you want to "freshen" the "release" =wirecell v0_6_0dev=.
+
