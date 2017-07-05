@@ -1,0 +1,28 @@
+#+TITLE: The Wire Cell Toolkit plugin for LArSoft 
+
+* =libWireCellLarsoft=
+
+This subdirectory holds code that is built into a shared library =libWireCellLarsoft= which will be used as a WCT /plugin/ library.  It contains WCT /component/ classes which also may depend on LArSoft types.  As such, each component class inherits from /Interface/ classes either in WCT proper or in [[../Interfaces]] (and typically both).  Any header files found here are considered "private" to the library.  They should NOT be installed or =#include='d into any =*_module.cc= code.  They may be =#include='d into unit tests (if the build system allows that).
+
+* Guidelines for development of this library
+
+To add new components to the =libWireCellLarsoft= WCT plugin library these guidelines should be followed:
+
+** Code Content
+
+Classes in this library should *merely* implement the [[https://sourcemaking.com/design_patterns/facade][facade]] [[https://en.wikipedia.org/wiki/Facade_pattern][pattern]] between an interface in [[../Interfaces]] and one from [[https://github.com/WireCell/wire-cell-iface/tree/master/inc/WireCellIface][wire-cell-iface]].  It is not appropriate to add a substantial amount of "real code" to classes in this package.  Instead, such code should either go into WCT proper or in some other =lar*= package.
+
+** Code Convention
+
+Place component classes in =namespace wcls=.  
+
+Component names given as the first argument to =WIRECELL_FACTORY()= must be unique.  To assure this, prefix them with =wcls= (for "Wire Cell + Larsoft") or otherwise distinguish them from the more generically named components in WCT proper.  Select a name that will make some sense to the user as this is the label they will use in configuration.  
+
+The name for the C++ class is not material but it is suggested to be the same as the =WIRECELL_FACTORY()= name with the prefix removed (as the C++ =namespace wcls= makes it unique).
+
+
+
+
+
+
+
