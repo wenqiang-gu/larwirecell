@@ -17,7 +17,7 @@ Create a new UPS products area and a build area starting in a fresh shell (no UP
   $ chmod +x buildFW
 #+END_EXAMPLE
 
-Get a build FW "control file" which lists packages and their versions to produce.  This list must match a targeted version of =larsoft=.  The starting point for this branch is [[./wire-cfg-0.5.2c]].  It must be consistent with the fresh-shell output of:
+Get a build FW "control file" which lists packages and their versions to produce.  This list must match a targeted version of =larsoft=.  The starting point for this branch is [[./wire-0.5.2c]].  It must be consistent with the fresh-shell output of:
 
 #+BEGIN_EXAMPLE
   $ (source /opt/fnal/products/setup ; ups depend larsoft v06_42_00 -q e14:prof)
@@ -26,13 +26,13 @@ Get a build FW "control file" which lists packages and their versions to produce
 for all the UPS products on which =wirecell= depends.  Note, the =wirecell= product itself is not needed.  With this file:
 
 #+BEGIN_EXAMPLE
-  $ ./buildFW -b e14 ~/dev/wcls/products prof wire-cfg-0.5.2c
+  $ ./buildFW -b e14 ~/dev/wcls/products prof wire-0.5.2c
 #+END_EXAMPLE
 
 Notes:
 
 - These directories are just an example but Lynn cautions to make the =products/= directory fresh.  
-- The control file is linked here: [[./wire-cfg-0.5.2c]].  
+- The control file is linked here: [[./wire-0.5.2c]].  
 - As of this build, Jsonnet is merely added on and WCT is not built against it.
 - We won't use the version of WCT this provides going forward.
 
