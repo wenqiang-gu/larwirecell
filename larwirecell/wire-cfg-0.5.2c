@@ -1,5 +1,5 @@
 # build wirecell
-# wirecell depends directly on eigen, fftw, root, boost, tbb, jsonnet and jsoncpp
+# wirecell depends directly on eigen, root, boost, tbb, and jsoncpp
 # root depends on clhep, fftw, gsl, pythia, postgresql, mysql_client, libxml2, xrootd, and python
 # python depends on sqlite
 
@@ -28,7 +28,8 @@ do_build root v6_08_06g ${basequal}:nu
 
 build_noarch eigen v3_3_3
 do_build jsoncpp v1_7_7 ${basequal}
-do_build jsonnet v0_9_3 ${basequal}
-# do_build wirecell v0_5_2c ${basequal}
+do_build wirecell v0_5_2c ${basequal}
+do_build jsonnet v0_9_3
 
 return 0
+
