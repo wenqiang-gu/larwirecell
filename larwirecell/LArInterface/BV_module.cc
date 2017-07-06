@@ -1,5 +1,7 @@
 #include "art/Framework/Core/ModuleMacros.h" 
 #include "art/Framework/Core/EDProducer.h"
+#include "art/Utilities/make_tool.h" 
+#include "larwirecell/Interfaces/MainTool.h"
 
 #include <iostream>
 
@@ -19,6 +21,8 @@ namespace wct {
         void endJob();
 
     private:
+
+        std::unique_ptr<wcls::MainTool> m_wcls;
         
     };
 }
@@ -39,11 +43,15 @@ wct::BV::~BV()
 void wct::BV::produce(art::Event & evt)
 {
     cerr << "BV produce\n";
+    m_wcls->process(evt);
 }
 
 void wct::BV::reconfigure(fhicl::ParameterSet const& pset)
 {
     cerr << "BV reconfigure\n";
+    auto const& wclsPS = pset.get<fhicl::ParameterSet>("wcls_main");
+    m_wcls = art::make_tool<wcls::MainTool>(wclsPS);
+    m_wcls->initialize();
 }
     
 void wct::BV::beginJob()

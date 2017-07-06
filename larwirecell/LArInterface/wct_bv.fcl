@@ -1,23 +1,21 @@
 
-
-BEGIN_PROLOG
-
-bv:
-{
-  module_type:         "BV"
+source :{
+   module_type: EmptyEvent
+   maxEvents: 1
 }
-
-END_PROLOG
-
 physics :{
-    producers: {
-        hi : {
-            module_type : BV
-        }
-    }
-
-    e1        : [ hi ]
-    end_paths : [ e1 ]
-
+   producers: {
+      hi : {
+         module_type : BV
+         wcls_main: {
+            tool_type: WCLS
+            configs: ["uboone/fourdee.jsonnet"]
+         }
+      }
+   }
+   
+   e1        : [ hi ]
+   end_paths : [ e1 ]
+   
 }
 
