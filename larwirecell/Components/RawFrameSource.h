@@ -24,7 +24,7 @@ namespace wcls {
         virtual bool operator()(WireCell::IFrame::pointer& frame);            
 
     private:
-        art::Event* m_event;    // temporary stash
+        WireCell::IFrame::pointer m_frame;
     };
 }
 
