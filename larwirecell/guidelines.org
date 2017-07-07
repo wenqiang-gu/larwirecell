@@ -1,0 +1,60 @@
+#+TITLE: Guidelines for Developing Wire Cell Toolkit / LArSoft Integration
+
+* Overview
+
+This document describes the =larwirecell= package which provides an *integration boundary* which allows the [[https://github.com/wirecell/][Wire Cell Toolkit (WCT)]] to be used in LArSoft (LS) in a very configurable and dynamic way which requires very little, if any, development once established.  This package contains a relatively small amount of code which performs not specific duties other than marshaling data between across integration boundary and executing the main WCT method.
+
+** Obsolete integration
+
+The initial integration effort exists in [[./LArInterface/]] for the MicroBooNE software noise filtering.  This code is not covered in this document and equivalent functionality is or will be provided by code that is.
+
+* Guidelines by Parts
+
+** Interfaces
+
+Here, an "interface" is defined as a C++ pure abstract base class.
+The [[./Interfaces/]] sub directory holds two categories of such interface classes.  
+
+The first category contains any WCT Interface classes which might otherwise be in [[https://github.com/WireCell/wire-cell-iface/tree/master/inc/WireCellIface][wire-cell-iface]] but are kept here because they must depend on some Art or LArSoft type.  These Interface classes largely define the integration boundary between LS and WCT through which LS data objects pass.  
+
+The second category contains interface classes which are simply any abstract base class needed in implementing an Art pattern and in particular an Art Tool.
+
+*** Guidelines
+
+For both categories described, it is expected only a very small number of interface classes are required.  Most developers need not contemplate adding new ones.  If it seems new ones are needed some discussion is warranted.
+
+** Components
+
+The [[./Components/]] sub directory holds implementations (subclasses) of WCT Interface classes.  Normally these components would be in a WCT package but due to them needing to inherit from Interface classes which are outside WCT their implementations are here.  They typically inherit from one Interface class defined here and one defined in WCT's =wire-cell-iface= package.
+
+*** Guidelines
+
+These components (unlike those in WCT, proper) should contain a bare minimum of code.  Their main purposes is to provide a two faced [[https://sourcemaking.com/design_patterns/facade][facade]] [[https://en.wikipedia.org/wiki/Facade_pattern][pattern]] with a conversion in between.  One face contains methods that accept or produce LS data objects and the other WCT data objects and methods (implementing WCT "source" and "sink" components).
+
+The code in between should *merely* involve data conversion and this conversion should be as "lossless" as possible.  If any adjustments to the data are needed in order to satisfy assumptions on either side of the integration boundary (eg, do the TPC waveforms keep or lose their baselines?) then these assumptions should be enforced either some LArSoft Module or Tool or in another component which is implemented in WCT, proper .
+
+Configuration of these WCT components is performed using the usual WCT configuration mechanism (and not using Art's).
+
+** Tools
+
+The [[./Tools/]] sub directory holds implementation of Art Tools which assist in managing the integration boundary.  It's contents are expected to be limited to a single tool which manages executing WCT's main method.
+
+** Modules
+
+The [[./Modules/]] directory holds Art modules.  It's contents are expected to be limited to the single tool which delegates to the WCT main tool described above.
+
+** Art Configuration
+
+- Use a C++ =struct= to declare all parts of the configuration which are known at compile time.
+- Give =Comment("...")= as second argument when defining a configuration entry.
+- Use =KeysToIgnore= struct if any keys are optional.
+
+* Links
+
+- [[https://cdcvs.fnal.gov/redmine/projects/art/wiki/Configuration_validation_and_description][Configuration validation and description]] :: write your Art configuration this way.  For tools, see: [[./Tools/WCLS_tool.cc]] and =art/test/Utilities/tools/AddNumber_tool.cc= for example.
+
+- [[https://cdcvs.fnal.gov/redmine/projects/fhicl-cpp/wiki][fhicl-cpp wiki]] :: =ParameterSet= class reference.
+
+- [[https://cdcvs.fnal.gov/redmine/projects/fhicl-cpp/wiki/Fhiclcpp_types_in_detail][fhiclcpp types in detail]] :: C++ class reference docs
+
+- [[https://cdcvs.fnal.gov/redmine/projects/fhicl-cpp/wiki/System_details#Name-and-Comment][FHiCL System Details]] :: shows use of =Comment()= to add docstrings.
