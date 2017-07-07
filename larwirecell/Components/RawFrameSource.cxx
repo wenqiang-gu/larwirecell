@@ -38,7 +38,7 @@ double tdiff(const art::Timestamp& ts1, const art::Timestamp& ts2)
     return tts2.AsDouble() - tts1.AsDouble();
 }
 
-void RawFrameSource::visit_art_event(art::Event & event)
+void RawFrameSource::visit(art::Event & event)
 {
     const detinfo::DetectorProperties&   detprop = *lar::providerFrom<detinfo::DetectorPropertiesService>();
     const double tick = detprop.SamplingRate(); // 0.5 * units::microsecond;

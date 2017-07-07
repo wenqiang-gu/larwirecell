@@ -11,7 +11,7 @@ physics :{
             tool_type: WCLS
             configs: ["uboone/fourdee.jsonnet"]
             params: {
-               key1: "value1"
+//               key1: "value1"
             }
         }
       }

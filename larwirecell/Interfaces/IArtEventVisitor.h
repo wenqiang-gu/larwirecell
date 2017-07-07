@@ -23,7 +23,7 @@ namespace wcls {
         virtual ~IArtEventVisitor() {}
 
         /// Implement to visit an Art event.
-        virtual void visit_art_event(art::Event & event) = 0;
+        virtual void visit(art::Event & event) = 0;
     };
 }
 #endif

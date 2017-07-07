@@ -17,7 +17,7 @@ SimDepoSource::~SimDepoSource()
 {
 }
 
-void SimDepoSource::visit_art_event(art::Event & event)
+void SimDepoSource::visit(art::Event & event)
 {
     m_event = &event;           // must take care not to use this for long.
 }

@@ -18,7 +18,7 @@ namespace wcls {
         virtual ~RawFrameSource();
 
         /// IArtEventVisitor 
-        virtual void visit_art_event(art::Event & event);
+        virtual void visit(art::Event & event);
 
         /// IFrameSource
         virtual bool operator()(WireCell::IFrame::pointer& frame);            

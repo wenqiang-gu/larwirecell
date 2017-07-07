@@ -15,7 +15,7 @@ namespace wcls {
         virtual ~SimDepoSource();
 
         /// IArtEventVisitor 
-        virtual void visit_art_event(art::Event & event);
+        virtual void visit(art::Event & event);
 
         /// IDepoSource
         virtual bool operator()(WireCell::IDepo::pointer& out);

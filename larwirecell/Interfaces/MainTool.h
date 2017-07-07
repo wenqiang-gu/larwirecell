@@ -15,7 +15,6 @@ namespace wcls {
     public:
 
         virtual ~MainTool() noexcept = default;
-        virtual void initialize() = 0;
         virtual void process(art::Event& event) = 0;
     };
 }
