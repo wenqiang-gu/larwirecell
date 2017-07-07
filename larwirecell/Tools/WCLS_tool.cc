@@ -20,12 +20,12 @@ namespace wcls {
 
 
     // https://cdcvs.fnal.gov/redmine/projects/fhicl-cpp/wiki/Fhiclcpp_types_in_detail#TableltT-KeysToIgnoregt
-    // struct WCLSKeysToIgnore {
-    //     std::set<std::string> operator()() {
-    //         // Ignore these for validation.
-    //         return {"params"};
-    //     }
-    // };
+    struct WCLSKeysToIgnore {
+        std::set<std::string> operator()() {
+            // Ignore these for validation.
+            return {"params"};
+        }
+    };
 
     // https://cdcvs.fnal.gov/redmine/projects/art/wiki/Configuration_validation_and_description
     struct WCLSConfig {
@@ -47,7 +47,7 @@ namespace wcls {
 
     class WCLS : public MainTool {
     public:
-        using Parameters = art::ToolConfigTable<WCLSConfig>;
+        using Parameters = art::ToolConfigTable<WCLSConfig, WCLSKeysToIgnore>;
 
         explicit WCLS(Parameters const& ps);
         virtual ~WCLS() { }
