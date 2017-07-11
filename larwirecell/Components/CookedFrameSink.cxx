@@ -1,9 +1,9 @@
 #include "CookedFrameSink.h"
 //#include "art/Framework/Principal/Handle.h" 
 
-#include "art/Framework/Principal/Event.h"
 #include "lardataobj/RecoBase/Wire.h"
 
+#include "art/Framework/Principal/Event.h"
 
 #include "WireCellIface/IFrame.h"
 #include "WireCellIface/ITrace.h"

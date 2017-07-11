@@ -2,6 +2,11 @@
 source :{
 //   module_type: EmptyEvent
    module_type: RootInput
+   //inputCommands: ["keep raw::RawDigits_*_*_*", "drop *"]
+   inputCommands: ["drop *", "keep raw::RawDigits_*_*_*"]
+   // raw::RawDigits_wcNoiseFilter__DataRecoStage1
+   //inputCommands: ["keep *", "drop raw::ubdaqSoftwareTriggerData_*_*_*"]
+   //inputCommands: ["drop raw::ubdaqSoftwareTriggerData_*_*_*"]
    maxEvents: 1
 }
 physics :{
@@ -13,6 +18,8 @@ physics :{
             apps: ["Omnibus"]
             plugins: ["WireCellGen", "WireCellSigProc", "WireCellSio", "WireCellLarsoft"]
             configs: ["uboone-filtered-sigproc.jsonnet"]
+            inputers: ["wclsRawFrameSource"]
+            outputers: ["wclsCookedFrameSink"]
             params: {
                detector: "uboone"
             }

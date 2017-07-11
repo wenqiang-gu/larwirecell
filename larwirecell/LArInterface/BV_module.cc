@@ -3,6 +3,9 @@
 #include "art/Utilities/make_tool.h" 
 #include "larwirecell/Interfaces/MainTool.h"
 
+// fixme: this should be removed once produces<>() is moved to sink components.
+#include "lardataobj/RecoBase/Wire.h"
+
 #include <iostream>
 
 using namespace std;
@@ -33,7 +36,9 @@ wct::BV::BV(fhicl::ParameterSet const& pset)
 {
     cerr << "BV constructed\n";
     this->reconfigure(pset);
-    //produces<int>();
+
+    // fixme: this needs to be moved into the sink components somehow.
+    produces< std::vector<recob::Wire> >();
 }
 wct::BV::~BV()
 {

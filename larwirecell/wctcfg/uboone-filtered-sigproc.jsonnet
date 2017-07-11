@@ -37,6 +37,7 @@ local sink = ls.sink.frame.cooked;
         data: {
             source: wc.tn(source),
             filters: [wc.tn(omni.sigproc)],
+            //filters: [],        // empty for fast testing of output
             sink: wc.tn(sink),
         }
     },

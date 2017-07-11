@@ -8,15 +8,16 @@
 #ifndef LARWIRECELL_COMPONENTS_COOKEDFRAMESINK
 #define LARWIRECELL_COMPONENTS_COOKEDFRAMESINK
 
-#include "larwirecell/Interfaces/IArtEventVisitor.h"
 #include "WireCellIface/IFrameSink.h"
 #include "WireCellIface/IConfigurable.h"
 #include "WireCellIface/IAnodePlane.h"
 
+#include "larwirecell/Interfaces/IArtEventVisitor.h"
+
 namespace wcls {
     class CookedFrameSink : public IArtEventVisitor, 
                             public WireCell::IFrameSink,
-                            public WireCell::IConfigurable { 
+                            public WireCell::IConfigurable {
     public:
         CookedFrameSink();
         virtual ~CookedFrameSink();

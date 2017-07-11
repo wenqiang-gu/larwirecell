@@ -26,7 +26,11 @@ local anodes = import "multi/anodes.jsonnet";
             noisefiltered : {
                 type: "wclsRawFrameSource",
                 data: {
-                    source_label: "raw::RawDigits_wcNoiseFilter__DataRecoStage1",
+                    source_label: "wcNoiseFilter",
+                    //source_label: "raw::RawDigits_wcNoiseFilter__DataRecoStage1",
+                    // not found: "raw::RawDigits_wcNoiseFilter__DataRecoStage1",
+                    //            "raw::RawDigits_wcNoiseFilter__DataRecoStage1."
+
                 }
             },
         },

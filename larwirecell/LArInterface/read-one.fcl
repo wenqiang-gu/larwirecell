@@ -1,5 +1,8 @@
 source :{
 //   module_type: EmptyEvent
    module_type: RootInput
+//   inputCommands: ["keep raw::RawDigits_wcNoiseFilter__DataRecoStage1", "drop *"]
+   inputCommands: ["drop raw::ubdaqSoftwareTriggerData_*_*_*"]
+
    maxEvents: 1
 }

@@ -12,6 +12,8 @@
 #include "WireCellIface/IFrameSource.h"
 #include "WireCellIface/IConfigurable.h"
 
+#include <string>
+
 namespace wcls {
     class RawFrameSource : public IArtEventVisitor, 
                            public WireCell::IFrameSource,
@@ -32,7 +34,8 @@ namespace wcls {
 
     private:
         WireCell::IFrame::pointer m_frame;
-        WireCell::Configuration m_cfg;
+        std::string m_source;
+        double m_tick;
     };
 }
 
