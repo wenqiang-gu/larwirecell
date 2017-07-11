@@ -8,6 +8,8 @@
 #include "fhiclcpp/types/Sequence.h" 
 #include "fhiclcpp/types/OptionalSequence.h" 
 #include "fhiclcpp/types/OptionalTable.h" 
+#include "fhiclcpp/types/DelegatedParameter.h" 
+#include "fhiclcpp/types/OptionalDelegatedParameter.h" 
 #include "fhiclcpp/types/Comment.h" 
 #include "fhiclcpp/types/Table.h" 
 
@@ -34,25 +36,34 @@ namespace wcls {
     struct WCLSConfig {
         typedef fhicl::Sequence<std::string> string_list_t;
         typedef fhicl::OptionalSequence<std::string> optional_string_list_t;
-        typedef fhicl::OptionalTable<fhicl::ParameterSet> optional_pset_t;
-
-        // These are items needed by the tool
-        optional_string_list_t inputers { fhicl::Name("inputers"),
-                fhicl::Comment("List of input converters.") };
-        optional_string_list_t outputers { fhicl::Name("outputers"),
-                fhicl::Comment("List of ouput converters.") };
+        //typedef fhicl::OptionalTable<fhicl::ParameterSet> generic_pset_t;
+        typedef fhicl::OptionalDelegatedParameter generic_pset_t;
 
         // These are WCT config items to pass through
         string_list_t configs { fhicl::Name("configs"),
-                fhicl::Comment("List of WCT configuration files.") };
-        optional_string_list_t apps { fhicl::Name("apps"),
-                fhicl::Comment("List of WCT application objects to execute.")};
+                fhicl::Comment("List of one or more WCT configuration files."
+                               "\nThey are located w.r.t. the WCT load path.") };
+        string_list_t apps { fhicl::Name("apps"),
+                fhicl::Comment("List of one or more WCT application objects to execute.")};
+        string_list_t plugins { fhicl::Name("plugins"),
+                fhicl::Comment("List of WCT component plugin libraries to load.\n"
+                               "They are located w.r.t. the OS library load path")};
+
         optional_string_list_t paths { fhicl::Name("paths"),
-                fhicl::Comment("File system paths in which to locate WCT files.")};
-        optional_string_list_t plugins { fhicl::Name("plugins"),
-                fhicl::Comment("List of WCT component plugins to load.")};
-        optional_pset_t params{ fhicl::Name("params"),
-                fhicl::Comment("External variables to inject into WCT configuration.")};
+                fhicl::Comment("Optional list of file system paths to add to the WCT "
+                               "configuration file load path."
+                               "\nThis augments the WIRECELL_PATH environment variable.")};
+        generic_pset_t params{ fhicl::Name("params"),
+                fhicl::Comment("Optional table giving external variables to inject into WCT configuration.")};
+
+        // These are items needed by the tool
+        optional_string_list_t inputers { fhicl::Name("inputers"),
+                fhicl::Comment("List of WCT components which act as WCT sources.\n"
+                               "They are called before WCT executes on each Art Event object") };
+        optional_string_list_t outputers { fhicl::Name("outputers"),
+                fhicl::Comment("List of WCT components which act as WCT sinks.\n"
+                               "They are called after WCT executes on each Art Event object.") };
+        
     };
 
     class WCLS : public MainTool {
@@ -80,41 +91,51 @@ wcls::WCLS::WCLS(wcls::WCLS::Parameters const& params)
     // transfer configuration
 
     // required
+
     for (auto cfg : wclscfg.configs()) {
         m_wcmain.add_config(cfg);
     }
     
+    for (auto app : wclscfg.apps()) {
+        m_wcmain.add_app(app);
+    }
+
+    for (auto plugin : wclscfg.plugins()) {
+        m_wcmain.add_plugin(plugin);
+    }
+
+    // optional
 
     WCLSConfig::optional_string_list_t::rtype slist;
-    if (wclscfg.apps(slist)) {
-        for (auto app : slist) {
-            m_wcmain.add_app(app);
-        }
-    }
-    slist.clear();
     if (wclscfg.paths(slist)) {
         for (auto path : slist) {
             m_wcmain.add_path(path);
         }
     }
     slist.clear();
-    if (wclscfg.plugins(slist)) {
-        for (auto plugin : slist) {
-            m_wcmain.add_plugin(plugin);
-        }
-    }
-    slist.clear();
 
-    fhicl::ParameterSet wcpars;
-    if (wclscfg.params(wcpars)) {
-        for (auto key : wcpars.get_names()) {
-            auto value = wcpars.get<std::string>(key);
-            m_wcmain.add_var(key, value);
+
+    {
+        fhicl::ParameterSet wcpars;
+        if (wclscfg.params.get_if_present(wcpars)) {
+            for (auto key : wcpars.get_names()) {
+                auto value = wcpars.get<std::string>(key);
+                m_wcmain.add_var(key, value);
+            }
         }
     }
 
+    std::cerr << "Initialize Wire Cell\n";
+    try {
+        m_wcmain.initialize();
+    }
+    catch (WireCell::Exception& e) {
+        std::cerr << "Wire Cell Toolkit threw an exception\n";
+        auto msg = errstr(e);
+        std::cerr << msg << std::endl;
+        throw cet::exception("WireCellLArSoft") << msg;
+    }
 
-    m_wcmain.initialize();
 
 
     if (wclscfg.inputers(slist)) {

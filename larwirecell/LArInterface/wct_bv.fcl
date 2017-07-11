@@ -9,9 +9,11 @@ physics :{
          module_type : BV
          wcls_main: {
             tool_type: WCLS
-            configs: ["uboone/fourdee.jsonnet"]
+            apps: ["Omnibus"]
+            plugins: ["WireCellGen", "WireCellSigProc", "WireCellSio", "WireCellLarsoft"]
+            configs: ["uboone-filtered-sigproc.jsonnet"]
             params: {
-//               key1: "value1"
+               detector: "uboone"
             }
         }
       }

@@ -12,5 +12,6 @@ art_make_library(
         canvas cetlib cetlib_except
         ${Boost_SYSTEM_LIBRARY}
         ${ROOT_BASIC_LIB_LIST}
+        jsoncpp
         ${WIRECELL_LIBS}
 )

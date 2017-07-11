@@ -51,6 +51,9 @@ void wct::BV::reconfigure(fhicl::ParameterSet const& pset)
     cerr << "BV reconfigure\n";
     auto const& wclsPS = pset.get<fhicl::ParameterSet>("wcls_main");
     m_wcls = art::make_tool<wcls::MainTool>(wclsPS);
+    if (! m_wcls) {
+        throw cet::exception("BV_module") << "Failed to get Art Tool \"wcls_main\"\n";
+    }
 }
     
 void wct::BV::beginJob()

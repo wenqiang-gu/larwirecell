@@ -9,10 +9,12 @@
 
 #include "larwirecell/Interfaces/IArtEventVisitor.h"
 #include "WireCellIface/IFrameSource.h"
+#include "WireCellIface/IConfigurable.h"
 
 namespace wcls {
-    class RawFrameSource : public IArtEventVisitor, // likely needs to be a configurable too.
-                           public WireCell::IFrameSource { 
+    class RawFrameSource : public IArtEventVisitor, 
+                           public WireCell::IFrameSource,
+                           public WireCell::IConfigurable { 
     public:
         RawFrameSource();
         virtual ~RawFrameSource();
@@ -23,8 +25,13 @@ namespace wcls {
         /// IFrameSource
         virtual bool operator()(WireCell::IFrame::pointer& frame);            
 
+        /// IConfigurable
+        virtual WireCell::Configuration default_configuration() const;
+        virtual void configure(const WireCell::Configuration& config);
+
     private:
         WireCell::IFrame::pointer m_frame;
+        WireCell::Configuration m_cfg;
     };
 }
 

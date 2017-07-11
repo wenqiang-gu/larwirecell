@@ -29,7 +29,25 @@ RawFrameSource::~RawFrameSource()
 }
 
 
-// is this a good idea?
+WireCell::Configuration RawFrameSource::default_configuration() const
+{
+    Configuration cfg;
+    cfg["source_label"] = "daq"; 
+    return cfg;
+}
+
+void RawFrameSource::configure(const WireCell::Configuration& cfg)
+{
+    const std::string sl = cfg["source_label"].asString();
+    if (sl.empty()) {
+        THROW(ValueError() << errmsg{"RawFrameSource requires a source_label"});
+    }
+    m_cfg = cfg;
+}
+
+
+
+// is this the right way to diff an art::Timestamp?  
 static
 double tdiff(const art::Timestamp& ts1, const art::Timestamp& ts2)
 {
@@ -45,9 +63,8 @@ void RawFrameSource::visit(art::Event & event)
 
     art::Handle< std::vector<raw::RawDigit> > rdvh;
 
-    // fixme: make name configurable
-    const std::string data_source = "raw::RawDigits_wcNoiseFilter__DataRecoStage1";
-    event.getByLabel(data_source, rdvh); 
+    const std::string source_label = m_cfg["source_label"].asString();
+    event.getByLabel(source_label, rdvh); 
     const std::vector<raw::RawDigit>& rdv(*rdvh);
 
     const size_t nchannels = rdv.size();
