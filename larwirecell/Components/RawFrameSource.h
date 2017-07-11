@@ -1,7 +1,8 @@
-/** A wct/ls raw frame source and art::Event visitor. 
+/** A WCT component which is a source of raw frames which it produces
+ * by also being an art::Event visitor.
  *
- * This is a source from the point of view of WCT.  It's conceptually
- * a sink from the point of view of LArsoft.
+ * Raw means that the waveforms are taken from the art::Event as a
+ * labeled std::vector<raw::RawDigit> collection.
  */
 
 #ifndef LARWIRECELL_COMPONENTS_RAWFRAMESOURCE

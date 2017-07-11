@@ -3,6 +3,8 @@
 
 file(GLOB wcls_components_sources "*.cxx")
 
+# This is what's needed for building he WireCellLarsoft WCT component
+# plugin library.  
 art_make_library(
   LIBRARY_NAME WireCellLarsoft
   SOURCE ${wcls_components_sources}
@@ -13,5 +15,8 @@ art_make_library(
         ${Boost_SYSTEM_LIBRARY}
         ${ROOT_BASIC_LIB_LIST}
         jsoncpp
+	lardata_Utilities
+	lardataobj_RawData
+	lardataobj_RecoBase
         ${WIRECELL_LIBS}
 )

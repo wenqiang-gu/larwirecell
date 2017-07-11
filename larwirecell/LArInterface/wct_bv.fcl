@@ -1,6 +1,7 @@
 
 source :{
-   module_type: EmptyEvent
+//   module_type: EmptyEvent
+   module_type: RootInput
    maxEvents: 1
 }
 physics :{

@@ -10,9 +10,12 @@ local bits = import "uboone/sigproc/bits.jsonnet";
 local filters = import "uboone/sigproc/filters.jsonnet";
 local omni = import "uboone/sigproc/omni.jsonnet";
 
+// We need these in at least two places, so make temp/local vars.
 local source = ls.source.frame.noisefiltered;
-[
+local sink = ls.sink.frame.cooked;
 
+// Now comes the actual configuration sequence.
+[
     source,
 
     anodes.nominal,
@@ -26,15 +29,16 @@ local source = ls.source.frame.noisefiltered;
     // omni.noisefilter,
     omni.sigproc,
     
-    // fixme: need a sink
+    sink,
+
+    // The final app that handles data flow throught hte next level components
     {
         type: "Omnibus",
         data: {
             source: wc.tn(source),
-            sink: "",
             filters: [wc.tn(omni.sigproc)],
+            sink: wc.tn(sink),
         }
     },
-
 
 ]

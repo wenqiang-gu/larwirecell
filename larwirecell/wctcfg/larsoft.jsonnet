@@ -3,6 +3,9 @@
 // To use it, import it into your own Jsonnet configuration file and
 // reference and/or override some of its data structures.
 
+local wc = import "wirecell.jsonnet";
+local anodes = import "multi/anodes.jsonnet";
+
 {
     source : {
         frame: {                // choose one, they are mutually
@@ -29,5 +32,20 @@
         },
 
     },
+
+    sink : {
+        frame: {
+            // A cooked frame sink accepts a frame and saves it into
+            // art::Event as a vector of recob::Wire.  It needs an
+            // anode plane in order to resolve what plane a channel is
+            // in.
+            cooked : {
+                type: "wclsCookedFrameSink",
+                data: {
+                    anode: wc.tn(anodes.nominal),
+                }
+            },
+        },
+    }
 
 }
