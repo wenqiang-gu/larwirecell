@@ -11,7 +11,6 @@
 #include "WireCellIface/IFrameSink.h"
 #include "WireCellIface/IConfigurable.h"
 #include "WireCellIface/IAnodePlane.h"
-
 #include "larwirecell/Interfaces/IArtEventVisitor.h"
 
 namespace wcls {
@@ -23,6 +22,7 @@ namespace wcls {
         virtual ~CookedFrameSink();
 
         /// IArtEventVisitor 
+        virtual void produces(art::EDProducer* prod);
         virtual void visit(art::Event & event);
 
         /// IFrameSink

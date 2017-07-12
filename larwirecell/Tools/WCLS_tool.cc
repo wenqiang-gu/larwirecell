@@ -73,11 +73,17 @@ namespace wcls {
         explicit WCLS(Parameters const& ps);
         virtual ~WCLS() { }
 
+        void produces(art::EDProducer* prod) {
+            for (auto iaev : m_outputers) {
+                iaev->produces(prod);
+            }
+        }
         void process(art::Event& event);
 
     private:
         WireCell::Main m_wcmain;
         wcls::IArtEventVisitor::vector m_inputers, m_outputers;
+        art::EDProducer* m_prod;
     };
 }
 

@@ -4,6 +4,7 @@
 #include "lardataobj/RecoBase/Wire.h"
 
 #include "art/Framework/Principal/Event.h"
+#include "art/Framework/Core/EDProducer.h"
 
 #include "WireCellIface/IFrame.h"
 #include "WireCellIface/ITrace.h"
@@ -43,6 +44,12 @@ void CookedFrameSink::configure(const WireCell::Configuration& cfg)
     m_anode = Factory::find_tn<IAnodePlane>(anode_tn);
 }
 
+void CookedFrameSink::produces(art::EDProducer* prod)
+{
+    assert(prod);
+    //prod->produces< std::vector<recob::Wire> >("CookedFrame");
+    prod->produces< std::vector<recob::Wire> >();
+}
 
 void CookedFrameSink::visit(art::Event & event)
 {

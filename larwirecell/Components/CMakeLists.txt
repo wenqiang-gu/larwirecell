@@ -10,6 +10,7 @@ art_make_library(
   SOURCE ${wcls_components_sources}
   LIBRARIES
         art_Framework_Core art_Framework_Principal art_Framework_Services_Registry
+        art_Persistency_Common art_Persistency_Provenance
         art_Utilities
         canvas cetlib cetlib_except
         ${Boost_SYSTEM_LIBRARY}

@@ -34,11 +34,12 @@ namespace wct {
 wct::BV::BV(fhicl::ParameterSet const& pset)
     : EDProducer()
 {
-    cerr << "BV constructed\n";
+    cerr << "BV constructed at " << (void*)this << endl;
     this->reconfigure(pset);
 
     // fixme: this needs to be moved into the sink components somehow.
-    produces< std::vector<recob::Wire> >();
+    //EDProducer* prod = this;
+    //prod->produces< std::vector<recob::Wire> >();
 }
 wct::BV::~BV()
 {
@@ -59,6 +60,7 @@ void wct::BV::reconfigure(fhicl::ParameterSet const& pset)
     if (! m_wcls) {
         throw cet::exception("BV_module") << "Failed to get Art Tool \"wcls_main\"\n";
     }
+    m_wcls->produces(this);
 }
     
 void wct::BV::beginJob()
