@@ -1,0 +1,4 @@
+The larwirecell package holds the integration boundary between larsoft
+and the Wire Cell Toolkit.
+
+For more information see the docs/ directory.

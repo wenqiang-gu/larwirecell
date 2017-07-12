@@ -1,4 +1,4 @@
-#+TITLE: WCT/LS Integration Branch
+#+TITLE: Development of the WCT/LS Integration Branch
 
 * Overview
 
@@ -60,11 +60,11 @@ Get the Jsonnet SSH shim
   $ cd ~/dev/wcls/build
   $ git clone ssh://p-build-framework@cdcvs.fnal.gov/cvs/projects/build-framework-jsonnet-ssi-build jsonnet-ssi-build
   $ cd jsonnet-ssi-build
-  $ git checkout -b v0_9_3 v0_9_3
-  $ patch -p1 < .../build-framework-jsonnet-ssi-build.patch
 #+END_EXAMPLE
 
-The patch should be Incorporated but if not it is [[./build-framework-jsonnet-ssi-build.patch][here]].  Continue to build it:
+Note, some [[./build-framework-jsonnet-ssi-build.patch][fixes]] were needed to the =v0_9_3= tagged version.  They are applied and pushed.
+
+Continue to build it:
 
 #+BEGIN_EXAMPLE
   $ source ~/dev/wcls/products/setup
@@ -93,15 +93,13 @@ Notes:
 
 * Build development version of WCT
 
-Beyond version =v0_5_2c= of =wirecell-ssi-build= is =v0_6_0dev= which builds the =master= branch.   If not committed one can use [[./wirecell-ssi-build.patch][this patch]].
+Beyond version =v0_5_2c= of =wirecell-ssi-build= is =v0_6_0dev= (temporary, untagged name) which builds the =master= branch.   Some [[./wirecell-ssi-build.patch][fixes]] were needed.  They've been applied and pushed.
 
 Now, build:
 
 #+BEGIN_EXAMPLE
   $ ./build_wirecell.sh ~/dev/wcls/products e14 prof
   ...
-  Checking for Jsonnet in /home/bviren/dev/wcls/products/jsonnet/v0_9_3/Linux64bit+4.4-2.23                      : The configuration failed
-  (complete log in /home/bviren/dev/wcls/products/wirecell/v0_6_0dev/Linux64bit+4.4-2.23-e14-prof/wire-cell-build/build/config.log)
 #+END_EXAMPLE
 
 * Get =larwirecell= source 

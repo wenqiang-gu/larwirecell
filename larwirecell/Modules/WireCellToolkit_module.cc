@@ -10,12 +10,12 @@
 
 using namespace std;
 
-namespace wct {
+namespace wcls {
 
-    class BV : public art::EDProducer {
+    class WireCellToolkit : public art::EDProducer {
     public:
-        explicit BV(fhicl::ParameterSet const& pset);
-        virtual ~BV();
+        explicit WireCellToolkit(fhicl::ParameterSet const& pset);
+        virtual ~WireCellToolkit();
 
         void produce(art::Event & evt);
         void reconfigure(fhicl::ParameterSet const& pset);
@@ -31,48 +31,48 @@ namespace wct {
 }
 
 
-wct::BV::BV(fhicl::ParameterSet const& pset)
+wcls::WireCellToolkit::WireCellToolkit(fhicl::ParameterSet const& pset)
     : EDProducer()
 {
-    cerr << "BV constructed at " << (void*)this << endl;
+    cerr << "WireCellToolkit constructed at " << (void*)this << endl;
     this->reconfigure(pset);
 
     // fixme: this needs to be moved into the sink components somehow.
     //EDProducer* prod = this;
     //prod->produces< std::vector<recob::Wire> >();
 }
-wct::BV::~BV()
+wcls::WireCellToolkit::~WireCellToolkit()
 {
-    cerr << "BV destructed\n";
+    cerr << "WireCellToolkit destructed\n";
 }
 
-void wct::BV::produce(art::Event & evt)
+void wcls::WireCellToolkit::produce(art::Event & evt)
 {
-    cerr << "BV produce\n";
+    cerr << "WireCellToolkit produce\n";
     m_wcls->process(evt);
 }
 
-void wct::BV::reconfigure(fhicl::ParameterSet const& pset)
+void wcls::WireCellToolkit::reconfigure(fhicl::ParameterSet const& pset)
 {
-    cerr << "BV reconfigure\n";
+    cerr << "WireCellToolkit reconfigure\n";
     auto const& wclsPS = pset.get<fhicl::ParameterSet>("wcls_main");
     m_wcls = art::make_tool<wcls::MainTool>(wclsPS);
     if (! m_wcls) {
-        throw cet::exception("BV_module") << "Failed to get Art Tool \"wcls_main\"\n";
+        throw cet::exception("WireCellToolkit_module") << "Failed to get Art Tool \"wcls_main\"\n";
     }
     m_wcls->produces(this);
 }
     
-void wct::BV::beginJob()
+void wcls::WireCellToolkit::beginJob()
 {
-    cerr << "BV begin job\n";
+    cerr << "WireCellToolkit begin job\n";
 }
 
-void wct::BV::endJob()
+void wcls::WireCellToolkit::endJob()
 {
-    cerr << "BV end job\n";
+    cerr << "WireCellToolkit end job\n";
 }
 
-namespace wct{
-    DEFINE_ART_MODULE(BV)
+namespace wcls{
+    DEFINE_ART_MODULE(WireCellToolkit)
 }
