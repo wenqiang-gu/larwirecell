@@ -244,7 +244,7 @@ void WireCellNoiseFilter::DoNoiseFilter(unsigned int runNum, const std::vector<r
     
     auto noise = new WireCell::SigProc::SimpleChannelNoiseDB;
     // initialize
-    noise->set_sampling(tick, windowSize);
+    noise->set_sampling(tick, nsamples);
     // set nominal baseline
     noise->set_nominal_baseline(uchans, unombl);
     noise->set_nominal_baseline(vchans, vnombl);
@@ -360,9 +360,9 @@ void WireCellNoiseFilter::DoNoiseFilter(unsigned int runNum, const std::vector<r
         
         WireCell::ITrace::ChargeSequence charges;
         
-        charges.resize(windowSize);
+        charges.resize(nsamples);
         
-        std::transform(rawAdcVec.begin() + startBin, rawAdcVec.begin() + stopBin, charges.begin(), [](auto& adcVal){return float(adcVal);});
+        std::transform(rawAdcVec.begin(), rawAdcVec.end(), charges.begin(), [](auto& adcVal){return float(adcVal);});
         
         unsigned int chan = inputWaveforms.at(ich).Channel();
         WireCell::SimpleTrace* st = new WireCell::SimpleTrace(chan, 0.0, charges);
@@ -389,12 +389,13 @@ void WireCellNoiseFilter::DoNoiseFilter(unsigned int runNum, const std::vector<r
     for (auto quiet_trace : *quiet_traces.get()) {
         //int tbin = quiet_trace->tbin();
         unsigned int channel = quiet_trace->channel();
-        auto quiet_charges = quiet_trace->charge();
+        
+        auto& quiet_charges = quiet_trace->charge();
         
         // Recover the database version of the pedestal, we'll offset the waveforms so it matches
         float pedestal = pedestalValues.PedMean(channel);
         
-        std::transform(quiet_charges.begin(), quiet_charges.end(), waveform.begin(), [pedestal](auto charge){return std::round(charge+pedestal);});
+        std::transform(quiet_charges.begin() + startBin, quiet_charges.begin() + stopBin, waveform.begin(), [pedestal](auto charge){return std::round(charge+pedestal);});
         
         outputWaveforms.emplace_back( raw::RawDigit( channel , waveform.size(), waveform, raw::kNone) );
         outputWaveforms.back().SetPedestal(pedestal,1.75);
