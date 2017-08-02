@@ -34,6 +34,7 @@ WireCell::Configuration RawFrameSource::default_configuration() const
     Configuration cfg;
     cfg["source_label"] = "daq"; 
     cfg["tick"] = 0.5*WireCell::units::us;
+    cfg["frame_tags"][0] = "orig"; // the tags to apply to this frame
     return cfg;
 }
 
@@ -45,6 +46,11 @@ void RawFrameSource::configure(const WireCell::Configuration& cfg)
     }
     m_source = sl;
     m_tick = cfg["tick"].asDouble();
+    std::cerr << "RawFrameSource: source is \"" << m_source
+              << "\", tick is " << m_tick/WireCell::units::us << " us\n";
+    for (auto jtag : cfg["frame_tags"]) {
+        m_frame_tags.push_back(jtag.asString());
+    }
 }
 
 
@@ -68,29 +74,43 @@ void RawFrameSource::visit(art::Event & event)
     std::cerr << "RawFrameSource getting: RawDigits at: \"" << m_source << "\"\n";
     art::Handle< std::vector<raw::RawDigit> > rdvh;
     bool okay = event.getByLabel(m_source, rdvh);
-    std::cerr << "Result of raw digits: " << okay << std::endl;
-    if (rdvh->size() == 0) {
-        std::cerr << "EMPTY RAW DIGITS VECTOR\n";
+    if (!okay || rdvh->size() == 0) {
+        std::string msg = "RawFrameSource failed to get raw::RawDigits: " + m_source;
+        std::cerr << msg << std::endl;
+        THROW(RuntimeError() << errmsg{msg});
     }
     const std::vector<raw::RawDigit>& rdv(*rdvh);
-
     const size_t nchannels = rdv.size();
+    std::cerr << "RawFrameSource: got " << nchannels << " raw::RawDigit objects\n";
+
 
     WireCell::ITrace::vector traces(nchannels);
+    double totq_in = 0, totq_out = 0;
     for (size_t ind=0; ind<nchannels; ++ind) {
-        const auto& rd = rdv.at(ind);
+        auto const& rd = rdv.at(ind);
         const int chid = rd.Channel();
         const int tbin = 0;
-        const auto& adcs = rd.ADCs();
+        const raw::RawDigit::ADCvector_t& adcs = rd.ADCs();
+        //std::cerr << "[" << chid << ":" << adcs.size() << "] ";
+        
 
         WireCell::ITrace::ChargeSequence charges(adcs.size());
-        std::transform(adcs.begin(), adcs.begin(), charges.begin(),
-                       [](auto& adcVal){return float(adcVal);});
+        for (size_t itick=0; itick < adcs.size(); ++ itick) {
+            charges[itick] = adcs[itick];
+            totq_out += charges[itick];
+            totq_in += adcs[itick];
+        }
+
         traces[ind] = std::make_shared<SimpleTrace>(chid, tbin, charges);
     }
+    std::cerr << "RawFrameSource: got Qin=" << totq_in << ", sending Qout=" << totq_out << std::endl;
 
     const double time = tdiff(event.getRun().beginTime(), event.time());
-    m_frame = std::make_shared<WireCell::SimpleFrame>(event.event(), time, traces, tick);
+    auto sframe = new WireCell::SimpleFrame(event.event(), time, traces, tick);
+    for (auto tag : m_frame_tags) {
+        sframe->tag_frame(tag);
+    }
+    m_frame = WireCell::IFrame::pointer(sframe);
     
 }
 
@@ -100,3 +120,7 @@ bool RawFrameSource::operator()(WireCell::IFrame::pointer& frame)
     frame = m_frame;
     return true;
 }
+// Local Variables:
+// mode: c++
+// c-basic-offset: 4
+// End:

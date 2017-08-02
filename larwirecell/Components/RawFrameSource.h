@@ -13,6 +13,7 @@
 #include "WireCellIface/IConfigurable.h"
 
 #include <string>
+#include <vector>
 
 namespace wcls {
     class RawFrameSource : public IArtEventVisitor, 
@@ -36,6 +37,7 @@ namespace wcls {
         WireCell::IFrame::pointer m_frame;
         std::string m_source;
         double m_tick;
+	std::vector<std::string> m_frame_tags;
     };
 }
 

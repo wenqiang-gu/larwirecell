@@ -13,6 +13,9 @@
 #include "WireCellIface/IAnodePlane.h"
 #include "larwirecell/Interfaces/IArtEventVisitor.h"
 
+#include <string>
+#include <vector>
+
 namespace wcls {
     class CookedFrameSink : public IArtEventVisitor, 
                             public WireCell::IFrameSink,
@@ -35,6 +38,7 @@ namespace wcls {
     private:
         WireCell::IFrame::pointer m_frame;
         WireCell::IAnodePlane::pointer m_anode;
+	std::vector<std::string> m_frame_tags;
     };
 }
 
