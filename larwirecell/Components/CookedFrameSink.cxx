@@ -146,7 +146,7 @@ void CookedFrameSink::visit(art::Event & event)
 	event.put(std::move(outwires), tag);
     }
 
-
+    m_frame = nullptr;
 }
 
 bool CookedFrameSink::operator()(const WireCell::IFrame::pointer& frame)
