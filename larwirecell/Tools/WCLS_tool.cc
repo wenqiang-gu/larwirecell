@@ -15,6 +15,7 @@
 
 #include "WireCellApps/Main.h"
 #include "WireCellUtil/NamedFactory.h"
+#include "WireCellUtil/ExecMon.h"
 
 #include <vector>
 #include <string>
@@ -84,6 +85,7 @@ namespace wcls {
         WireCell::Main m_wcmain;
         wcls::IArtEventVisitor::vector m_inputers, m_outputers;
         art::EDProducer* m_prod;
+	WireCell::ExecMon m_em;
     };
 }
 
@@ -91,6 +93,7 @@ namespace wcls {
 
 wcls::WCLS::WCLS(wcls::WCLS::Parameters const& params)
     : m_wcmain()
+    , m_em("WCLS tool constructing")
 {
     const auto& wclscfg = params();
 
@@ -160,24 +163,36 @@ wcls::WCLS::WCLS(wcls::WCLS::Parameters const& params)
         }
     }
     slist.clear();
+    m_em("WCLS constructed");
 }
 
 void wcls::WCLS::process(art::Event& event)
 {
+    m_em("WCLS start process");
     for (auto iaev : m_inputers) {
         std::cerr << "pre visit\n";
         iaev->visit(event);
     }
-    
+    m_em("WCLS input complete");
+
     std::cerr << "Running Wire Cell Toolkit...\n";
     m_wcmain();
     std::cerr << "... Wire Cell Toolkit done\n";
+    m_em("WCLS main complete");
     
     for (auto iaev : m_outputers) {
         std::cerr << "post visit\n";
         iaev->visit(event);
     }
+
+    m_em("WCLS process complete");
+    std::cerr << m_em.summary() << std::endl;
 }
 
 
 DEFINE_ART_CLASS_TOOL(wcls::WCLS)
+
+// Local Variables:
+// mode: c++
+// c-basic-offset: 4
+// End:
