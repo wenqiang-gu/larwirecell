@@ -1,4 +1,4 @@
-// This is a main Wire Cell Toolkit configuration file.
+// This is a main Wire Cell Toolkit configuration file for use with LArSoft.
 //
 // It configures WCT to run inside LArSoft in order to run MicroBooNE
 // noise filtering (NF) and signal processing (SP).
@@ -6,18 +6,22 @@
 // Most of the configuration is provided as part of WCT as located by
 // directories in a WIRECELL_PATH environment variable.
 
+
+// These are provided by the wire-cell-cfg package.
 local wc = import "wirecell.jsonnet";
-local params = import "params/chooser.jsonnet";
+local gen = import "uboone/nfsp/general.jsonnet";
+local nf = import "uboone/nfsp/nf.jsonnet";
+local sp = import "uboone/nfsp/sp.jsonnet";
+local params = import "uboone/nfsp/params.jsonnet";
+local chndb_data = import "uboone/nfsp/chndb_data.jsonnet"; 
 
 
-// replace the OmniChannelNoiseDB with a derived version that extends
-// both the C++ and its configuration.
-local omnicndb_data = import "uboone/sigproc/omnicndb.jsonnet";
-local base_guts = import "uboone/sigproc/omni-nf-sp.jsonnet";
-local guts = base_guts {
-    noisedb: {
+// Override parts of the NF config in order to use LArSoft-specific
+// channel noise database class.
+local wcls_nf = nf {
+    chndb : {
 	type: "wclsChannelNoiseDB",
-	data: omnicndb_data {
+	data: chndb_data {
 	    bad_channel: { policy: "replace" },
 	    misconfig_channel: {
                 policy: "replace",
@@ -33,18 +37,17 @@ local source = {
     data: {
         source_label: "daq", 
         frame_tags: ["orig"],
-	nticks: params.sigproc.frequency_bins,
+	nticks: params.frequency_bins,
     },
 };
+
 local sink = {
     type: "wclsCookedFrameSink",
     data: {
-	anode: wc.tn(guts.anode),
         frame_tags: ["gauss", "wiener"],
-	nticks: params.detector.nticks,
-    }
+	nticks: params.output_nticks,
+    },
 };
-
 
 
 // now the main config sequence
@@ -53,15 +56,14 @@ local sink = {
     source,
     sink,
 
-] + guts.config_sequence + [
+] + gen.sequence + wcls_nf.sequence + sp.sequence + [
 
     {
         type: "Omnibus",
         data: {
             source: wc.tn(source),
             sink: wc.tn(sink),
-            filters: std.map(wc.tn, guts.frame_filters)
-
+            filters: std.map(wc.tn, wcls_nf.frame_filters + sp.frame_filters)
         }
     },
     

@@ -28,14 +28,14 @@ physics :{
             params: {
                detector: "uboone"
 	       input: "/dev/null"
-	       output: "magnify-0005937-00029.root"
+	       output: "magnify-nf-sp.root"
             }
         }
       }
    }
    
-   e1        : [ nfsp ]
-   end_paths : [ e1 ]
+   p1        : [ nfsp ]
+   trigger_paths : [ p1 ]
    
 }
 

@@ -1,9 +1,9 @@
 source :{
    module_type: RootInput
    //inputCommands: ["keep raw::RawDigits_*_*_*", "drop *"]
-   inputCommands: ["drop *", "keep raw::RawDigits_*_*_*"]
+//   inputCommands: ["drop *", "keep raw::RawDigits_*_*_*"]
    // raw::RawDigits_wcNoiseFilter__DataRecoStage1
-   //inputCommands: ["keep *", "drop raw::ubdaqSoftwareTriggerData_*_*_*"]
+   inputCommands: ["keep *", "drop raw::ubdaqSoftwareTriggerData_*_*_*"]
    //inputCommands: ["drop raw::ubdaqSoftwareTriggerData_*_*_*"]
    maxEvents: 1
 }
@@ -25,15 +25,17 @@ physics :{
             # Two-faced output components.  Needs to also be mentioned in WCT config.
             outputers: ["wclsCookedFrameSink"]
             # external parameters injected into the WCT configuration
-#            params: {
-#               detector: "uboone"
-#            }
+            params: {
+               detector: "uboone"
+	       input: "/dev/null"
+	       output: "magnify.root"
+            }
         }
       }
    }
    
-   e1        : [ shunt ]
-   end_paths : [ e1 ]
+   p1 : [shunt]
+   trigger_paths: [p1]
    
 }
 
