@@ -21,6 +21,7 @@ using namespace WireCell;
 
 RawFrameSource::RawFrameSource()
     : m_frame(nullptr)
+    , m_nticks(0)
 {
 }
 
@@ -35,6 +36,7 @@ WireCell::Configuration RawFrameSource::default_configuration() const
     cfg["source_label"] = "daq"; 
     cfg["tick"] = 0.5*WireCell::units::us;
     cfg["frame_tags"][0] = "orig"; // the tags to apply to this frame
+    cfg["nticks"] = m_nticks; // if nonzero, truncate or baseline-pad frame to this number of ticks.
     return cfg;
 }
 
@@ -46,11 +48,14 @@ void RawFrameSource::configure(const WireCell::Configuration& cfg)
     }
     m_source = sl;
     m_tick = cfg["tick"].asDouble();
-    std::cerr << "RawFrameSource: source is \"" << m_source
-              << "\", tick is " << m_tick/WireCell::units::us << " us\n";
     for (auto jtag : cfg["frame_tags"]) {
         m_frame_tags.push_back(jtag.asString());
     }
+    m_nticks = get(cfg, "nticks", m_nticks);
+    std::cerr << "RawFrameSource: source is \"" << m_source
+              << "\", tick is " << m_tick/WireCell::units::us << " us "
+	      << "nticks=" << m_nticks << std::endl;
+    std::cerr << cfg << std::endl;
 }
 
 
@@ -62,6 +67,34 @@ double tdiff(const art::Timestamp& ts1, const art::Timestamp& ts2)
     TTimeStamp tts1(ts1.timeHigh(), ts1.timeLow());
     TTimeStamp tts2(ts2.timeHigh(), ts2.timeLow());
     return tts2.AsDouble() - tts1.AsDouble();
+}
+
+
+static
+SimpleTrace* make_trace(const raw::RawDigit& rd, unsigned int nticks)
+{
+    const int chid = rd.Channel();
+    const int tbin = 0;
+    const raw::RawDigit::ADCvector_t& adcv = rd.ADCs();
+
+    short baseline = 0;
+    size_t npad=0, nsamples = adcv.size();
+    if (nticks) {		// enforce a waveform size
+	if (nticks > nsamples) { // need to pad
+	    baseline = Waveform::most_frequent(adcv);
+	    npad = nticks - nsamples;
+	}
+	nsamples = nticks;
+    }
+
+    auto strace = new SimpleTrace(chid, tbin, nsamples);
+    for (size_t itick=0; itick < nsamples; ++ itick) {
+	strace->charge()[itick] = adcv[itick];
+    }
+    for (size_t itick = nsamples; itick < nsamples + npad; ++itick) {
+	strace->charge()[itick] = baseline;
+    }
+    return strace;
 }
 
 void RawFrameSource::visit(art::Event & event)
@@ -83,27 +116,14 @@ void RawFrameSource::visit(art::Event & event)
     const size_t nchannels = rdv.size();
     std::cerr << "RawFrameSource: got " << nchannels << " raw::RawDigit objects\n";
 
-
     WireCell::ITrace::vector traces(nchannels);
-    double totq_in = 0, totq_out = 0;
     for (size_t ind=0; ind<nchannels; ++ind) {
         auto const& rd = rdv.at(ind);
-        const int chid = rd.Channel();
-        const int tbin = 0;
-        const raw::RawDigit::ADCvector_t& adcs = rd.ADCs();
-        //std::cerr << "[" << chid << ":" << adcs.size() << "] ";
-        
-
-        WireCell::ITrace::ChargeSequence charges(adcs.size());
-        for (size_t itick=0; itick < adcs.size(); ++ itick) {
-            charges[itick] = adcs[itick];
-            totq_out += charges[itick];
-            totq_in += adcs[itick];
-        }
-
-        traces[ind] = std::make_shared<SimpleTrace>(chid, tbin, charges);
+        traces[ind] = ITrace::pointer(make_trace(rd, m_nticks));
+	if (!ind) {
+	    std::cerr << "\tnticks=" << rd.ADCs().size() << " setting to " << m_nticks << std::endl;
+	}
     }
-    std::cerr << "RawFrameSource: got Qin=" << totq_in << ", sending Qout=" << totq_out << std::endl;
 
     const double time = tdiff(event.getRun().beginTime(), event.time());
     auto sframe = new WireCell::SimpleFrame(event.event(), time, traces, tick);

@@ -18,6 +18,7 @@ using namespace WireCell;
 
 CookedFrameSink::CookedFrameSink()
     : m_frame(nullptr)
+    , m_nticks(0)
 {
 }
 
@@ -33,6 +34,7 @@ WireCell::Configuration CookedFrameSink::default_configuration() const
     // frames to output
     cfg["frame_tags"][0] = "gauss";
     cfg["frame_tags"][1] = "wiener";
+    cfg["nticks"] = m_nticks; // if nonzero, force number of ticks in output waveforms. 
     return cfg;
 }
 
@@ -53,7 +55,7 @@ void CookedFrameSink::configure(const WireCell::Configuration& cfg)
 	std::cerr << "\t" << tag << "\n";
         m_frame_tags.push_back(tag);
     }
-
+    m_nticks = get(cfg, "nticks", m_nticks);
 }
 
 void CookedFrameSink::produces(art::EDProducer* prod)
@@ -116,9 +118,18 @@ void CookedFrameSink::visit(art::Event & event)
 	    const auto& charge = trace->charge();
 
 	    //std::cerr << tag << ": chid=" << chid << " tbin=" << tbin << " nq=" << charge.size() << std::endl;
-
-	    // this is a lar::sparse_vector<float>
-	    recob::Wire::RegionsOfInterest_t roi(charge, tbin);
+	    
+	    // enforce number of ticks if we are so configured.
+	    size_t ncharge = charge.size();
+	    int nticks = tbin + ncharge;
+	    if (m_nticks) {	// force output waveform size
+		if (m_nticks < nticks) {
+		    ncharge  = m_nticks - tbin;
+		}
+		nticks = m_nticks;
+	    }
+	    recob::Wire::RegionsOfInterest_t roi(nticks);
+	    roi.add_range(tbin, charge.begin(), charge.begin() + ncharge);
 
 	    // geo::kU, geo::kV, geo::kW
 	    auto wpid = m_anode->resolve(chid);

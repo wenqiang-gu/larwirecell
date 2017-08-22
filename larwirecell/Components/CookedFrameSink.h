@@ -39,6 +39,7 @@ namespace wcls {
         WireCell::IFrame::pointer m_frame;
         WireCell::IAnodePlane::pointer m_anode;
 	std::vector<std::string> m_frame_tags;
+	int m_nticks;
     };
 }
 

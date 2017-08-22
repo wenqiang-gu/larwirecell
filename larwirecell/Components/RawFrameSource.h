@@ -37,8 +37,11 @@ namespace wcls {
         WireCell::IFrame::pointer m_frame;
         std::string m_source;
         double m_tick;
+	int m_nticks;
 	std::vector<std::string> m_frame_tags;
+
     };
+
 }
 
 #endif
