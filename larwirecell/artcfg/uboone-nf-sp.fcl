@@ -21,7 +21,10 @@ physics :{
             # The top-level WCT configuration sequence
             configs: ["uboone-nf-sp.jsonnet"]
             # Two-faced input components.  Needs to also be mentioned in WCT config.
-            inputers: ["wclsRawFrameSource", "wclsChannelNoiseDB"]
+	    # inputers: ["wclsRawFrameSource", "wclsChannelNoiseDB"]
+	    # Note: need wclsChannelNoiseDB to use LS services for bad/misconfigured channels.
+	    # Note: need to change uboone-nf-sp.jsonnet too
+	    inputers: ["wclsRawFrameSource"]
             # Two-faced output components.  Needs to also be mentioned in WCT config.
             outputers: ["wclsCookedFrameSink"]
             # external parameters injected into the WCT configuration

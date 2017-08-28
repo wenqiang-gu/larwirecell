@@ -12,21 +12,26 @@ local params = import "params/chooser.jsonnet";
 
 // replace the OmniChannelNoiseDB with a derived version that extends
 // both the C++ and its configuration.
-local omnicndb_data = import "uboone/sigproc/omnicndb.jsonnet";
-local base_guts = import "uboone/sigproc/omni-nf-sp.jsonnet";
-local guts = base_guts {
-    noisedb: {
-	type: "wclsChannelNoiseDB",
-	data: omnicndb_data {
-	    bad_channel: { policy: "replace" },
-	    misconfig_channel: {
-                policy: "replace",
-                from: {gain:  4.7*wc.mV/wc.fC, shaping: 1.1*wc.us},
-                to:   {gain: 14.0*wc.mV/wc.fC, shaping: 2.2*wc.us},
-	    }
-	}
-    }
-};
+///// this is what's needed if using wclsChannelNoiseDB.
+//
+//local omnicndb_data = import "uboone/sigproc/omnicndb.jsonnet";
+//local base_guts = import "uboone/sigproc/omni-nf-sp.jsonnet";
+//local guts = base_guts {
+//    noisedb: {
+//	type: "wclsChannelNoiseDB",
+//	data: omnicndb_data {
+//	    bad_channel: { policy: "replace" },
+//	    misconfig_channel: {
+//                policy: "replace",
+//                from: {gain:  4.7*wc.mV/wc.fC, shaping: 1.1*wc.us},
+//                to:   {gain: 14.0*wc.mV/wc.fC, shaping: 2.2*wc.us},
+//	    }
+//	}
+//    }
+//};
+///// else use statically configured.
+local guts = import "uboone/sigproc/omni-nf-sp.jsonnet";
+
 
 local source = {
     type: "wclsRawFrameSource",
