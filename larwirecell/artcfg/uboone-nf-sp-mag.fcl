@@ -5,7 +5,7 @@ source :{
    // raw::RawDigits_wcNoiseFilter__DataRecoStage1
    //inputCommands: ["keep *", "drop raw::ubdaqSoftwareTriggerData_*_*_*"]
    //inputCommands: ["drop raw::ubdaqSoftwareTriggerData_*_*_*"]
-   maxEvents: 1
+   saveMemoryObjectThreshold: 10485760
 }
 physics :{
    producers: {
@@ -39,3 +39,4 @@ physics :{
    
 }
 
+# no art output 
