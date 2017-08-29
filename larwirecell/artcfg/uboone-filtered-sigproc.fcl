@@ -1,0 +1,41 @@
+
+source :{
+//   module_type: EmptyEvent
+   module_type: RootInput
+   //inputCommands: ["keep raw::RawDigits_*_*_*", "drop *"]
+   inputCommands: ["drop *", "keep raw::RawDigits_*_*_*"]
+   // raw::RawDigits_wcNoiseFilter__DataRecoStage1
+   //inputCommands: ["keep *", "drop raw::ubdaqSoftwareTriggerData_*_*_*"]
+   //inputCommands: ["drop raw::ubdaqSoftwareTriggerData_*_*_*"]
+   maxEvents: 1
+}
+physics :{
+   producers: {
+      sigproc : {
+         module_type : WireCellToolkit
+         wcls_main: {
+            # Configure Wire Cell / Larsoft integration layer
+            tool_type: WCLS
+            # The "apps" are the main executing components on the WCT side
+            apps: ["Omnibus"]
+            # Plugins are libraries of WCT components
+            plugins: ["WireCellGen", "WireCellSigProc", "WireCellSio", "WireCellLarsoft"]
+            # The top-level WCT configuration sequence
+            configs: ["uboone-filtered-sigproc.jsonnet"]
+            # Two-faced components which input to or
+            inputers: ["wclsRawFrameSource"]
+            # output from WCT to art/larsoft
+            outputers: ["wclsCookedFrameSink"]
+            # external parameters injected into the WCT configuration
+            params: {
+               detector: "uboone"
+            }
+        }
+      }
+   }
+   
+   e1        : [ sigproc ]
+   end_paths : [ e1 ]
+   
+}
+

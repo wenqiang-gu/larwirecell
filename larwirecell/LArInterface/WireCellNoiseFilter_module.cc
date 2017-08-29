@@ -23,12 +23,8 @@
 #include "lardataobj/RawData/RawDigit.h"
 #include "lardataobj/RawData/raw.h"
 
-// The following suggested by Brett to deal with the def clashes
-namespace
-{
-    #undef HEP_SYSTEM_OF_UNITS_H
-    #include "WireCellUtil/Units.h"
-}
+#include "WireCellUtil/Units.h"
+
 #include "WireCellUtil/Units.h"
 #include "WireCellIface/SimpleFrame.h"
 #include "WireCellIface/SimpleTrace.h"
@@ -40,6 +36,8 @@ namespace
 #include <string>
 #include <vector>
 #include <iostream>
+
+using namespace WireCell;
 
 namespace noisefilteralg {
 

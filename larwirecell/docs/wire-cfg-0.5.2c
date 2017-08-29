@@ -1,0 +1,35 @@
+# build wirecell
+# wirecell depends directly on eigen, root, boost, tbb, and jsoncpp
+# root depends on clhep, fftw, gsl, pythia, postgresql, mysql_client, libxml2, xrootd, and python
+# python depends on sqlite
+
+basequal=${1}
+
+# specify version to bootstrap and setup ups
+check_ups v5_2_0
+
+do_build cmake v3_7_1
+do_build gcc ${gcc_version}
+(( ${darwin:-0} )) && { do_build getopt v1_1_6; }
+
+do_build boost v1_63_0b ${basequal}
+do_build fftw v3_3_6_pl2
+do_build sqlite v3_16_02_00a
+do_build python v2_7_13d
+do_build clhep v2_3_4_4 ${basequal}
+do_build libxml2 v2_9_4b
+do_build tbb v2017_3c ${basequal}
+do_build xrootd v4_5_0c ${basequal}
+do_build mysql_client v5_5_54 ${basequal}
+do_build postgresql v9_5_6 p2713d
+do_build pythia v6_4_28h ${gccqual}
+do_build gsl v2_3 ${basequal}
+do_build root v6_08_06g ${basequal}:nu
+
+build_noarch eigen v3_3_3
+do_build jsoncpp v1_7_7 ${basequal}
+do_build wirecell v0_5_2c ${basequal}
+do_build jsonnet v0_9_3
+
+return 0
+
