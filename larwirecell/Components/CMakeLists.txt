@@ -15,11 +15,10 @@ art_make_library(
         canvas cetlib cetlib_except
         ${Boost_SYSTEM_LIBRARY}
         ${ROOT_BASIC_LIB_LIST}
-        jsoncpp
+        ${JSONCPP}
 	lardata_Utilities
 	lardataobj_RawData
 	lardataobj_RecoBase
-	larcore_Geometry
 	larevt_CalibrationDBI_IOVData
 	larevt_CalibrationDBI_Providers
         ${WIRECELL_LIBS}
