@@ -19,6 +19,7 @@ art_make_library(
 	lardata_Utilities
 	lardataobj_RawData
 	lardataobj_RecoBase
+        larcorealg_Geometry
 	larevt_CalibrationDBI_IOVData
 	larevt_CalibrationDBI_Providers
         ${WIRECELL_LIBS}
