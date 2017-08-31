@@ -13,12 +13,12 @@ defaultqual	e14
 #
 product         version
 larevt          v06_47_01_01
-wirecell	v0_5_2d
+wirecell	v0_6_1
 
 cetbuildtools	v5_14_00   -   only_for_build
 end_product_list
   
-qualifier	larevt		wirecell	notes
+qualifier	larevt          wirecell	notes
 e14:debug	e14:debug 	e14:debug
 e14:opt		e14:opt		e14:opt
 e14:prof	e14:prof	e14:prof

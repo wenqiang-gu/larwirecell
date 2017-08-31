@@ -37,7 +37,7 @@ art_make(
           		${ROOT_XMLIO}
           		${ROOT_GDML}
           		${ROOT_BASIC_LIB_LIST}
-	  		${WIRECELL_LIBS}
+                        ${WIRECELL_LIBS}
 )
 
 install_headers()

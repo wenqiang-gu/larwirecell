@@ -1,0 +1,205 @@
+#+TITLE: Development of the WCT/LS Integration Branch
+
+* Overview
+
+The =features/integration= branch holds the development for integrating Wire Cell Toolkit (WCT) into LArSoft (LS).  In order to develop on this branch you likely need to simultaneously develop this package and WCT itself.  To do that you will want a way to quickly rebuild WCT followed by this package.  For this package to build requires WCT to be in the form of the =wirecell= UPS product.  This document describes how to set up your developer environment such that you can quickly build and rebuild WCT into an installed =wirecell= product.
+
+This method (from Lynn Garren) uses Fermilab's [[https://cdcvs.fnal.gov/redmine/projects/build-framework][build-framework]].  It culminates in a new UPS product area that holds all the UPS products needed to build WCT.  The versions of these products must be chosen consistent with a target version of the UPS product built from this package (=larwirecell=) and thus also the associated =larsoft= umbrella UPS product.  The instructions assume =larsoft v06_42_00= however, this branch will likely be moved forward in the future.
+
+* Prepare Development UPS Area
+
+Create a new UPS products area and a build area starting in a fresh shell (no UPS environment set):
+
+#+BEGIN_EXAMPLE
+  $ mkdir -p ~/dev/wcls/{build,products}
+  $ cd ~/dev/wcls/build
+  $ wget  http://scisoft.fnal.gov/scisoft/bundles/tools/buildFW
+  $ chmod +x buildFW
+  $ wget https://raw.githubusercontent.com/brettviren/larwirecell/feature/integration/larwirecell/wire-cfg-0.5.2c
+#+END_EXAMPLE
+
+Get a build framework "control file" which lists the required high-level package installation commands defined by the build FW.  This list must match a targeted version of =larsoft=.  The starting point for this branch is the file [[./wire-cfg-0.5.2c]].  The versions it references must be consistent with the fresh-shell output of:
+
+#+BEGIN_EXAMPLE
+  $ (source /opt/fnal/products/setup ; ups depend larsoft v06_42_00 -q e14:prof)
+#+END_EXAMPLE
+
+for all the UPS products on which =wirecell= depends.
+With this control file create the base development environment:
+
+#+BEGIN_EXAMPLE
+  $ ./buildFW -b e14 ~/dev/wcls/products prof wire-0.5.2c
+#+END_EXAMPLE
+
+
+Notes:
+
+- *WARNING* the last argument (=wire-0.5.2c=) and the control file (=wire-cfg-0.5.2c=) are similar but *different*.  Don't change their names as they hold meaning.
+- The =products/= directory is an example but Lynn cautions to make it fresh.  
+- The control file is linked here: [[./wire-cfg-0.5.2c]].  
+- As of this first build, Jsonnet is merely added on and WCT is not built against it.  We'll fix that below.  In the future, a corrected version is likely included properly in the "control file"
+- We won't actually use the version of WCT this provides going forward.
+
+* Clone Needed Build FW Script Repositories
+
+The build FW uses a per-product repository to hold scripts that build a release of a package into a UPS product.  This repo is called a "shim" or "SSI".  Clone the [[https://cdcvs.fnal.gov/redmine/projects/build-framework/repository/wirecell-ssi-build][wirecell-ssi-build repo]] (following [[https://cdcvs.fnal.gov/redmine/projects/build-framework/wiki/Create_a_new_product_build_repository][these hints]] for the URL).
+
+#+BEGIN_EXAMPLE
+  $ cd ~/dev/wcls/build
+  $ git clone ssh://p-build-framework@cdcvs.fnal.gov/cvs/projects/build-framework-wirecell-ssi-build wirecell-ssi-build
+#+END_EXAMPLE
+
+Notes:
+
+- This URL requires Kerberized SSH access and being authorized as a developer of this Redmine project.  The URL can be translated into one does not require this auth and does not allow pushing.
+
+* Fix up Jsonnet UPS Product Build
+
+Get the Jsonnet SSH shim
+
+#+BEGIN_EXAMPLE
+  $ cd ~/dev/wcls/build
+  $ git clone ssh://p-build-framework@cdcvs.fnal.gov/cvs/projects/build-framework-jsonnet-ssi-build jsonnet-ssi-build
+  $ cd jsonnet-ssi-build
+#+END_EXAMPLE
+
+The [[./build-framework-jsonnet-ssi-build.patch][fixes]] needed were applied to the =v0_9_3= tagged version and pushed back to the =master= branch.
+
+Continue with building:
+
+#+BEGIN_EXAMPLE
+  $ source ~/dev/wcls/products/setup
+  $ ./bootstrap.sh ~/dev/wcls/products
+  $ ./build_jsonnet.sh ~/dev/wcls/products e14 prof
+#+END_EXAMPLE
+
+* Optional exercise: Build current WCT release
+
+Exercise this shim to repeat the build of the current release of WCT but in a new products area.
+
+#+BEGIN_EXAMPLE
+  $ source ~/dev/wcls/products/setup
+  $ cd ~/dev/wcls/build/wirecell-ssi-build/
+  $ git checkout -b v0_5_2c v0_5_2c 
+
+  $ sed -e 's/git co/git checkout/' -i bootstrap.sh
+  
+  $ ./bootstrap.sh ~/dev/wcls/products
+  $ ./build_wirecell.sh ~/dev/wcls/products e14 prof
+#+END_EXAMPLE
+
+Notes:
+
+- The =sed= command fixes missing =git co=.  This should be fixed in subsequent versions.it.
+- We don't need this released version for development, this is just testing the machinery
+
+* Build development version of WCT
+
+The =wirecell-ssi-build= shim just past =v0_5_2c= will build a temporary, untagged "version"  =v0_6_0dev=  which actually builds the =master= branch.   Some [[./wirecell-ssi-build.patch][fixes]] were needed and have been applied and pushed.
+
+Now, build:
+
+#+BEGIN_EXAMPLE
+  $ ./build_wirecell.sh ~/dev/wcls/products e14 prof
+  ...
+#+END_EXAMPLE
+
+Notes:
+
+- We won't actually use this method during development (see below) but it primes the pump by providing an installed UPS product location.
+
+* Get =larwirecell= source 
+
+Next, get =larwirecell= branch =feature/integration=.
+
+ #+BEGIN_EXAMPLE
+   $ source /opt/fnal/products/setup
+   $ PRODUCTS=$HOME/dev/wcls/products:$PRODUCTS
+   $ setup larsoft v06_42_00 -q e14:prof
+   $ which wire-cell
+#+END_EXAMPLE
+
+If all went well, that last line should return a versioned location which should be named with =v0_5_2c=.
+
+#+BEGIN_EXAMPLE
+   $ export MRB_PROJECT=larsoft
+   $ setup mrb
+
+   $ mkdir -p ~/dev/wcls/devel
+   $ cd ~/dev/wcls/devel
+   $ mrb newDev
+   $ source ~/dev/wcls/devel/localProducts_larsoft_v06_42_00_e14_prof/setup
+
+   $ kinit bv@FNAL.GOV
+
+   $ cd srcs
+   $ mrb g -b feature/integration larwirecell
+
+#+END_EXAMPLE
+
+* Set =larwirecell= environment
+
+#+BEGIN_EXAMPLE
+  $ source /opt/fnal/products/setup
+  $ PRODUCTS=$HOME/dev/wcls/products:$PRODUCTS
+
+  $ setup larsoft v06_42_00 -q e14:prof
+  $ unsetup wirecell
+  $ export MRB_PROJECT=larsoft
+  $ setup mrb
+
+  $ source ~/dev/wcls/devel/localProducts_larsoft_v06_42_00_e14_prof/setup
+  $ cd ~/dev/wcls/devel/build_u16.x86_64
+  $ mrbsetenv
+  $ mrb build
+#+END_EXAMPLE
+
+Success should greet you.
+
+* Speed up WCT rebuilding
+
+In the steps that build WCT into the =wirecell= UPS product above, the tip of the =master= branch is taken.  With that method you can edit-commit-push-build-test which is rather a slow loop.  Here describes how to have a tighter loop.
+
+The basic idea is to set up our own source area but use the environment and =wcb configure= command that =build_wirecell.sh= does.  Redo the above
+#+BEGIN_EXAMPLE
+  $ source /opt/fnal/products/setup
+  $ ./build_wirecell.sh ~/dev/wcls/products e14 prof
+#+END_EXAMPLE
+
+Check the output to capture the full hairy =wcb configure= line:
+
+#+BEGIN_EXAMPLE
+  env CC=gcc CXX=g++ FC=gfortran ./wcb configure --with-jsoncpp=/home/bviren/dev/wcls/products/jsoncpp/v1_7_7/Linux64bit+4.4-2.23-e14-prof --with-jsonnet=/home/bviren/dev/wcls/products/jsonnet/v0_9_3/Linux64bit+4.4-2.23-e14-prof --with-tbb=/home/bviren/dev/wcls/products/tbb/v2017_3c/Linux64bit+4.4-2.23-e14-prof --with-eigen=/home/bviren/dev/wcls/products/eigen/v3_3_3 --with-root=/home/bviren/dev/wcls/products/root/v6_08_06g/Linux64bit+4.4-2.23-e14-nu-prof --with-fftw=/home/bviren/dev/wcls/products/fftw/v3_3_6_pl2/Linux64bit+4.4-2.23-prof --with-fftw-include=/home/bviren/dev/wcls/products/fftw/v3_3_6_pl2/Linux64bit+4.4-2.23-prof/include --with-fftw-lib=/home/bviren/dev/wcls/products/fftw/v3_3_6_pl2/Linux64bit+4.4-2.23-prof/lib --boost-includes=/home/bviren/dev/wcls/products/boost/v1_63_0b/Linux64bit+4.4-2.23-e14-prof/include --boost-libs=/home/bviren/dev/wcls/products/boost/v1_63_0b/Linux64bit+4.4-2.23-e14-prof/lib --boost-mt --prefix=/home/bviren/dev/wcls/products/wirecell/v0_6_0dev/Linux64bit+4.4-2.23-e14-prof
+#+END_EXAMPLE
+
+Now find some new place to clone:
+
+#+BEGIN_EXAMPLE
+  $ cd ~/dev/wcls/build
+  $ git clone --recursive git@github.com:WireCell/wire-cell-build.git wct
+  $ cd wct
+#+END_EXAMPLE
+
+Now set up environment and copy-paste that big, hairy =wcb configure= script
+
+#+BEGIN_EXAMPLE
+  $ PRODUCTS=$HOME/dev/wcls/products:$PRODUCTS
+  $ setup wirecell v0_6_0dev -q +e14:+prof
+  $ env CC=gcc CXX=g++ FC=gfortran ./wcb configure ...
+  $ ./wcb build install
+#+END_EXAMPLE
+
+Now, you can return that last command whenever you want to "freshen" the "release" =wirecell v0_6_0dev=.
+
+* Running a job
+
+And example job:
+
+#+BEGIN_EXAMPLE
+  $ art -o sigproc.root \
+        -c uboone-filtered-sigproc.fcl  \
+        -s /opt/bviren/wcls/data/PhysicsRun-2016_4_16_16_4_43-0005937-00029_20160417T025948_ext_unbiased_20160417T043249_merged_20160428T225457_reco1_20160429T060831_reco2_20170622T153953_reco1_20170622T164220_reco2.root 
+
+#+END_EXAMPLE
+
+Finding that ROOT input file is left as an exercise to the reader.
