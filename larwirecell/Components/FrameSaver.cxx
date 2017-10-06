@@ -233,7 +233,7 @@ void FrameSaver::save_as_raw(art::Event & event)
 	    std::cerr << "FrameSaver: no traces for tag \"" << tag << "\"\n";
 	    continue;
 	}
-
+	std::cerr << "FrameSaver: got "<<traces.size()<<" traces for tag \"" << tag << "\"\n";
 	std::unique_ptr<std::vector<raw::RawDigit> > out(new std::vector<raw::RawDigit>);
 
 	// what about the frame's time() and ident()?
@@ -255,10 +255,11 @@ void FrameSaver::save_as_raw(art::Event & event)
 	    for (int ind=0; ind<nticks; ++ind) {
 		adcv[ind] = scale * charge[ind]; // scale + truncate/redigitize
 	    }
-	    std::unique_ptr<std::vector<raw::RawDigit> > out(new std::vector<raw::RawDigit>);
 	    out->emplace_back(raw::RawDigit(chid, nticks, adcv, raw::kNone));
 	    out->back().SetPedestal(pu(chid), m_pedestal_sigma);
 	}
+	std::cerr << "FrameSaver saving " << out->size()
+		  << " raw::RawDigits named \""<<tag<<"\"\n";
 	event.put(std::move(out), tag);
     }
 }
@@ -341,7 +342,8 @@ void FrameSaver::save_as_cooked(art::Event & event)
 
 	    outwires->emplace_back(recob::Wire(roi, chid, view));
 	}
-	std::cerr << "FrameSaver saving " << outwires->size() << " recob::Wires named \""<<tag<<"\"\n";
+	std::cerr << "FrameSaver saving " << outwires->size()
+		  << " recob::Wires named \""<<tag<<"\"\n";
 	event.put(std::move(outwires), tag);
     }
 }

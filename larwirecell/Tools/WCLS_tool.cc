@@ -151,7 +151,7 @@ wcls::WCLS::WCLS(wcls::WCLS::Parameters const& params)
         for (auto inputer : slist) {
             auto iaev = WireCell::Factory::find_tn<IArtEventVisitor>(inputer);
             m_inputers.push_back(iaev);
-            //std::cerr << "Inputer: \"" << inputer << "\"\n";
+            std::cerr << "Inputer: \"" << inputer << "\"\n";
         }
     }
     slist.clear();
@@ -159,7 +159,7 @@ wcls::WCLS::WCLS(wcls::WCLS::Parameters const& params)
         for (auto outputer : slist) {
             auto iaev = WireCell::Factory::find_tn<IArtEventVisitor>(outputer);
             m_outputers.push_back(iaev);
-            //std::cerr << "Outputer: \"" << outputer << "\"\n";
+            std::cerr << "Outputer: \"" << outputer << "\"\n";
         }
     }
     slist.clear();
@@ -170,18 +170,18 @@ void wcls::WCLS::process(art::Event& event)
 {
     m_em("WCLS start process");
     for (auto iaev : m_inputers) {
-        //std::cerr << "pre visit\n";
+        std::cerr << "pre visit\n";
         iaev->visit(event);
     }
     m_em("WCLS input complete");
 
-    //std::cerr << "Running Wire Cell Toolkit...\n";
+    std::cerr << "Running Wire Cell Toolkit...\n";
     m_wcmain();
-    //std::cerr << "... Wire Cell Toolkit done\n";
+    std::cerr << "... Wire Cell Toolkit done\n";
     m_em("WCLS main complete");
     
     for (auto iaev : m_outputers) {
-        //std::cerr << "post visit\n";
+        std::cerr << "post visit\n";
         iaev->visit(event);
     }
 
