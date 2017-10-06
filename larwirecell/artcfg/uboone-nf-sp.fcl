@@ -26,7 +26,7 @@ physics :{
 	    # Note: need to change uboone-nf-sp.jsonnet too
 	    inputers: ["wclsRawFrameSource"]
             # Two-faced output components.  Needs to also be mentioned in WCT config.
-            outputers: ["wclsCookedFrameSink"]
+            outputers: ["wclsFrameSaver:nfsaver", "wclsFrameSaver:spsaver"]
             # external parameters injected into the WCT configuration
             params: {
                detector: "uboone"

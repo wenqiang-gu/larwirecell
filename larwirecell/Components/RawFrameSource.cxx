@@ -13,7 +13,8 @@
 #include "WireCellIface/SimpleTrace.h"
 #include "WireCellUtil/NamedFactory.h"
 
-WIRECELL_FACTORY(wclsRawFrameSource, wcls::RawFrameSource, wcls::IArtEventVisitor, WireCell::IFrameSource)
+WIRECELL_FACTORY(wclsRawFrameSource, wcls::RawFrameSource,
+		 wcls::IArtEventVisitor, WireCell::IFrameSource)
 
 
 using namespace wcls;
@@ -52,10 +53,10 @@ void RawFrameSource::configure(const WireCell::Configuration& cfg)
         m_frame_tags.push_back(jtag.asString());
     }
     m_nticks = get(cfg, "nticks", m_nticks);
-    std::cerr << "RawFrameSource: source is \"" << m_source
-              << "\", tick is " << m_tick/WireCell::units::us << " us "
-	      << "nticks=" << m_nticks << std::endl;
-    std::cerr << cfg << std::endl;
+    // std::cerr << "RawFrameSource: source is \"" << m_source
+    //           << "\", tick is " << m_tick/WireCell::units::us << " us "
+    // 	      << "nticks=" << m_nticks << std::endl;
+    // std::cerr << cfg << std::endl;
 }
 
 
@@ -104,7 +105,7 @@ void RawFrameSource::visit(art::Event & event)
     //const double tick = detprop.SamplingRate(); // 0.5 * units::microsecond;
     const double tick = m_tick; // fixme: want to avoid depending on DetectorPropertiesService for now.
 
-    std::cerr << "RawFrameSource getting: RawDigits at: \"" << m_source << "\"\n";
+    //std::cerr << "RawFrameSource getting: RawDigits at: \"" << m_source << "\"\n";
     art::Handle< std::vector<raw::RawDigit> > rdvh;
     bool okay = event.getByLabel(m_source, rdvh);
     if (!okay || rdvh->size() == 0) {

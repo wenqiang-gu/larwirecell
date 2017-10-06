@@ -1,10 +1,8 @@
-// This is a main Wire Cell Toolkit configuration file.
+// This is an example main Wire Cell Toolkit configuration file.
 //
-// It configures WCT to run inside LArSoft in order to run MicroBooNE
-// noise filtering (NF) and signal processing (SP).
+// NOTE: for production running, you don't want this file but rather a
+// compiled compressed JSON file.  
 
-// Most of the configuration is provided as part of WCT as located by
-// directories in a WIRECELL_PATH environment variable.
 
 local wc = import "wirecell.jsonnet";
 local params = import "params/chooser.jsonnet";
@@ -41,22 +39,51 @@ local source = {
 	nticks: params.sigproc.frequency_bins,
     },
 };
-local sink = {
-    type: "wclsCookedFrameSink",
+
+// Note, don't forget to mention the wclsFrameSaver:nfsaver in the
+// "outputers" list in the FHiCL file.
+local nf_saver = {
+    type: "wclsFrameSaver",
+    name: "nfsaver",
     data: {
 	anode: wc.tn(guts.anode),
-        frame_tags: ["gauss", "wiener"],
+	digitize: true,
+	//pedestal_mean: "fiction",
+	pedestal_mean: 0.0,
+	pedestal_sigma: 1.75,
+        frame_tags: ["raw"],
 	nticks: params.detector.nticks,
+	chanmaskmaps: ["bad"],
     }
 };
 
+// Note, don't forget to mention the wclsFrameSaver:spsaver in the
+// "outputers" list in the FHiCL file.
+local wcls_charge_scale = 200.0;
+local sp_saver = {
+    type: "wclsFrameSaver",
+    name: "spsaver",
+    data: {
+	anode: wc.tn(guts.anode),
+	digitize: false,
+	sparse: true,
+        frame_tags: ["gauss", "wiener"],
+	frame_scale: wcls_charge_scale,
+	nticks: params.detector.nticks,
+	summary_tags: ["threshold"], 
+	summary_scale: wcls_charge_scale,
+    }
+};
+
+local filter_components = guts.noise_frame_filters + [nf_saver] + guts.sigproc_frame_filters + [sp_saver];
 
 
 // now the main config sequence
 
 [
     source,
-    sink,
+    nf_saver,
+    sp_saver,
 
 ] + guts.config_sequence + [
 
@@ -64,9 +91,8 @@ local sink = {
         type: "Omnibus",
         data: {
             source: wc.tn(source),
-            sink: wc.tn(sink),
-            filters: std.map(wc.tn, guts.frame_filters)
-
+            //sink: wc.tn(sink),
+            filters: std.map(wc.tn, filter_components),
         }
     },
     
