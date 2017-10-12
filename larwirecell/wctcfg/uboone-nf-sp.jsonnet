@@ -59,7 +59,7 @@ local nf_saver = {
 
 // Note, don't forget to mention the wclsFrameSaver:spsaver in the
 // "outputers" list in the FHiCL file.
-local wcls_charge_scale = 200.0;
+local wcls_charge_scale = 1.0;	// hanlde this scaling in the butcher
 local sp_saver = {
     type: "wclsFrameSaver",
     name: "spsaver",

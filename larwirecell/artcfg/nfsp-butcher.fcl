@@ -1,0 +1,38 @@
+process_name: Butcher
+physics :{
+   producers: {
+      butcher : {
+         module_type : "EventButcher"
+
+	 // took about two hours to figure out the syntax for these
+	 // tags.  Answer seems to only exist in the PDF manual
+
+	 inRawTag: "nfsp:raw:"
+	 inSigTag: "nfsp:gauss:"
+	 ndrop: 1600
+	 nkeep: 6400
+	 sigscale: 0.005
+      }
+   }
+   
+   p1        : [ butcher ]
+   outputFiles : [ out ]
+
+   trigger_paths : [ p1 ]
+   end_paths: [ outputFiles ]
+}
+outputs: {
+  out: {
+   module_type: RootOutput
+   fileName: "output.root"
+      // DataType_ModuleLabel_InstanceName_ProcessName
+      outputCommands :   [
+	 "keep *_*_*_*",
+         "drop *_nfsp_raw_*",
+         "drop *_nfsp_wiener_*",
+         "drop *_nfsp_gauss_*",
+         "drop *_wcNoiseFilter_*_*",
+         "drop *_daq_*_*"
+      ]
+  }
+}
