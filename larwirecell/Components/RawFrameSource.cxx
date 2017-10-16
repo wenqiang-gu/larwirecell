@@ -129,7 +129,7 @@ void RawFrameSource::visit(art::Event & event)
     const double time = tdiff(event.getRun().beginTime(), event.time());
     auto sframe = new WireCell::SimpleFrame(event.event(), time, traces, tick);
     for (auto tag : m_frame_tags) {
-        std::cerr << "\ttagged: " << tag << std::endl;
+        //std::cerr << "\ttagged: " << tag << std::endl;
         sframe->tag_frame(tag);
     }
     m_frame = WireCell::IFrame::pointer(sframe);

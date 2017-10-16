@@ -100,10 +100,8 @@ void FrameSaver::configure(const WireCell::Configuration& cfg)
 	auto jscale = cfg["frame_scale"];
 	m_frame_tags.clear();
 	auto jtags = cfg["frame_tags"];
-	std::cerr << "FrameSaver: saving " << jtags.size() << " frames\n";
 	for (auto jtag : jtags) {
 	    std::string tag = jtag.asString();
-	    std::cerr << "\tsaving:" << tag << "\n";
 
 	    // get any waveform scaling for this frame
 	    const int ind = m_frame_tags.size();
@@ -129,7 +127,6 @@ void FrameSaver::configure(const WireCell::Configuration& cfg)
 	auto jscale = cfg["summary_scale"];
 	m_summary_tags.clear();
 	auto jtags = cfg["summary_tags"];
-	std::cerr << "FrameSaver: saving " << jtags.size() << " summaries\n";
 	for (auto jtag : jtags) {
 	    std::string tag = jtag.asString();
 
@@ -233,7 +230,7 @@ void FrameSaver::save_as_raw(art::Event & event)
 	    std::cerr << "FrameSaver: no traces for tag \"" << tag << "\"\n";
 	    continue;
 	}
-	std::cerr << "FrameSaver: got "<<traces.size()<<" traces for tag \"" << tag << "\"\n";
+	//std::cerr << "FrameSaver: got "<<traces.size()<<" traces for tag \"" << tag << "\"\n";
 	std::unique_ptr<std::vector<raw::RawDigit> > out(new std::vector<raw::RawDigit>);
 
 	// what about the frame's time() and ident()?
@@ -258,8 +255,6 @@ void FrameSaver::save_as_raw(art::Event & event)
 	    out->emplace_back(raw::RawDigit(chid, nticks, adcv, raw::kNone));
 	    out->back().SetPedestal(pu(chid), m_pedestal_sigma);
 	}
-	std::cerr << "FrameSaver saving " << out->size()
-		  << " raw::RawDigits named \""<<tag<<"\"\n";
 	event.put(std::move(out), tag);
     }
 }
@@ -342,8 +337,6 @@ void FrameSaver::save_as_cooked(art::Event & event)
 
 	    outwires->emplace_back(recob::Wire(roi, chid, view));
 	}
-	std::cerr << "FrameSaver saving " << outwires->size()
-		  << " recob::Wires named \""<<tag<<"\"\n";
 	event.put(std::move(outwires), tag);
     }
 }
