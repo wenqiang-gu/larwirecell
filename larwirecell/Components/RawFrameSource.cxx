@@ -72,27 +72,28 @@ double tdiff(const art::Timestamp& ts1, const art::Timestamp& ts2)
 
 
 static
-SimpleTrace* make_trace(const raw::RawDigit& rd, unsigned int nticks)
+SimpleTrace* make_trace(const raw::RawDigit& rd, unsigned int nticks_want)
 {
     const int chid = rd.Channel();
     const int tbin = 0;
     const raw::RawDigit::ADCvector_t& adcv = rd.ADCs();
 
     short baseline = 0;
-    size_t npad=0, nsamples = adcv.size();
-    if (nticks) {		// enforce a waveform size
-	if (nticks > nsamples) { // need to pad
-	    baseline = Waveform::most_frequent(adcv);
-	    npad = nticks - nsamples;
-	}
-	nsamples = nticks;
+    unsigned int nadcs = adcv.size();
+    int npad = nticks_want - nadcs;
+    if (npad > 0) {		// need to pad
+	baseline = Waveform::most_frequent(adcv);
+    }
+    else {			// either exact or need to truncate
+	npad = 0;
+	nadcs = std::min(nadcs, nticks_want);
     }
 
-    auto strace = new SimpleTrace(chid, tbin, nsamples);
-    for (size_t itick=0; itick < nsamples; ++ itick) {
+    auto strace = new SimpleTrace(chid, tbin, nticks_want);
+    for (unsigned int itick=0; itick < nadcs; ++ itick) {
 	strace->charge()[itick] = adcv[itick];
     }
-    for (size_t itick = nsamples; itick < nsamples + npad; ++itick) {
+    for (unsigned int itick = nadcs; itick < nticks_want; ++itick) {
 	strace->charge()[itick] = baseline;
     }
     return strace;
