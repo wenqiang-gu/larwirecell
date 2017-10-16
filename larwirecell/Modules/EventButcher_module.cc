@@ -1,10 +1,7 @@
 #include "art/Framework/Core/ModuleMacros.h" 
 #include "art/Framework/Core/EDProducer.h"
 
-// this is apparently deprecated in the future, at least as of larsoft 6.52
-#include "lardata/Utilities/PtrMaker.h"
-// it needs to change to:
-//#include "art/Persistency/Common/PtrMaker.h"
+#include "art/Persistency/Common/PtrMaker.h"
 
 #include "lardataobj/RecoBase/Wire.h"
 #include "lardataobj/RawData/RawDigit.h"
@@ -109,8 +106,8 @@ void butcher::EventButcher::produce(art::Event & event)
     const size_t nsig = sig->size();
 
     // https://cdcvs.fnal.gov/redmine/projects/art/wiki/The_PtrMaker_utility
-    lar::PtrMaker<raw::RawDigit> RawPtr(event, *this, m_cfg.outRawTag());
-    lar::PtrMaker<recob::Wire> SigPtr(event, *this, m_cfg.outSigTag());
+    art::PtrMaker<raw::RawDigit> RawPtr(event, *this, m_cfg.outRawTag());
+    art::PtrMaker<recob::Wire> SigPtr(event, *this, m_cfg.outSigTag());
 
     // keep track of raw digit Ptr by its channel id, for later look
     // up in making associations.
