@@ -169,9 +169,11 @@ void FrameSaver::produces(art::EDProducer* prod)
 	prod->produces< std::vector<double> >(tag);
     }
     for (auto cmm : m_cmms) {
+	const std::string cmm_name = cmm.asString();
 	std::cerr << "FrameSaver: promising to produce channel masks named \"" 
-		  << cmm << "\"\n";
-	prod->produces< std::vector<int> >(cmm.asString());
+		  << cmm_name << "\"\n";
+	prod->produces< channel_list > (cmm_name + "channels");
+	prod->produces< channel_masks > (cmm_name + "masks");
     }
 }
 
@@ -376,14 +378,21 @@ void FrameSaver::save_cmms(art::Event & event)
 	    std::cerr << "FrameSaver: failed to find requested channel masks \"" << name << "\"\n";
 	    continue;
 	}
-	std::unique_ptr<std::vector<int> > out(new std::vector<int>);
-	for (auto cmit : it->second) {
-	    out->push_back(cmit.first);
+	std::unique_ptr< channel_list > out_list(new channel_list);
+	std::unique_ptr< channel_masks > out_masks(new channel_masks);
+	for (auto cmit : it->second) { // int->vec<pair<int,int>>
+	    out_list->push_back(cmit.first);
+	    for (auto be : cmit.second) {
+		out_masks->push_back(cmit.first);
+		out_masks->push_back(be.first);
+		out_masks->push_back(be.second);
+	    }
 	}
-	if (out->empty()) {
+	if (out_list->empty()) {
 	    std::cerr << "FrameSaver: found empty channel masks for \"" << name << "\"\n";
 	}
-	event.put(std::move(out), name);
+	event.put(std::move(out_list), name + "channels");
+	event.put(std::move(out_masks), name + "masks");
     }
     
 }
