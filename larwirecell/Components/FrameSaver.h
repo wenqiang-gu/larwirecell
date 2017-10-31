@@ -21,6 +21,7 @@ It can be configured to scale waveform or summary values by some constant.
 
 #include <string>
 #include <vector>
+#include <map>
 
 namespace wcls {
     class FrameSaver : public IArtEventVisitor, 
@@ -41,6 +42,28 @@ namespace wcls {
         /// IConfigurable
         virtual WireCell::Configuration default_configuration() const;
         virtual void configure(const WireCell::Configuration& config);
+
+	/// A WCT frame includes the concept of a "channel mask map"
+	/// which is a named association between a set of channels and
+	/// a number of bin ranges (the masks) for each channel.  The
+	/// name is meant to connote some semantic meaning to the
+	/// masks (eg, "bad" or "noisy").  The bin ranges are
+	/// expressed as a begin and end index into the associated
+	/// channel waveform (aka the "trace"). The end index is one
+	/// past the intended coverage in the usual C++ iterator
+	/// convention.  This information is stored in two
+	/// vecotor<int> data products which are given instance names
+	/// based on the channel mask map name.  The first vector<int>
+	/// named "<name>channels" holds a simple list of channel
+	/// numbers which have at least one mask.  The second
+	/// vector<int> named "<name>masks" is a flattened 3xN array
+	/// of entries like: [(channel, begin, end), ...].  This
+	/// contrivied storage format is to avoid creating an data
+	/// product class.  Both are produced so that the job may be
+	/// configured to drop one or both.
+	typedef std::vector<int> channel_list;
+	typedef std::vector<int> channel_masks;
+	
 
     private:
         WireCell::IFrame::pointer m_frame;
