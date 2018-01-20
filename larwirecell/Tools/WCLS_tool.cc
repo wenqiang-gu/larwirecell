@@ -112,7 +112,7 @@ wcls::WCLS::WCLS(wcls::WCLS::Parameters const& params)
 
     // optional
 
-    WCLSConfig::optional_string_list_t::rtype slist;
+    WCLSConfig::optional_string_list_t::value_type slist;
     if (wclscfg.paths(slist)) {
         for (auto path : slist) {
             m_wcmain.add_path(path);
