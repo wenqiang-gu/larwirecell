@@ -2,11 +2,24 @@ process_name: bogoplop
 physics :{
    producers: {
       plopper : {
-         module_type : "BlipMaker"
+         module_type : BlipMaker
+      }
+      simmer : {
+         module_type : WireCellToolkit
+         wcls_main: {
+            tool_type: WCLS
+            apps: ["Pgrapher"]
+            plugins: ["WireCellPgraph", "WireCellGen","WireCellLarsoft"]
+            configs: ["bogoflop.jsonnet"]
+            inputers: ["wclsSimDepoSource"]
+            outputers: []
+            params: {
+               detector: "uboone"
+            }
+        }
       }
    }
-   
-   p1        : [ plopper ]
+   p1        : [ plopper, simmer ]
    outputFiles : [ out ]
 
    trigger_paths : [ p1 ]
@@ -16,14 +29,5 @@ outputs: {
   out: {
    module_type: RootOutput
    fileName: "output.root"
-      // DataType_ModuleLabel_InstanceName_ProcessName
-      outputCommands :   [
-	 "keep *_*_*_*",
-         "drop *_nfsp_raw_*",
-         "drop *_nfsp_wiener_*",
-         "drop *_nfsp_gauss_*",
-         "drop *_wcNoiseFilter_*_*",
-         "drop *_daq_*_*"
-      ]
   }
 }

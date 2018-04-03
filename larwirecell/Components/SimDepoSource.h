@@ -5,11 +5,16 @@
 
 #include "larwirecell/Interfaces/IArtEventVisitor.h"
 #include "WireCellIface/IDepoSource.h"
+#include "WireCellIface/IConfigurable.h"
+#include "WireCellIface/IDepo.h"
+
+#include <deque>
 
 namespace wcls {
 
-    class SimDepoSource :  public IArtEventVisitor, // likely needs to be a configurable too.
-                           public WireCell::IDepoSource { 
+    class SimDepoSource :  public IArtEventVisitor,
+                           public WireCell::IDepoSource,
+                           public WireCell::IConfigurable {
     public:
         SimDepoSource();
         virtual ~SimDepoSource();
@@ -20,9 +25,12 @@ namespace wcls {
         /// IDepoSource
         virtual bool operator()(WireCell::IDepo::pointer& out);
 
-    private:
-        art::Event* m_event;    // fixme: may not be best to hang on to this
+        /// IConfigurable
+        virtual WireCell::Configuration default_configuration() const;
+        virtual void configure(const WireCell::Configuration& config);
 
+    private:
+        std::deque<WireCell::IDepo::pointer> m_depos;
     };
 }
 #endif

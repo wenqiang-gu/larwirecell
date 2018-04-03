@@ -22,17 +22,13 @@ namespace bogoblip {
     };
 }
 
-namespace bogoblip {
-    DEFINE_ART_MODULE(BlipMaker)
-}
-
 #include <string>
-const std::string tag = "bogus"; // fixme: make configurable
+const std::string label = "bogus"; // fixme: make configurable
 
 bogoblip::BlipMaker::BlipMaker(Parameters const& params)
     : m_cfg(params())
 {
-    produces< std::vector<sim::SimEnergyDeposit> >(tag);
+    produces< std::vector<sim::SimEnergyDeposit> >(label);
 }
 bogoblip::BlipMaker::~BlipMaker()
 {
@@ -72,6 +68,14 @@ void bogoblip::BlipMaker::produce(art::Event & event)
         last = next;
     }
 
-    event.put(std::move(out), tag);
+    std::cerr << "BlipMaker making " << out->size() << " depos to label: " << label << std::endl;
+
+
+    event.put(std::move(out), label);
+}
+
+
+namespace bogoblip {
+    DEFINE_ART_MODULE(BlipMaker)
 }
 
