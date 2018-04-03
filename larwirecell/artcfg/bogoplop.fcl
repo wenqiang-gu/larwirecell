@@ -1,0 +1,29 @@
+process_name: bogoplop
+physics :{
+   producers: {
+      plopper : {
+         module_type : "BlipMaker"
+      }
+   }
+   
+   p1        : [ plopper ]
+   outputFiles : [ out ]
+
+   trigger_paths : [ p1 ]
+   end_paths: [ outputFiles ]
+}
+outputs: {
+  out: {
+   module_type: RootOutput
+   fileName: "output.root"
+      // DataType_ModuleLabel_InstanceName_ProcessName
+      outputCommands :   [
+	 "keep *_*_*_*",
+         "drop *_nfsp_raw_*",
+         "drop *_nfsp_wiener_*",
+         "drop *_nfsp_gauss_*",
+         "drop *_wcNoiseFilter_*_*",
+         "drop *_daq_*_*"
+      ]
+  }
+}
