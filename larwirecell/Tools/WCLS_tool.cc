@@ -83,7 +83,8 @@ namespace wcls {
     private:
         WireCell::Main m_wcmain;
         wcls::IArtEventVisitor::vector m_inputers, m_outputers;
-        art::EDProducer* m_prod;
+        // for c2: m_prod is not used
+        // art::EDProducer* m_prod;
     };
 }
 
