@@ -403,6 +403,7 @@ void FrameSaver::visit(art::Event & event)
         std::cerr << "FrameSaver: I have no frame to save to art::Event\n";
         return;
     }
+    std::cerr << "FrameSaver: saving frame to art::Event\n";
 
     if (m_digitize) {
 	save_as_raw(event);
@@ -422,7 +423,19 @@ bool FrameSaver::operator()(const WireCell::IFrame::pointer& inframe,
 				  WireCell::IFrame::pointer& outframe)
 {
     // set an IFrame based on last visited event.
-    m_frame = outframe = inframe;
+    outframe = inframe;
+    if (inframe) {
+        if (m_frame) {
+            std::cerr << "FrameSaver: warning: dropping prior frame.  Fixme to handle queue of frames.\n";
+        }
+        else {
+            std::cerr << "FrameSaver got frame\n";
+        }
+        m_frame=inframe;
+    }
+    else {
+        std::cerr << "FrameSaver sees EOS\n";
+    }
     return true;
 }
 

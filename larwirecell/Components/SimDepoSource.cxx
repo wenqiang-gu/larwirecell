@@ -15,6 +15,7 @@ WIRECELL_FACTORY(wclsSimDepoSource, wcls::SimDepoSource, wcls::IArtEventVisitor,
 using namespace wcls;
 
 SimDepoSource::SimDepoSource()
+    : m_eos(false)
 {
 }
 
@@ -31,22 +32,29 @@ void SimDepoSource::configure(const WireCell::Configuration& cfg)
 {
 }
 
-const std::string label = "bogus"; // fixme:make configurable
+const std::string label = "bogus";      // fixme:make configurable
+const std::string instance = "plopper"; // fixme:make configurable
 void SimDepoSource::visit(art::Event & event)
 {
     art::Handle< std::vector<sim::SimEnergyDeposit> > sedvh;
-
-    bool okay = event.getByLabel(label, sedvh);
-    std::cerr << "SimDepoSource got " << sedvh->size() << " depos from " << label << " bool return: " << okay << std::endl;
-
+    
+    bool okay = event.getByLabel(instance, label, sedvh);
     if (!okay || sedvh->empty()) {
         std::string msg = "SimDepoSource failed to get sim::SimEnergyDeposit from label: " + label;
         std::cerr << msg << std::endl;
         THROW(WireCell::RuntimeError() << WireCell::errmsg{msg});
     }
-
+    
     const size_t ndepos = sedvh->size();
-    std::cerr << "SimDepoSource got " << ndepos << " depos\n";
+    
+    if (ndepos) {
+        m_eos = false;
+    }
+
+    std::cerr << "SimDepoSource got " << ndepos
+              << " depos from " << label
+              << " bool return: " << okay << std::endl;
+    
     for (size_t ind=0; ind<ndepos; ++ind) {
         auto const& sed = sedvh->at(ind);
         auto pt = sed.MidPoint();
@@ -61,13 +69,18 @@ void SimDepoSource::visit(art::Event & event)
         m_depos.push_back(depo);
     }
     std::sort(m_depos.begin(), m_depos.end(), WireCell::ascending_time);
+                                                                        
 }
 
 bool SimDepoSource::operator()(WireCell::IDepo::pointer& out)
 {
     out = nullptr;
     if (m_depos.empty()) {
-        return false;
+        if (m_eos) {
+            return false;
+        }
+        m_eos = true;
+        return true;
     }
 
     out = m_depos.front();

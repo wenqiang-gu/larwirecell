@@ -1,0 +1,33 @@
+process_name: bogoplopsim
+physics :{
+   producers: {
+      plopper : {
+         module_type : BlipMaker
+      }
+      simmer : {
+         module_type : WireCellToolkit
+         wcls_main: {
+            tool_type: WCLS
+            apps: ["Pgrapher"]
+            plugins: ["WireCellPgraph", "WireCellGen","WireCellLarsoft"]
+            configs: ["bogosim.jsonnet"]
+            inputers: ["wclsSimDepoSource"]
+            outputers: ["wclsFrameSaver"]
+            params: {
+               detector: "uboone"
+            }
+         }
+      }
+   }
+   p1        : [ plopper, simmer ]
+   outputFiles : [ out ]
+   
+   trigger_paths : [ p1 ]
+   end_paths: [ outputFiles ]
+}
+outputs: {
+   out: {
+      module_type: RootOutput
+      fileName: "output.root"
+   }
+}

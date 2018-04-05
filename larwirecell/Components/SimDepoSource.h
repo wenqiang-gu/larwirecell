@@ -31,6 +31,7 @@ namespace wcls {
 
     private:
         std::deque<WireCell::IDepo::pointer> m_depos;
+        bool m_eos;
     };
 }
 #endif
