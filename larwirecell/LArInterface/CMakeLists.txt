@@ -18,6 +18,7 @@ art_make(
           MODULE_LIBRARIES
 			lardata_Utilities
 			lardataobj_RawData
+                        larcorealg_Geometry
 			larevt_CalibrationDBI_IOVData
 			larevt_CalibrationDBI_Providers
           		${ART_FRAMEWORK_CORE}
