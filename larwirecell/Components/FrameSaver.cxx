@@ -222,18 +222,27 @@ void FrameSaver::save_as_raw(art::Event & event)
 {
     PU pu(m_pedestal_mean);
 
-    const int nframes = m_frame_tags.size();
-    for (int ind=0; ind<nframes; ++ind) {
+    const int ntags = m_frame_tags.size();
+    for (int ind=0; ind<ntags; ++ind) {
 	auto tag = m_frame_tags[ind];
-	double scale = m_frame_scale[ind];
+
+        if (!m_frame) { // is there someway to avoid this empty collection
+                        // without annoying produces()?
+            std::unique_ptr<std::vector<raw::RawDigit> > out(new std::vector<raw::RawDigit>);
+            event.put(std::move(out), tag);
+            continue;
+        }
 
 	auto traces = tagged_traces(m_frame, tag);
 	if (traces.empty()) {
 	    std::cerr << "FrameSaver: no traces for tag \"" << tag << "\"\n";
 	    continue;
 	}
+
 	//std::cerr << "FrameSaver: got "<<traces.size()<<" traces for tag \"" << tag << "\"\n";
 	std::unique_ptr<std::vector<raw::RawDigit> > out(new std::vector<raw::RawDigit>);
+
+	double scale = m_frame_scale[ind];
 
 	// what about the frame's time() and ident()?
 	for (const auto& trace : traces) {
@@ -264,10 +273,17 @@ void FrameSaver::save_as_raw(art::Event & event)
 
 void FrameSaver::save_as_cooked(art::Event & event)
 {
-    const int nframes = m_frame_tags.size();
-    for (int ind=0; ind<nframes; ++ind) {
+    const int ntags = m_frame_tags.size();
+    for (int ind=0; ind<ntags; ++ind) {
 	auto tag = m_frame_tags[ind];
-	double scale = m_frame_scale[ind];
+
+        if (!m_frame) { // is there someway to avoid this empty collection
+                        // without annoying produces()?
+            std::unique_ptr<std::vector<recob::Wire> > outwires(new std::vector<recob::Wire>);
+            event.put(std::move(outwires), tag);
+            continue;
+        }
+        
 
 	auto traces = tagged_traces(m_frame, tag);
 	if (traces.empty()) {
@@ -275,6 +291,7 @@ void FrameSaver::save_as_cooked(art::Event & event)
 	    continue;
 	}
 
+	double scale = m_frame_scale[ind];
 	std::unique_ptr<std::vector<recob::Wire> > outwires(new std::vector<recob::Wire>);
 
 	// what about the frame's time() and ident()?
@@ -345,34 +362,43 @@ void FrameSaver::save_as_cooked(art::Event & event)
 
 void FrameSaver::save_summaries(art::Event & event)
 {
-    const int nframes = m_summary_tags.size();
-    for (int ind=0; ind<nframes; ++ind) {
+    const int ntags = m_summary_tags.size();
+    for (int ind=0; ind<ntags; ++ind) {
 	auto tag = m_summary_tags[ind];
-        const auto& summary = m_frame->trace_summary(tag);
-	if (summary.empty()) {
-	    std::cerr << "FrameSaver: no summary for tag \"" << tag << "\"\n";
-	    continue;
-	}
-	const double scale = m_summary_scale[ind];
+        std::unique_ptr<std::vector<double> > outsum(new std::vector<double>);
 
-	std::unique_ptr<std::vector<double> > outsum(new std::vector<double>);
-	for (auto val : summary) {
-	    outsum->push_back(scale * val);
-	}
+        if (m_frame) {
+            const auto& summary = m_frame->trace_summary(tag);
+            if (summary.empty()) {
+                std::cerr << "FrameSaver: no summary for tag \"" << tag << "\"\n";
+                continue;
+            }
+            const double scale = m_summary_scale[ind];
+
+            for (auto val : summary) {
+                outsum->push_back(scale * val);
+            }
+        }
 	event.put(std::move(outsum), tag);
     }
 }
 
 void FrameSaver::save_cmms(art::Event & event)
 {
-    if (m_cmms.isNull()) { return; }
+    if (m_cmms.isNull()) {
+        return;
+    }
     if (!m_cmms.isArray()) {
 	std::cerr << "FrameSaver: wrong type for configuration array of channel mask maps to save\n";
 	return;
     }
+    if (!m_frame) {
+        return;
+    }
     auto cmm = m_frame->masks();
     for (auto jcmm : m_cmms) {
 	std::string name = jcmm.asString();
+
 	auto it = cmm.find(name);
 	if (it == cmm.end()) {
 	    std::cerr << "FrameSaver: failed to find requested channel masks \"" << name << "\"\n";
@@ -394,16 +420,16 @@ void FrameSaver::save_cmms(art::Event & event)
 	event.put(std::move(out_list), name + "channels");
 	event.put(std::move(out_masks), name + "masks");
     }
-    
 }
 
 void FrameSaver::visit(art::Event & event)
 {
-    if (!m_frame) {
-        std::cerr << "FrameSaver: I have no frame to save to art::Event\n";
-        return;
+    if (m_frame) {
+        std::cerr << "FrameSaver: saving frame to art::Event\n";
     }
-    std::cerr << "FrameSaver: saving frame to art::Event\n";
+    else {
+        std::cerr << "FrameSaver: I have no frame to save to art::Event\n";
+    }
 
     if (m_digitize) {
 	save_as_raw(event);

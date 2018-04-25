@@ -47,19 +47,20 @@ void bogoblip::BlipMaker::produce(art::Event & event)
     const int trackid = 0;
 
     
-
+    // implicit units are cm, ns and MeV.
     const sim::SimEnergyDeposit::Point_t start = {100.,0.,0.};
     const sim::SimEnergyDeposit::Point_t end = {110.,0.,100.};
-    auto vdiff = end-start;
-    auto vlen = sqrt(vdiff.Mag2());
-    auto vdir = vdiff.unit();
+    const auto vdiff = end-start;
+    const auto vlen = sqrt(vdiff.Mag2());
+    const auto vdir = vdiff.unit();
 
     const double stepsize = 0.1; // cm
     const int nsteps = vlen/stepsize;
 
     sim::SimEnergyDeposit::Point_t last = start;
     for (int istep=1; istep<nsteps; ++istep) {
-        const sim::SimEnergyDeposit::Point_t next(stepsize*istep*vdir);
+        const sim::SimEnergyDeposit::Point_t next(start + stepsize*istep*vdir);
+        //std::cerr << last << " -> " << next << "\n";
         out->emplace_back(sim::SimEnergyDeposit(nphotons,
                                                 stepsize * nelepercm,
                                                 stepsize * mevpercm,

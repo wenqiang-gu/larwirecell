@@ -15,6 +15,8 @@ local wc = import "wirecell.jsonnet";
 local v = import "vector.jsonnet";
 
 local base_params = {
+    local par = self,           // make available to inner data structures
+
     lar : {
         DL :  7.2 * wc.cm2/wc.s,
         DT : 12.0 * wc.cm2/wc.s,
@@ -32,9 +34,9 @@ local base_params = {
         // Default here is that the extent is centered on the origin
         // of the wire coordinate system.
         center: [0,0,0],
-        drift_time: self.extent[0]/self.lar.drift_speed,
-        drift_volume: v.vmult(self.extent),
-        drift_mass: self.lar.density * self.drift_volume,
+        drift_time: self.extent[0]/par.lar.drift_speed,
+        drift_volume: self.extent[0]*self.extent[1]*self.extent[2],
+        drift_mass: par.lar.density * self.drift_volume,
     },
     daq : {
         readout_time: 5*wc.ms,
@@ -60,7 +62,14 @@ local base_params = {
     sim : {
         fluctuate: true,
         digitize: true,
-        noise: true,
+        noise: false,
+
+        // continuous makes the WCT sim act like the streaming
+        // detector+daq.  This means producing readout even if there
+        // may be no depos.  If true then readout is based on chunking
+        // up depos in time and there may be periods of time that do
+        // not have any readouts.
+        continuous: false,
     },
     files : {                   // each detector MUST fill these in.
         wires: null,
@@ -74,8 +83,14 @@ local uboone_params = base_params {
         drift_speed : 1.114*wc.mm/wc.us, // at microboone voltage
     },
     detector : super.detector {
+        // these two vectors define the origin of a Cartesian
+        // coordinate system.  First sets the size of a box which is
+        // the sensitive volume:
         extent: [2.5604*wc.m,2.325*wc.m,10.368*wc.m],
-        // Wires have a detector edge at X=0, Z=0, centered in Y.
+        // Next says where the center of that box is expressed
+        // relative to whatever the origin is.  For MB we want this
+        // box placed so that it has one plane at X=0 and another a
+        // Z=0 and then centered on Y=0.
         center: [0.5*self.extent[0], 0.0, 0.5*self.extent[2]],
     },
     elec : super.elec {
@@ -259,7 +274,7 @@ local sink = { type: "DumpFrames" };
 
 
 
-local graph = [
+local graph_noise = [
     {
         tail: { node: wc.tn(source) },
         head: { node: wc.tn(drifter) },
@@ -290,8 +305,30 @@ local graph = [
     },
 ];
 
+local graph_quiet = [
+    {
+        tail: { node: wc.tn(source) },
+        head: { node: wc.tn(drifter) },
+    },
+    {
+        tail: { node: wc.tn(drifter) },
+        head: { node: wc.tn(ductor) },
+    },
+    {
+        tail: { node: wc.tn(ductor) },
+        head: { node: wc.tn(digitizer) },
+    },
+    {
+        tail: { node: wc.tn(digitizer) },
+        head: { node: wc.tn(saver) },
+    },
+    {
+        tail: { node: wc.tn(saver) },
+        head: { node: wc.tn(sink) },
+    },
+];
 
-
+local graph = if params.sim.noise then graph_noise else graph_quiet;
 
 local app = {
     type: "Pgrapher",
