@@ -159,12 +159,12 @@ void SimDepoSource::visit(art::Event & event)
     const size_t ndepos = sedvh->size();
     
     std::cerr << "SimDepoSource got " << ndepos
-              << " depos from " << label
-              << " bool return: " << okay << std::endl;
+              << " depos from label \"" << label
+              << "\" returns: " << okay << std::endl;
     
     if (!m_depos.empty()) {
         std::cerr << "SimDepoSource dropping " << m_depos.size()
-                  << " unused depos\n";
+                  << " unused, prior depos\n";
         m_depos.clear();
     }
 
@@ -197,9 +197,9 @@ bool SimDepoSource::operator()(WireCell::IDepo::pointer& out)
     out = m_depos.front();
     m_depos.pop_front();
 
-    if (!out) {
-        std::cerr << "SimDepoSource: reached EOS\n";
-    }
+    // if (!out) {
+    //     std::cerr << "SimDepoSource: reached EOS\n";
+    // }
     // else {
     //     std::cerr << "SimDepoSource: t=" << out->time()/units::us << "us,"
     //               << " r=" << out->pos()/units::cm << "cm, " << " q=" << out->charge() << "\n";

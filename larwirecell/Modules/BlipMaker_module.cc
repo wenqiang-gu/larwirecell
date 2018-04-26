@@ -19,6 +19,7 @@ namespace bogoblip {
     private:
 
 	const BlipMakerConfig m_cfg;
+        int m_count;
     };
 }
 
@@ -27,6 +28,7 @@ const std::string label = "bogus"; // fixme: make configurable
 
 bogoblip::BlipMaker::BlipMaker(Parameters const& params)
     : m_cfg(params())
+    , m_count(0)
 {
     produces< std::vector<sim::SimEnergyDeposit> >(label);
 }
@@ -35,6 +37,8 @@ bogoblip::BlipMaker::~BlipMaker()
 }
 void bogoblip::BlipMaker::produce(art::Event & event)
 {
+    ++m_count;
+    const double jump = m_count*1e9; // each call jump forward in time.
 
     auto out = std::make_unique< std::vector<sim::SimEnergyDeposit> >();
     
@@ -49,7 +53,7 @@ void bogoblip::BlipMaker::produce(art::Event & event)
     
     // implicit units are cm, ns and MeV.
     const sim::SimEnergyDeposit::Point_t start = {100.,0.,0.};
-    const sim::SimEnergyDeposit::Point_t end = {110.,0.,100.};
+    const sim::SimEnergyDeposit::Point_t end = {150.,10.,50.};
     const auto vdiff = end-start;
     const auto vlen = sqrt(vdiff.Mag2());
     const auto vdir = vdiff.unit();
@@ -65,7 +69,8 @@ void bogoblip::BlipMaker::produce(art::Event & event)
                                                 stepsize * nelepercm,
                                                 stepsize * mevpercm,
                                                 last, next,
-                                                t0, t1, trackid));
+                                                jump + t0,
+                                                jump + t1, trackid));
         last = next;
     }
 

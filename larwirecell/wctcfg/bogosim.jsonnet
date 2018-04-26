@@ -62,7 +62,7 @@ local base_params = {
     sim : {
         fluctuate: true,
         digitize: true,
-        noise: true,
+        noise: false,
 
         // continuous makes the WCT sim act like the streaming
         // detector+daq.  This means producing readout even if there

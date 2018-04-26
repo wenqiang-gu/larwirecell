@@ -153,24 +153,24 @@ void FrameSaver::produces(art::EDProducer* prod)
 
     for (auto tag : m_frame_tags) {
 	if (!m_digitize) {
-	    std::cerr << "FrameSaver: promising to produce recob::Wires named \"" 
+	    std::cerr << "wclsFrameSaver: promising to produce recob::Wires named \"" 
 		      << tag << "\"\n";
 	    prod->produces< std::vector<recob::Wire> >(tag);
 	}
 	else {
-	    std::cerr << "FrameSaver: promising to produce raw::RawDigits named \"" 
+	    std::cerr << "wclsFrameSaver: promising to produce raw::RawDigits named \"" 
 		      << tag << "\"\n";
 	    prod->produces< std::vector<raw::RawDigit> >(tag);
 	}
     }
     for (auto tag : m_summary_tags) {
-	std::cerr << "FrameSaver: promising to produce channel summary named \"" 
+	std::cerr << "wclsFrameSaver: promising to produce channel summary named \"" 
 		  << tag << "\"\n";
 	prod->produces< std::vector<double> >(tag);
     }
     for (auto cmm : m_cmms) {
 	const std::string cmm_name = cmm.asString();
-	std::cerr << "FrameSaver: promising to produce channel masks named \"" 
+	std::cerr << "wclsFrameSaver: promising to produce channel masks named \"" 
 		  << cmm_name << "\"\n";
 	prod->produces< channel_list > (cmm_name + "channels");
 	prod->produces< channel_masks > (cmm_name + "masks");
@@ -235,11 +235,11 @@ void FrameSaver::save_as_raw(art::Event & event)
 
 	auto traces = tagged_traces(m_frame, tag);
 	if (traces.empty()) {
-	    std::cerr << "FrameSaver: no traces for tag \"" << tag << "\"\n";
+	    std::cerr << "wclsFrameSaver: no traces for tag \"" << tag << "\"\n";
 	    continue;
 	}
 
-	//std::cerr << "FrameSaver: got "<<traces.size()<<" traces for tag \"" << tag << "\"\n";
+	//std::cerr << "wclsFrameSaver: got "<<traces.size()<<" traces for tag \"" << tag << "\"\n";
 	std::unique_ptr<std::vector<raw::RawDigit> > out(new std::vector<raw::RawDigit>);
 
 	double scale = m_frame_scale[ind];
@@ -287,7 +287,7 @@ void FrameSaver::save_as_cooked(art::Event & event)
 
 	auto traces = tagged_traces(m_frame, tag);
 	if (traces.empty()) {
-	    std::cerr << "FrameSaver: no traces for tag \"" << tag << "\"\n";
+	    std::cerr << "wclsFrameSaver: no traces for tag \"" << tag << "\"\n";
 	    continue;
 	}
 
@@ -370,7 +370,7 @@ void FrameSaver::save_summaries(art::Event & event)
         if (m_frame) {
             const auto& summary = m_frame->trace_summary(tag);
             if (summary.empty()) {
-                std::cerr << "FrameSaver: no summary for tag \"" << tag << "\"\n";
+                std::cerr << "wclsFrameSaver: no summary for tag \"" << tag << "\"\n";
                 continue;
             }
             const double scale = m_summary_scale[ind];
@@ -389,7 +389,7 @@ void FrameSaver::save_cmms(art::Event & event)
         return;
     }
     if (!m_cmms.isArray()) {
-	std::cerr << "FrameSaver: wrong type for configuration array of channel mask maps to save\n";
+	std::cerr << "wclsFrameSaver: wrong type for configuration array of channel mask maps to save\n";
 	return;
     }
     if (!m_frame) {
@@ -401,7 +401,7 @@ void FrameSaver::save_cmms(art::Event & event)
 
 	auto it = cmm.find(name);
 	if (it == cmm.end()) {
-	    std::cerr << "FrameSaver: failed to find requested channel masks \"" << name << "\"\n";
+	    std::cerr << "wclsFrameSaver: failed to find requested channel masks \"" << name << "\"\n";
 	    continue;
 	}
 	std::unique_ptr< channel_list > out_list(new channel_list);
@@ -415,7 +415,7 @@ void FrameSaver::save_cmms(art::Event & event)
 	    }
 	}
 	if (out_list->empty()) {
-	    std::cerr << "FrameSaver: found empty channel masks for \"" << name << "\"\n";
+	    std::cerr << "wclsFrameSaver: found empty channel masks for \"" << name << "\"\n";
 	}
 	event.put(std::move(out_list), name + "channels");
 	event.put(std::move(out_masks), name + "masks");
@@ -425,10 +425,10 @@ void FrameSaver::save_cmms(art::Event & event)
 void FrameSaver::visit(art::Event & event)
 {
     if (m_frame) {
-        std::cerr << "FrameSaver: saving frame to art::Event\n";
+        std::cerr << "wclsFrameSaver: saving frame to art::Event\n";
     }
     else {
-        std::cerr << "FrameSaver: I have no frame to save to art::Event\n";
+        std::cerr << "wclsFrameSaver: I have no frame to save to art::Event\n";
     }
 
     if (m_digitize) {
@@ -452,16 +452,16 @@ bool FrameSaver::operator()(const WireCell::IFrame::pointer& inframe,
     outframe = inframe;
     if (inframe) {
         if (m_frame) {
-            std::cerr << "FrameSaver: warning: dropping prior frame.  Fixme to handle queue of frames.\n";
+            std::cerr << "wclsFrameSaver: warning: dropping prior frame.  Fixme to handle queue of frames.\n";
         }
-        else {
-            std::cerr << "FrameSaver got frame\n";
-        }
+        // else {
+        //     std::cerr << "wclsFrameSaver got frame\n";
+        // }
         m_frame=inframe;
     }
-    else {
-        std::cerr << "FrameSaver sees EOS\n";
-    }
+    // else {
+    //     std::cerr << "wclsFrameSaver sees EOS\n";
+    // }
     return true;
 }
 
