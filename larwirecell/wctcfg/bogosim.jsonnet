@@ -62,7 +62,7 @@ local base_params = {
     sim : {
         fluctuate: true,
         digitize: true,
-        noise: false,
+        noise: true,
 
         // continuous makes the WCT sim act like the streaming
         // detector+daq.  This means producing readout even if there
@@ -262,7 +262,7 @@ local saver = {
     type: "wclsFrameSaver",
     data: {
         anode: wc.tn(anode_nominal),
-        digitize: true,
+        digitize: true,         // true means save as RawDigit, else recob::Wire
         frame_tags: ["sim"],
         nticks: params.daq.ticks_per_readout,
         chanmaskmaps: [],
@@ -272,11 +272,27 @@ local saver = {
 // not a configurable
 local sink = { type: "DumpFrames" };
 
+local numpy_saver = {
+    data: params.daq {
+        filename: "bogosim-%(noise)s.npz" % {
+            noise: if params.sim.noise then "noise" else "signal",
+        },
+        frame_tags: [""],       // untagged.
+        scale: 1.0,             // ADC
+    }
+};
+local numpy_depo_saver = numpy_saver { type: "NumpyDepoSaver" };
+local numpy_frame_saver = numpy_saver { type: "NumpyFrameSaver" };
 
+local io = [saver, numpy_depo_saver, numpy_frame_saver];
 
 local graph_noise = [
     {
         tail: { node: wc.tn(source) },
+        head: { node: wc.tn(numpy_depo_saver) },
+    },
+    {
+        tail: { node: wc.tn(numpy_depo_saver) },
         head: { node: wc.tn(drifter) },
     },
     {
@@ -301,6 +317,10 @@ local graph_noise = [
     },
     {
         tail: { node: wc.tn(saver) },
+        head: { node: wc.tn(numpy_frame_saver) },
+    },
+    {
+        tail: { node: wc.tn(numpy_frame_saver) },
         head: { node: wc.tn(sink) },
     },
 ];
@@ -308,6 +328,10 @@ local graph_noise = [
 local graph_quiet = [
     {
         tail: { node: wc.tn(source) },
+        head: { node: wc.tn(numpy_depo_saver) },
+    },
+    {
+        tail: { node: wc.tn(numpy_depo_saver) },
         head: { node: wc.tn(drifter) },
     },
     {
@@ -324,6 +348,10 @@ local graph_quiet = [
     },
     {
         tail: { node: wc.tn(saver) },
+        head: { node: wc.tn(numpy_frame_saver) },
+    },
+    {
+        tail: { node: wc.tn(numpy_frame_saver) },
         head: { node: wc.tn(sink) },
     },
 ];
@@ -338,4 +366,4 @@ local app = {
 
 // the final configuration sequence of data structures
 
-[random, source] + anodes + noise + signal + [frame_summer, digitizer, saver, app]
+[random, source] + anodes + noise + signal + [frame_summer, digitizer] + io + [app]

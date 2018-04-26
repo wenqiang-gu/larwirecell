@@ -6,7 +6,7 @@ physics :{
          wcls_main: {
             tool_type: WCLS
             apps: ["Pgrapher"]
-            plugins: ["WireCellPgraph", "WireCellGen","WireCellLarsoft"]
+            plugins: ["WireCellPgraph", "WireCellGen","WireCellSio", "WireCellLarsoft"]
             configs: ["bogosim.jsonnet"]
             inputers: ["wclsSimDepoSource"]
             outputers: []
