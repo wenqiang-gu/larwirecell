@@ -64,5 +64,9 @@ local chndb_multi = {
         ]
     }
 };
+local app = {
+    type: "Pgrapher",
+    data: { edges: [] }
+};
 
-[anode, chndb_prehwfix, chndb_posthwfix, chndb_catchall, chndb_multi]
+[anode, chndb_prehwfix, chndb_posthwfix, chndb_catchall, chndb_multi, app]

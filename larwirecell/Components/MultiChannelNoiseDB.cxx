@@ -3,6 +3,7 @@
 #include "art/Framework/Principal/Event.h"
 
 #include "WireCellUtil/NamedFactory.h"
+#include "WireCellUtil/Type.h"
 
 WIRECELL_FACTORY(wclsMultiChannelNoiseDB, wcls::MultiChannelNoiseDB,
 		 wcls::IArtEventVisitor, WireCell::IChannelNoiseDatabase, WireCell::IConfigurable)
@@ -23,6 +24,10 @@ void wcls::MultiChannelNoiseDB::MultiChannelNoiseDB::visit(art::Event & event)
     for (auto one : m_rules) {
         if (one.check(event)) {
             m_pimpl = one.chndb;
+            // std::cerr << "wclsMultiChannelNoiseDB: using: " << type(*one.chndb)
+            //           << " @" << (void*)one.chndb.get()
+            //           << " from MultiChannelNoiseDB @" << (void*)this
+            //           <<"\n";
             m_pimpl_visitor = one.visitor;
             if (m_pimpl_visitor) { // okay to be nullptr if not a wclsChannelNoiseDB
                 m_pimpl_visitor->visit(event);
@@ -32,7 +37,7 @@ void wcls::MultiChannelNoiseDB::MultiChannelNoiseDB::visit(art::Event & event)
     }
     THROW(KeyError() << errmsg{"MultiChannelNoiseDB: no matching rule for event, consider 'bool' catch all in config"});
 }
-	
+
 struct ReturnBool {
     bool ok;
     ReturnBool(Json::Value jargs) // simple value, true or false
