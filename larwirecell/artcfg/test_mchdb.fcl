@@ -1,0 +1,22 @@
+process_name: testmchdb
+physics :{
+   producers: {
+      tester : {
+         module_type : WireCellToolkit
+         wcls_main: {
+            tool_type: WCLS
+            apps: ["Pgrapher"]
+            plugins: ["WireCellPgraph", "WireCellGen","WireCellSio", "WireCellLarsoft"]
+            configs: ["test_mchdb.jsonnet"]
+            inputers: ["wclsSimDepoSource"]
+            outputers: []
+            params: {
+               detector: "uboone"
+            }
+         }
+      }
+   }
+   p1        : [ tester ]
+   
+   trigger_paths : [ p1 ]
+}
