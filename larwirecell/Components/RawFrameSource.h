@@ -14,6 +14,7 @@
 
 #include <string>
 #include <vector>
+#include <deque>
 
 namespace wcls {
     class RawFrameSource : public IArtEventVisitor, 
@@ -34,7 +35,7 @@ namespace wcls {
         virtual void configure(const WireCell::Configuration& config);
 
     private:
-        WireCell::IFrame::pointer m_frame;
+        std::deque<WireCell::IFrame::pointer> m_frames;
         std::string m_source;
         double m_tick;
 	int m_nticks;
