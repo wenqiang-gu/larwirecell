@@ -363,8 +363,11 @@ void FrameSaver::save_as_cooked(art::Event & event)
 void FrameSaver::save_summaries(art::Event & event)
 {
     const int ntags = m_summary_tags.size();
+    //std::cerr << "wclsFrameSaver: " << ntags << " summary tags to save\n";
     for (int ind=0; ind<ntags; ++ind) {
 	auto tag = m_summary_tags[ind];
+        //std::cerr << "\t" << tag << "\n";
+
         std::unique_ptr<std::vector<double> > outsum(new std::vector<double>);
 
         if (m_frame) {
@@ -379,6 +382,7 @@ void FrameSaver::save_summaries(art::Event & event)
                 outsum->push_back(scale * val);
             }
         }
+
 	event.put(std::move(outsum), tag);
     }
 }
