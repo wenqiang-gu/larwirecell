@@ -1,0 +1,30 @@
+process_name: bogosim
+physics :{
+   producers: {
+      simmer : {
+         module_type : WireCellToolkit
+         wcls_main: {
+            tool_type: WCLS
+            apps: ["Pgrapher"]
+            plugins: ["WireCellPgraph", "WireCellGen","WireCellSio", "WireCellLarsoft"]
+            configs: ["bogosim.jsonnet"]
+            inputers: ["wclsSimDepoSource"]
+            outputers: []
+            params: {
+               detector: "uboone"
+            }
+         }
+      }
+   }
+   p1        : [ simmer ]
+   outputFiles : [ out ]
+   
+   trigger_paths : [ p1 ]
+   end_paths: [ outputFiles ]
+}
+outputs: {
+   out: {
+      module_type: RootOutput
+      fileName: "output.root"
+   }
+}

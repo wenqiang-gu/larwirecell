@@ -1,0 +1,32 @@
+process_name: testmchdb
+source :{
+   module_type: RootInput
+   //inputCommands: ["keep raw::RawDigits_*_*_*", "drop *"]
+   inputCommands: ["drop *", "keep raw::RawDigits_*_*_*"]
+   // raw::RawDigits_wcNoiseFilter__DataRecoStage1
+   //inputCommands: ["keep *", "drop raw::ubdaqSoftwareTriggerData_*_*_*"]
+   //inputCommands: ["drop raw::ubdaqSoftwareTriggerData_*_*_*"]
+   saveMemoryObjectThreshold: 10485760
+}
+
+physics :{
+   producers: {
+      tester : {
+         module_type : WireCellToolkit
+         wcls_main: {
+            tool_type: WCLS
+            apps: ["Pgrapher"]
+            plugins: ["WireCellPgraph", "WireCellGen","WireCellSio", "WireCellLarsoft"]
+            configs: ["test_mchdb.jsonnet"]
+            inputers: ["wclsMultiChannelNoiseDB"]
+            outputers: []
+            params: {
+               detector: "uboone"
+            }
+         }
+      }
+   }
+   p1        : [ tester ]
+   
+   trigger_paths : [ p1 ]
+}

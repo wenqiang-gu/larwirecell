@@ -55,6 +55,8 @@ namespace wcls {
                                "\nThis augments the WIRECELL_PATH environment variable.")};
         generic_pset_t params{ fhicl::Name("params"),
                 fhicl::Comment("Optional table giving external variables to inject into WCT configuration.")};
+        generic_pset_t structs{ fhicl::Name("structs"),
+                fhicl::Comment("Optional table giving external Jsonnet code to inject into WCT configuration.")};
 
         // These are items needed by the tool
         optional_string_list_t inputers { fhicl::Name("inputers"),
@@ -123,11 +125,20 @@ wcls::WCLS::WCLS(wcls::WCLS::Parameters const& params)
 
 
     {
-        fhicl::ParameterSet wcpars;
-        if (wclscfg.params.get_if_present(wcpars)) {
-            for (auto key : wcpars.get_names()) {
-                auto value = wcpars.get<std::string>(key);
+        fhicl::ParameterSet wcps;
+        if (wclscfg.params.get_if_present(wcps)) {
+            for (auto key : wcps.get_names()) {
+                auto value = wcps.get<std::string>(key);
                 m_wcmain.add_var(key, value);
+            }
+        }
+    }
+    {
+        fhicl::ParameterSet wcps;
+        if (wclscfg.structs.get_if_present(wcps)) {
+            for (auto key : wcps.get_names()) {
+                auto value = wcps.get<std::string>(key);
+                m_wcmain.add_code(key, value);
             }
         }
     }

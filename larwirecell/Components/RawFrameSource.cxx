@@ -21,8 +21,7 @@ using namespace wcls;
 using namespace WireCell;
 
 RawFrameSource::RawFrameSource()
-    : m_frame(nullptr)
-    , m_nticks(0)
+    : m_nticks(0)
 {
 }
 
@@ -101,7 +100,6 @@ SimpleTrace* make_trace(const raw::RawDigit& rd, unsigned int nticks_want)
 
 void RawFrameSource::visit(art::Event & event)
 {
-
     //const detinfo::DetectorProperties&   detprop = *lar::providerFrom<detinfo::DetectorPropertiesService>();
     //const double tick = detprop.SamplingRate(); // 0.5 * units::microsecond;
     const double tick = m_tick; // fixme: want to avoid depending on DetectorPropertiesService for now.
@@ -133,15 +131,18 @@ void RawFrameSource::visit(art::Event & event)
         //std::cerr << "\ttagged: " << tag << std::endl;
         sframe->tag_frame(tag);
     }
-    m_frame = WireCell::IFrame::pointer(sframe);
-    
+    m_frames.push_back(WireCell::IFrame::pointer(sframe));
+    m_frames.push_back(nullptr);
 }
 
 bool RawFrameSource::operator()(WireCell::IFrame::pointer& frame)
 {
-    // set an IFrame based on last visited event.
-    frame = m_frame;
-    m_frame = nullptr;
+    frame = nullptr;
+    if (m_frames.empty()) {
+        return false;
+    }
+    frame = m_frames.front();
+    m_frames.pop_front();
     return true;
 }
 // Local Variables:
