@@ -29,6 +29,7 @@
 #include "WireCellIface/IDepoSource.h"
 #include "WireCellIface/IConfigurable.h"
 #include "WireCellIface/IDepo.h"
+#include "canvas/Utilities/InputTag.h"
 
 #include <deque>
 
@@ -58,7 +59,8 @@ namespace wcls {
     private:
         std::deque<WireCell::IDepo::pointer> m_depos;
         bits::DepoAdapter* m_adapter;
-
+                               
+        art::InputTag m_inputTag;
     };
 }
 #endif
