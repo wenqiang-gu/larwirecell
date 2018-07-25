@@ -179,9 +179,6 @@ void SimDepoSource::visit(art::Event & event)
         double wt = sed.Time()*units::ns;
         double wq = (*m_adapter)(sed);
         int wid = sed.TrackID();
-        
-        if (wq < 0.) wq = -wq;
-        else         std::cout << "---> wq = " << wq << std::endl;
 
         WireCell::IDepo::pointer depo
             = std::make_shared<WireCell::SimpleDepo>(wt, wpt, wq, nullptr, 0.0, 0.0, wid);
