@@ -61,13 +61,13 @@ void bogoblip::BlipMaker::produce(art::Event & event)
 
     const double stepsize = 0.1; // cm
     const int nsteps = vlen/stepsize;
-
+    int nelectrons = stepsize * nelepercm;
     sim::SimEnergyDeposit::Point_t last = start;
     for (int istep=1; istep<nsteps; ++istep) {
         sim::SimEnergyDeposit::Point_t next(start + stepsize*istep*vdir);
         //std::cerr << last << " -> " << next << "\n";
         out->emplace_back(sim::SimEnergyDeposit(nphotons,
-                                                stepsize * nelepercm,
+                                                nelectrons,
                                                 stepsize * mevpercm,
                                                 last, next,
                                                 jump + t0,
