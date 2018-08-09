@@ -6,13 +6,13 @@
 
 # The parent line must be the first non-comment line in the file
 # This line defines the product name and version
-parent larwirecell v07_00_01
+parent larwirecell v07_00_02
 defaultqual	e15
 #
 #fcldir product_dir job
 #
 product         version
-larevt          v07_00_01
+larevt          v07_00_02
 wirecell	v0_7_0a
 
 cetbuildtools	v7_03_03   -   only_for_build
