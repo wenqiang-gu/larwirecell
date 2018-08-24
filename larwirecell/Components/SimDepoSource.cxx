@@ -160,7 +160,7 @@ void SimDepoSource::visit(art::Event & event)
     
     std::cerr << "SimDepoSource got " << ndepos
               << " depos from label \"" << label
-              << "\" returns: " << okay << std::endl;
+              << "\" returns: " << (okay ? "okay" : "fail") << std::endl;
     
     if (!m_depos.empty()) {
         std::cerr << "SimDepoSource dropping " << m_depos.size()
@@ -183,8 +183,11 @@ void SimDepoSource::visit(art::Event & event)
         //           << " r=" << wpt/units::cm << "cm, "
         //           << " q=" << wq << "\n";
     }
+    // don't trust user to honor time ordering.
     std::sort(m_depos.begin(), m_depos.end(), WireCell::ascending_time);
-    std::cerr << "SimDepoSource: ready with " << m_depos.size() << " depos\n";
+    std::cerr << "SimDepoSource: ready with " << m_depos.size() << " depos spanning: ["
+              << m_depos.front()->time()/units::us << ", "
+              << m_depos.back()->time()/units::us << "]us\n";
     m_depos.push_back(nullptr); // EOS marker
 }
 
