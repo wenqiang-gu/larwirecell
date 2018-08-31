@@ -108,6 +108,10 @@ WireCell::Configuration SimDepoSource::default_configuration() const
     // a WC depo.
     cfg["scale"] = 1.0;
 
+    // For locating input in the art::Event
+    cfg["art_label"] = "";     // eg, "plopper"
+    cfg["art_instance"] = "";  // eg, "bogus"
+
     return cfg;
 }
 void SimDepoSource::configure(const WireCell::Configuration& cfg)
@@ -140,18 +144,20 @@ void SimDepoSource::configure(const WireCell::Configuration& cfg)
             m_adapter = new wcls::bits::StepAdapter(model, scale);
         }
     }
+
+    m_label = WireCell::get(cfg, "art_label", m_label);
+    m_instance = WireCell::get(cfg, "art_instance", m_instance);
+
 }
 
 
-const std::string label = "bogus";      // fixme:make configurable
-const std::string instance = "plopper"; // fixme:make configurable
 void SimDepoSource::visit(art::Event & event)
 {
     art::Handle< std::vector<sim::SimEnergyDeposit> > sedvh;
     
-    bool okay = event.getByLabel(instance, label, sedvh);
+    bool okay = event.getByLabel(m_label, m_instance, sedvh);
     if (!okay || sedvh->empty()) {
-        std::string msg = "SimDepoSource failed to get sim::SimEnergyDeposit from label: " + label;
+        std::string msg = "SimDepoSource failed to get sim::SimEnergyDeposit from label: " + m_label;
         std::cerr << msg << std::endl;
         THROW(WireCell::RuntimeError() << WireCell::errmsg{msg});
     }
@@ -159,7 +165,7 @@ void SimDepoSource::visit(art::Event & event)
     const size_t ndepos = sedvh->size();
     
     std::cerr << "SimDepoSource got " << ndepos
-              << " depos from label \"" << label
+              << " depos from label \"" << m_label
               << "\" returns: " << (okay ? "okay" : "fail") << std::endl;
     
     if (!m_depos.empty()) {

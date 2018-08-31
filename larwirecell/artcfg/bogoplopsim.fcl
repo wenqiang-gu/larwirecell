@@ -10,8 +10,7 @@ physics :{
             tool_type: WCLS
             apps: ["Pgrapher"]
             plugins: ["WireCellPgraph", "WireCellGen","WireCellSio","WireCellLarsoft"]
-            //configs: ["bogosim.jsonnet"]
-            configs: ["pgrapher/experiment/uboone/wcls-sim.jsonnet"]
+            configs: ["bogoplopsim.jsonnet"]
             inputers: ["wclsSimDepoSource"]
             outputers: ["wclsFrameSaver"]
             params: {

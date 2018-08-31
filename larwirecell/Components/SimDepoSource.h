@@ -59,6 +59,10 @@ namespace wcls {
         std::deque<WireCell::IDepo::pointer> m_depos;
         bits::DepoAdapter* m_adapter;
 
+    
+        std::string m_label, m_instance;
+
+
     };
 }
 #endif
