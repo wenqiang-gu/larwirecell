@@ -117,6 +117,10 @@ local random = {
 
 local source = {
     type: "wclsSimDepoSource",
+    data: {
+        art_label: "bogus",
+        art_instance: "plopper",
+    },
 };
 
 
