@@ -48,8 +48,6 @@ void bogoblip::BlipMaker::produce(art::Event & event)
     double t0 = 0.;
     double t1 = 0.;
     int trackid = 0;
-    int pdgid = 0;
-
     
     // implicit units are cm, ns and MeV.
     sim::SimEnergyDeposit::Point_t start = {100.,0.,0.};
