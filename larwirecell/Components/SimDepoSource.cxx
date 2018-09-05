@@ -107,10 +107,9 @@ WireCell::Configuration SimDepoSource::default_configuration() const
     // Multiply this number to the number of electrons before forming
     // a WC depo.
     cfg["scale"] = 1.0;
-
+    
     // For locating input in the art::Event
-    cfg["art_label"] = "";     // eg, "plopper"
-    cfg["art_instance"] = "";  // eg, "bogus"
+    cfg["art_tag"] = "";
 
     return cfg;
 }
@@ -144,10 +143,8 @@ void SimDepoSource::configure(const WireCell::Configuration& cfg)
             m_adapter = new wcls::bits::StepAdapter(model, scale);
         }
     }
-
-    m_label = WireCell::get(cfg, "art_label", m_label);
-    m_instance = WireCell::get(cfg, "art_instance", m_instance);
-
+    
+    m_inputTag = cfg["art_tag"].asString();
 }
 
 
@@ -155,9 +152,9 @@ void SimDepoSource::visit(art::Event & event)
 {
     art::Handle< std::vector<sim::SimEnergyDeposit> > sedvh;
     
-    bool okay = event.getByLabel(m_label, m_instance, sedvh);
+    bool okay = event.getByLabel(m_inputTag, sedvh);
     if (!okay || sedvh->empty()) {
-        std::string msg = "SimDepoSource failed to get sim::SimEnergyDeposit from label: " + m_label;
+        std::string msg = "SimDepoSource failed to get sim::SimEnergyDeposit from art tag: " + m_inputTag;
         std::cerr << msg << std::endl;
         THROW(WireCell::RuntimeError() << WireCell::errmsg{msg});
     }
@@ -165,7 +162,7 @@ void SimDepoSource::visit(art::Event & event)
     const size_t ndepos = sedvh->size();
     
     std::cerr << "SimDepoSource got " << ndepos
-              << " depos from label \"" << m_label
+              << " depos from art tag \"" << m_inputTag
               << "\" returns: " << (okay ? "okay" : "fail") << std::endl;
     
     if (!m_depos.empty()) {
@@ -178,9 +175,9 @@ void SimDepoSource::visit(art::Event & event)
         auto const& sed = sedvh->at(ind);
         auto pt = sed.MidPoint();
         const WireCell::Point wpt(pt.x()*units::cm, pt.y()*units::cm, pt.z()*units::cm);
-        const double wt = sed.Time()*units::ns;
-        const double wq = (*m_adapter)(sed);
-        const int wid = sed.TrackID();
+        double wt = sed.Time()*units::ns;
+        double wq = (*m_adapter)(sed);
+        int wid = sed.TrackID();
 
         WireCell::IDepo::pointer depo
             = std::make_shared<WireCell::SimpleDepo>(wt, wpt, wq, nullptr, 0.0, 0.0, wid);

@@ -41,18 +41,19 @@ void bogoblip::BlipMaker::produce(art::Event & event)
 
     auto out = std::make_unique< std::vector<sim::SimEnergyDeposit> >();
     
-    const int nphotons = 0;
-    const int nelepercm = 50000;
+    int nphotons = 0;
+    const  int nelepercm = 50000;
     const double mevpercm = 2.0;
 
-    const double t0 = 0.;
-    const double t1 = 0.;
-    const int trackid = 0;
+    double t0 = 0.;
+    double t1 = 0.;
+    int trackid = 0;
+    int pdgid = 0;
 
     
     // implicit units are cm, ns and MeV.
-    const sim::SimEnergyDeposit::Point_t start = {100.,0.,0.};
-    const sim::SimEnergyDeposit::Point_t end = {150.,10.,50.};
+    sim::SimEnergyDeposit::Point_t start = {100.,0.,0.};
+    sim::SimEnergyDeposit::Point_t end = {150.,10.,50.};
     const auto vdiff = end-start;
     const auto vlen = sqrt(vdiff.Mag2());
     const auto vdir = vdiff.unit();

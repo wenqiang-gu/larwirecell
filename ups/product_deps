@@ -15,7 +15,7 @@ product         version
 larevt          v07_00_04
 wirecell	v0_8_0
 
-cetbuildtools	v7_03_03   -   only_for_build
+cetbuildtools	v7_04_00   -   only_for_build
 end_product_list
   
 qualifier	larevt          wirecell	notes
@@ -23,7 +23,6 @@ e17:debug	e17:debug 	e17:debug
 e17:opt		e17:opt		e17:opt
 e17:prof	e17:prof	e17:prof
 c2:debug	c2:debug 	c2:debug
-c2:opt		c2:opt		c2:opt
 c2:prof		c2:prof		c2:prof
 end_qualifier_list
 
