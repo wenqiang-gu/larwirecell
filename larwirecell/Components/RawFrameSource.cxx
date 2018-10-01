@@ -33,7 +33,7 @@ RawFrameSource::~RawFrameSource()
 WireCell::Configuration RawFrameSource::default_configuration() const
 {
     Configuration cfg;
-    cfg["source_label"] = "daq"; 
+    cfg["art_tag"] = "";        // how to look up the raw digits
     cfg["tick"] = 0.5*WireCell::units::us;
     cfg["frame_tags"][0] = "orig"; // the tags to apply to this frame
     cfg["nticks"] = m_nticks; // if nonzero, truncate or baseline-pad frame to this number of ticks.
@@ -42,20 +42,17 @@ WireCell::Configuration RawFrameSource::default_configuration() const
 
 void RawFrameSource::configure(const WireCell::Configuration& cfg)
 {
-    const std::string sl = cfg["source_label"].asString();
-    if (sl.empty()) {
+    const std::string art_tag = cfg["art_tag"].asString();
+    if (art_tag.empty()) {
         THROW(ValueError() << errmsg{"RawFrameSource requires a source_label"});
     }
-    m_source = sl;
+    m_inputTag = cfg["art_tag"].asString();
+
     m_tick = cfg["tick"].asDouble();
     for (auto jtag : cfg["frame_tags"]) {
         m_frame_tags.push_back(jtag.asString());
     }
     m_nticks = get(cfg, "nticks", m_nticks);
-    // std::cerr << "RawFrameSource: source is \"" << m_source
-    //           << "\", tick is " << m_tick/WireCell::units::us << " us "
-    // 	      << "nticks=" << m_nticks << std::endl;
-    // std::cerr << cfg << std::endl;
 }
 
 
@@ -100,15 +97,12 @@ SimpleTrace* make_trace(const raw::RawDigit& rd, unsigned int nticks_want)
 
 void RawFrameSource::visit(art::Event & event)
 {
-    //const detinfo::DetectorProperties&   detprop = *lar::providerFrom<detinfo::DetectorPropertiesService>();
-    //const double tick = detprop.SamplingRate(); // 0.5 * units::microsecond;
-    const double tick = m_tick; // fixme: want to avoid depending on DetectorPropertiesService for now.
-
-    //std::cerr << "RawFrameSource getting: RawDigits at: \"" << m_source << "\"\n";
+    // fixme: want to avoid depending on DetectorPropertiesService for now.
+    const double tick = m_tick; 
     art::Handle< std::vector<raw::RawDigit> > rdvh;
-    bool okay = event.getByLabel(m_source, rdvh);
+    bool okay = event.getByLabel(m_inputTag, rdvh);
     if (!okay || rdvh->size() == 0) {
-        std::string msg = "RawFrameSource failed to get raw::RawDigits: " + m_source;
+        std::string msg = "RawFrameSource failed to get raw::RawDigits: " + m_inputTag.encode();
         std::cerr << msg << std::endl;
         THROW(RuntimeError() << errmsg{msg});
     }
