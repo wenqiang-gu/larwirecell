@@ -107,9 +107,9 @@ WireCell::Configuration SimDepoSource::default_configuration() const
     // Multiply this number to the number of electrons before forming
     // a WC depo.
     cfg["scale"] = 1.0;
-    
+
     // For locating input in the art::Event
-    cfg["art_tag"] = "";
+    cfg["art_tag"] = "";     // eg, "plopper:bogus"
 
     return cfg;
 }
@@ -143,7 +143,7 @@ void SimDepoSource::configure(const WireCell::Configuration& cfg)
             m_adapter = new wcls::bits::StepAdapter(model, scale);
         }
     }
-    
+
     m_inputTag = cfg["art_tag"].asString();
 }
 
@@ -178,13 +178,16 @@ void SimDepoSource::visit(art::Event & event)
         double wt = sed.Time()*units::ns;
         double wq = (*m_adapter)(sed);
         int wid = sed.TrackID();
+        int pdg = sed.PdgCode();
+        double we = sed.Energy()*units::MeV;
 
         WireCell::IDepo::pointer depo
-            = std::make_shared<WireCell::SimpleDepo>(wt, wpt, wq, nullptr, 0.0, 0.0, wid);
+            = std::make_shared<WireCell::SimpleDepo>(wt, wpt, wq, nullptr, 0.0, 0.0, wid, pdg, we);
         m_depos.push_back(depo);
         // std::cerr << ind << ": t=" << wt/units::us << "us,"
         //           << " r=" << wpt/units::cm << "cm, "
-        //           << " q=" << wq << "\n";
+        //           << " q=" << wq 
+        //           << " e=" << we/units::MeV << "\n";
     }
     // don't trust user to honor time ordering.
     std::sort(m_depos.begin(), m_depos.end(), WireCell::ascending_time);
