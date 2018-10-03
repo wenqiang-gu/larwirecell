@@ -12,6 +12,8 @@
 #include "WireCellIface/IFrameSource.h"
 #include "WireCellIface/IConfigurable.h"
 
+#include "canvas/Utilities/InputTag.h"
+
 #include <string>
 #include <vector>
 #include <deque>
@@ -36,7 +38,7 @@ namespace wcls {
 
     private:
         std::deque<WireCell::IFrame::pointer> m_frames;
-        std::string m_source;
+        art::InputTag m_inputTag;
         double m_tick;
 	int m_nticks;
 	std::vector<std::string> m_frame_tags;
