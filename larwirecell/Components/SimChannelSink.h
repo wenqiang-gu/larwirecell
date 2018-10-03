@@ -64,7 +64,7 @@ namespace wcls {
 	WireCell::Pimpos *uboone_u;
 	WireCell::Pimpos *uboone_v;
 	WireCell::Pimpos *uboone_y;
-	WireCell::Pimpos *pimpos;
+	//WireCell::Pimpos *pimpos; // unused
   };
 }
 
