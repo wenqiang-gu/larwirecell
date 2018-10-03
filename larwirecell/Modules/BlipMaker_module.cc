@@ -1,5 +1,6 @@
 #include "art/Framework/Core/ModuleMacros.h" 
 #include "art/Framework/Core/EDProducer.h"
+#include "art/Framework/Principal/Event.h"
 
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
 
@@ -92,4 +93,3 @@ void bogoblip::BlipMaker::produce(art::Event & event)
 namespace bogoblip {
     DEFINE_ART_MODULE(BlipMaker)
 }
-
