@@ -89,80 +89,114 @@ void SimChannelSink::produces(art::EDProducer* prod)
 }
 
 void SimChannelSink::save_as_simchannel(const WireCell::IDepo::pointer& depo){
-    Binning tbins(m_readout_time/m_tick, m_start_time, m_start_time+m_readout_time);
+  Binning tbins(m_readout_time/m_tick, m_start_time, m_start_time+m_readout_time);
 
-    if(!depo) return;
+  if(!depo) return;
 
+  int ctr = 0;
+  while(ctr<1){
+    ctr++;
+    //      if(ctr % 10000==0){ std::cout<<"COUNTER "<<ctr<<std::endl;}
     for(auto face : m_anode->faces()){
-        auto boundbox = face->sensitive();
-        if(!boundbox.inside(depo->pos())) continue;
-
-	int plane = -1;
-	for(Pimpos* pimpos : {uboone_u, uboone_v, uboone_y}){
+      auto boundbox = face->sensitive();
+      if(!boundbox.inside(depo->pos())) continue;
+      
+      int plane = -1;
+      for(Pimpos* pimpos : {uboone_u, uboone_v, uboone_y}){
         plane++;
 	
-	    Gen::BinnedDiffusion bindiff(*pimpos, tbins, m_nsigma, m_rng);
-	    bindiff.add(depo,depo->extent_long() / m_drift_speed, depo->extent_tran());
-	    double depo_dist = pimpos->distance(depo->pos());
-	    std::pair<int,int> wire_pair = pimpos->closest(depo_dist); 
-	    auto& wires = face->plane(plane)->wires();
+	const double center_time = depo->time();
+	const double center_pitch = pimpos->distance(depo->pos());
 
-	    double xyz[3];
-	    int id = -10000;
-	    double energy = 100.0;
-	    if(depo->prior()){ 
-	      id = depo->prior()->id(); 
-	      if(m_use_energy){ energy = depo->prior()->energy(); }
+	Gen::GausDesc time_desc(center_time, depo->extent_long() / m_drift_speed);
+	{
+	  double nmin_sigma = time_desc.distance(tbins.min());
+	  double nmax_sigma = time_desc.distance(tbins.max());
+	  
+	  double eff_nsigma = depo->extent_long() / m_drift_speed>0?m_nsigma:0;
+	  if (nmin_sigma > eff_nsigma || nmax_sigma < -eff_nsigma) {
+	    break;
+	  }
+	}
+	
+	auto ibins = pimpos->impact_binning();
+
+	Gen::GausDesc pitch_desc(center_pitch, depo->extent_tran());
+	{
+	  double nmin_sigma = pitch_desc.distance(ibins.min());
+	  double nmax_sigma = pitch_desc.distance(ibins.max());
+	  
+	  double eff_nsigma = depo->extent_tran()>0?m_nsigma:0;
+	  if (nmin_sigma > eff_nsigma || nmax_sigma < -eff_nsigma) {
+            break;
+	  }
+	}
+
+	auto gd = std::make_shared<Gen::GaussianDiffusion>(depo, time_desc, pitch_desc);
+	gd->set_sampling(tbins, ibins, m_nsigma, 0, 1);
+
+	double xyz[3];
+	int id = -10000;
+	double energy = 100.0;
+	if(depo->prior()){ 
+	  id = depo->prior()->id(); 
+	  if(m_use_energy){ energy = depo->prior()->energy(); }
+	}
+	else{ 
+	  id = depo->id(); 
+	  if(m_use_energy){ energy = depo->energy(); }
+	}
+
+	const auto patch = gd->patch();
+	const int poffset_bin = gd->poffset_bin();
+	const int toffset_bin = gd->toffset_bin();
+	const int np = patch.rows();
+	const int nt = patch.cols();
+
+	int min_imp = 0;
+	int max_imp = ibins.nbins();
+	
+	for (int pbin = 0; pbin != np; pbin++){
+	  int abs_pbin = pbin + poffset_bin;
+	  if (abs_pbin < min_imp || abs_pbin >= max_imp) continue;
+
+	  int channel = abs_pbin;
+	  if(plane == 1){ channel = abs_pbin+2400; }
+	  if(plane == 2){ channel = abs_pbin+4800; }
+	  
+	  auto channelData = m_mapSC.find(channel);
+	  sim::SimChannel& sc = (channelData == m_mapSC.end())
+	    ? (m_mapSC[channel]=sim::SimChannel(channel))
+	    : channelData->second;
+
+	  for (int tbin = 0; tbin!= nt; tbin++){
+	    int abs_tbin = tbin + toffset_bin;
+	    double charge = patch(pbin, tbin);
+	    double tdc = tbins.center(abs_tbin);
+	
+	    if(plane == 0){ 
+	      tdc = tdc + (m_uboone_u_to_rp/m_drift_speed) + m_u_time_offset; 
+	      xyz[0] = depo->pos().x()/units::cm - m_uboone_u_to_rp/units::cm; 
 	    }
-	    else{ 
-	      id = depo->id(); 
-	      if(m_use_energy){ energy = depo->energy(); }
+	    if(plane == 1){
+	      tdc = tdc + (m_uboone_v_to_rp/m_drift_speed) + m_v_time_offset; 
+	      xyz[0] = depo->pos().x()/units::cm - m_uboone_v_to_rp/units::cm; 
 	    }
-
-	    const std::pair<int,int> impact_range = bindiff.impact_bin_range(m_nsigma);
-	    int reference_impact = (int)(impact_range.first+impact_range.second)/2;
-	    int reference_channel = wires[wire_pair.first]->channel();
-	    
-	    for(int i=impact_range.first; i<=impact_range.second; i++){
-	        auto impact_data = bindiff.impact_data(i);
-		if(!impact_data) continue;
-		int channel_change = i-reference_impact; // (default) 1 impact/wire region
-
-		unsigned int depo_chan = (unsigned int)reference_channel+channel_change;
-		auto channelData = m_mapSC.find(depo_chan);
-		sim::SimChannel& sc = (channelData == m_mapSC.end())
-		  ? (m_mapSC[depo_chan]=sim::SimChannel(depo_chan))
-		  : channelData->second;
-		
-		auto wave = impact_data->waveform();
-		const std::pair<double,double> time_span = impact_data->span(m_nsigma);
-		const int min_tick = tbins.bin(time_span.first);
-		const int max_tick = tbins.bin(time_span.second);
-		for(int t=min_tick; t<=max_tick; t++){
-
-		    double tdc = tbins.center(t);
-		    if(plane == 0){ 
-		        tdc = tdc + (m_uboone_u_to_rp/m_drift_speed) + m_u_time_offset; 
-			xyz[0] = depo->pos().x()/units::cm - m_uboone_u_to_rp/units::cm; 
-		    }
-		    if(plane == 1){
-		        tdc = tdc + (m_uboone_v_to_rp/m_drift_speed) + m_v_time_offset; 
-			xyz[0] = depo->pos().x()/units::cm - m_uboone_v_to_rp/units::cm; 
-		    }
-		    if(plane == 2){
-		        tdc = tdc + (m_uboone_y_to_rp/m_drift_speed) + m_y_time_offset; 
-			xyz[0] = depo->pos().x()/units::cm - m_uboone_y_to_rp/units::cm; 
-		    }
-
-		    unsigned int temp_time = (unsigned int) ( (tdc/units::us+4050) / (m_tick/units::us) ); // hacked G4 to TDC
-		    double temp_charge = abs(wave[t]);
-		    if(temp_charge>1){
-			sc.AddIonizationElectrons(id, temp_time, temp_charge, xyz, energy*abs(temp_charge/depo->charge()));			
-		    }		    
-		} // t
-	    } // i
-	} // plane
+	    if(plane == 2){
+	      tdc = tdc + (m_uboone_y_to_rp/m_drift_speed) + m_y_time_offset; 
+	      xyz[0] = depo->pos().x()/units::cm - m_uboone_y_to_rp/units::cm; 
+	    }
+	
+	    unsigned int temp_time = (unsigned int) ( (tdc/units::us+4050) / (m_tick/units::us) ); // hacked G4 to TDC
+	    charge = abs(charge);
+	    if(charge>1){
+	      sc.AddIonizationElectrons(id, temp_time, charge, xyz, energy*abs(charge/depo->charge()));			
+	    }		    
+	  }
+	}
+      } // plane
     } //face
+  }
 }
 
 void SimChannelSink::visit(art::Event & event)
