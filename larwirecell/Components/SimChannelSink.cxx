@@ -21,10 +21,16 @@ SimChannelSink::SimChannelSink()
   : m_depo(nullptr)
 {
   m_mapSC.clear();
+  uboone_u = new Pimpos(2400, -3598.5, 3598.5, Point(0,sin(Pi/6),cos(Pi/6)), Point(0,cos(5*Pi/6),sin(5*Pi/6)), Point(94,9.7,5184.98), 1);
+  uboone_v = new Pimpos(2400, -3598.5, 3598.5, Point(0,sin(5*Pi/6),cos(5*Pi/6)), Point(0,cos(Pi/6),sin(Pi/6)), Point(94,9.7,5184.98), 1);
+  uboone_y = new Pimpos(3456, -5182.5, 5182.5, Point(0,1,0), Point(0,0,1), Point(94,9.7,5184.98), 1);
 }
 
 SimChannelSink::~SimChannelSink()
 {
+  delete uboone_u;
+  delete uboone_v;
+  delete uboone_y;
 }
 
 WireCell::Configuration SimChannelSink::default_configuration() const
@@ -74,9 +80,6 @@ void SimChannelSink::configure(const WireCell::Configuration& cfg)
     m_y_time_offset = get(cfg,"y_time_offset",0.0*units::us);
     m_use_energy = get(cfg,"use_energy",false);
 
-    uboone_u = new Pimpos(2400, -3598.5, 3598.5, Point(0,sin(Pi/6),cos(Pi/6)), Point(0,cos(5*Pi/6),sin(5*Pi/6)), Point(94,9.7,5184.98), 1);
-    uboone_v = new Pimpos(2400, -3598.5, 3598.5, Point(0,sin(5*Pi/6),cos(5*Pi/6)), Point(0,cos(Pi/6),sin(Pi/6)), Point(94,9.7,5184.98), 1);
-    uboone_y = new Pimpos(3456, -5182.5, 5182.5, Point(0,1,0), Point(0,0,1), Point(94,9.7,5184.98), 1);
 }
 
 void SimChannelSink::produces(art::EDProducer* prod)
@@ -86,11 +89,10 @@ void SimChannelSink::produces(art::EDProducer* prod)
 }
 
 void SimChannelSink::save_as_simchannel(const WireCell::IDepo::pointer& depo){
+    Binning tbins(m_readout_time/m_tick, m_start_time, m_start_time+m_readout_time);
 
     if(!depo) return;
-    //if(depo->charge()<1.0) return;
-    //std::cout<<"depo charge: "<<depo->charge()<<std::endl;
-    //std::cout<<"depo energy: "<<depo->energy()<<std::endl;
+
     for(auto face : m_anode->faces()){
         auto boundbox = face->sensitive();
         if(!boundbox.inside(depo->pos())) continue;
@@ -98,7 +100,7 @@ void SimChannelSink::save_as_simchannel(const WireCell::IDepo::pointer& depo){
 	int plane = -1;
 	for(Pimpos* pimpos : {uboone_u, uboone_v, uboone_y}){
         plane++;
-	    Binning tbins(m_readout_time/m_tick, m_start_time, m_start_time+m_readout_time);
+	
 	    Gen::BinnedDiffusion bindiff(*pimpos, tbins, m_nsigma, m_rng);
 	    bindiff.add(depo,depo->extent_long() / m_drift_speed, depo->extent_tran());
 	    double depo_dist = pimpos->distance(depo->pos());
@@ -125,7 +127,12 @@ void SimChannelSink::save_as_simchannel(const WireCell::IDepo::pointer& depo){
 	        auto impact_data = bindiff.impact_data(i);
 		if(!impact_data) continue;
 		int channel_change = i-reference_impact; // (default) 1 impact/wire region
-		//int channel_change = find_uboone_channel(i, reference_impact, wire_pair.second); // 2 impacts/wire region
+
+		unsigned int depo_chan = (unsigned int)reference_channel+channel_change;
+		auto channelData = m_mapSC.find(depo_chan);
+		sim::SimChannel& sc = (channelData == m_mapSC.end())
+		  ? (m_mapSC[depo_chan]=sim::SimChannel(depo_chan))
+		  : channelData->second;
 		
 		auto wave = impact_data->waveform();
 		const std::pair<double,double> time_span = impact_data->span(m_nsigma);
@@ -150,13 +157,6 @@ void SimChannelSink::save_as_simchannel(const WireCell::IDepo::pointer& depo){
 		    unsigned int temp_time = (unsigned int) ( (tdc/units::us+4050) / (m_tick/units::us) ); // hacked G4 to TDC
 		    double temp_charge = abs(wave[t]);
 		    if(temp_charge>1){
-
-		        unsigned int depo_chan = (unsigned int)reference_channel+channel_change;
-			auto channelData = m_mapSC.find(depo_chan);
-			sim::SimChannel& sc = (channelData == m_mapSC.end())
-			  ? (m_mapSC[depo_chan]=sim::SimChannel(depo_chan))
-			  : channelData->second;
-		
 			sc.AddIonizationElectrons(id, temp_time, temp_charge, xyz, energy*abs(temp_charge/depo->charge()));			
 		    }		    
 		} // t
@@ -165,35 +165,11 @@ void SimChannelSink::save_as_simchannel(const WireCell::IDepo::pointer& depo){
     } //face
 }
 
-int SimChannelSink::find_uboone_channel(int impact_bin,int reference_bin, int centroid_impact)
-{
-  int channel_change = 0;
-  float num_channel = 1.0;
-  float steps = (float)impact_bin - reference_bin;
-  float threshold = 0.0;
-
-  if(steps>0 && centroid_impact==0) threshold = 1;
-  if(steps>0 && centroid_impact==-1) threshold = 2;
-  if(steps<0 && centroid_impact==0) threshold = 2;
-  if(steps<0 && centroid_impact==-1) threshold = 1;
-
-  while(num_channel>abs(channel_change)){
-    if(abs(steps)/(threshold+(2*(num_channel-1.0))) >= 1){
-      channel_change = (int)num_channel*(abs(steps)/steps);
-      num_channel++;
-    }
-    else{ break; }
-  }
-
-  return channel_change;
-}
-
 void SimChannelSink::visit(art::Event & event)
 {
     std::unique_ptr<std::vector<sim::SimChannel> > out(new std::vector<sim::SimChannel>);
     
     for(auto& m : m_mapSC){
-      sim::SimChannel s = m.second;
       out->emplace_back(m.second);
     }
     
@@ -207,9 +183,9 @@ bool SimChannelSink::operator()(const WireCell::IDepo::pointer& indepo,
     outdepo = indepo;
     if (indepo) {
         m_depo = indepo;
+	save_as_simchannel(m_depo);
     }
 
-    save_as_simchannel(m_depo);
     return true;
 }
 
