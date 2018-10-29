@@ -398,20 +398,21 @@ void FrameSaver::save_cmms(art::Event & event)
 	std::cerr << "wclsFrameSaver: wrong type for configuration array of channel mask maps to save\n";
 	return;
     }
-    if (!m_frame) {
-        return;
-    }
-    auto cmm = m_frame->masks();
+    //if (!m_frame) {
+    //    return;
+    //}
     for (auto jcmm : m_cmms) {
 	std::string name = jcmm.asString();
+	std::unique_ptr< channel_list > out_list(new channel_list);
+	std::unique_ptr< channel_masks > out_masks(new channel_masks);
 
+	if(m_frame){
+    	auto cmm = m_frame->masks();
 	auto it = cmm.find(name);
 	if (it == cmm.end()) {
 	    std::cerr << "wclsFrameSaver: failed to find requested channel masks \"" << name << "\"\n";
 	    continue;
 	}
-	std::unique_ptr< channel_list > out_list(new channel_list);
-	std::unique_ptr< channel_masks > out_masks(new channel_masks);
 	for (auto cmit : it->second) { // int->vec<pair<int,int>>
 	    out_list->push_back(cmit.first);
 	    for (auto be : cmit.second) {
@@ -419,6 +420,7 @@ void FrameSaver::save_cmms(art::Event & event)
 		out_masks->push_back(be.first);
 		out_masks->push_back(be.second);
 	    }
+	}
 	}
 	if (out_list->empty()) {
 	    std::cerr << "wclsFrameSaver: found empty channel masks for \"" << name << "\"\n";

@@ -104,7 +104,8 @@ void RawFrameSource::visit(art::Event & event)
     if (!okay || rdvh->size() == 0) {
         std::string msg = "RawFrameSource failed to get raw::RawDigits: " + m_inputTag.encode();
         std::cerr << msg << std::endl;
-        THROW(RuntimeError() << errmsg{msg});
+        //THROW(RuntimeError() << errmsg{msg});
+        return;
     }
     const std::vector<raw::RawDigit>& rdv(*rdvh);
     const size_t nchannels = rdv.size();

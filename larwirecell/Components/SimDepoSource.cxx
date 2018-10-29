@@ -156,7 +156,8 @@ void SimDepoSource::visit(art::Event & event)
     if (!okay || sedvh->empty()) {
         std::string msg = "SimDepoSource failed to get sim::SimEnergyDeposit from art tag: " + m_inputTag.encode();
         std::cerr << msg << std::endl;
-        THROW(WireCell::RuntimeError() << WireCell::errmsg{msg});
+        //THROW(WireCell::RuntimeError() << WireCell::errmsg{msg});
+        return;
     }
     
     const size_t ndepos = sedvh->size();
