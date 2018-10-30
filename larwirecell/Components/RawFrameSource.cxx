@@ -101,12 +101,13 @@ void RawFrameSource::visit(art::Event & event)
     const double tick = m_tick; 
     art::Handle< std::vector<raw::RawDigit> > rdvh;
     bool okay = event.getByLabel(m_inputTag, rdvh);
-    if (!okay || rdvh->size() == 0) {
+    if (!okay) {
         std::string msg = "RawFrameSource failed to get raw::RawDigits: " + m_inputTag.encode();
         std::cerr << msg << std::endl;
-        //THROW(RuntimeError() << errmsg{msg});
-        return;
+        THROW(RuntimeError() << errmsg{msg});
     }
+    else if (rdvh->size() == 0) return;
+
     const std::vector<raw::RawDigit>& rdv(*rdvh);
     const size_t nchannels = rdv.size();
     std::cerr << "RawFrameSource: got " << nchannels << " raw::RawDigit objects\n";

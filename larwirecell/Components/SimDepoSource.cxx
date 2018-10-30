@@ -153,12 +153,12 @@ void SimDepoSource::visit(art::Event & event)
     art::Handle< std::vector<sim::SimEnergyDeposit> > sedvh;
     
     bool okay = event.getByLabel(m_inputTag, sedvh);
-    if (!okay || sedvh->empty()) {
+    if (!okay) {
         std::string msg = "SimDepoSource failed to get sim::SimEnergyDeposit from art tag: " + m_inputTag.encode();
         std::cerr << msg << std::endl;
-        //THROW(WireCell::RuntimeError() << WireCell::errmsg{msg});
-        return;
+        THROW(WireCell::RuntimeError() << WireCell::errmsg{msg});
     }
+    else if (sedvh->empty()) return;
     
     const size_t ndepos = sedvh->size();
     
