@@ -13,7 +13,7 @@ defaultqual	e17
 #
 product         version
 larevt          v07_01_00
-wirecell	v0_9_2
+wirecell	v0_9_3
 
 cetbuildtools	v7_04_00   -   only_for_build
 end_product_list
