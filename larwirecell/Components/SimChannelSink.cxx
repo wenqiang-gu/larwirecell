@@ -176,16 +176,18 @@ void SimChannelSink::save_as_simchannel(const WireCell::IDepo::pointer& depo){
 	
 	    if(plane == 0){ 
 	      tdc = tdc + (m_uboone_u_to_rp/m_drift_speed) + m_u_time_offset; 
-	      xyz[0] = depo->pos().x()/units::cm - m_uboone_u_to_rp/units::cm; 
+	      xyz[0] = depo->pos().x()/units::cm - 94*units::mm/units::cm; //m_uboone_u_to_rp/units::cm; 
 	    }
 	    if(plane == 1){
 	      tdc = tdc + (m_uboone_v_to_rp/m_drift_speed) + m_v_time_offset; 
-	      xyz[0] = depo->pos().x()/units::cm - m_uboone_v_to_rp/units::cm; 
+	      xyz[0] = depo->pos().x()/units::cm - 97*units::mm/units::cm; //m_uboone_v_to_rp/units::cm; 
 	    }
 	    if(plane == 2){
 	      tdc = tdc + (m_uboone_y_to_rp/m_drift_speed) + m_y_time_offset; 
-	      xyz[0] = depo->pos().x()/units::cm - m_uboone_y_to_rp/units::cm; 
+	      xyz[0] = depo->pos().x()/units::cm - 100*units::mm/units::cm; //m_uboone_y_to_rp/units::cm; 
 	    }
+	    xyz[1] = depo->pos().y()/units::cm;
+	    xyz[2] = depo->pos().z()/units::cm;
 	
 	    unsigned int temp_time = (unsigned int) ( (tdc/units::us+4050) / (m_tick/units::us) ); // hacked G4 to TDC
 	    charge = abs(charge);
