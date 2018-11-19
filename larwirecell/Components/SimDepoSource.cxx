@@ -158,7 +158,7 @@ void SimDepoSource::visit(art::Event & event)
         std::cerr << msg << std::endl;
         THROW(WireCell::RuntimeError() << WireCell::errmsg{msg});
     }
-    else if (sedvh->empty()) return;
+    //else if (sedvh->empty()) return;
     
     const size_t ndepos = sedvh->size();
     
@@ -190,6 +190,15 @@ void SimDepoSource::visit(art::Event & event)
         //           << " q=" << wq 
         //           << " e=" << we/units::MeV << "\n";
     }
+
+    // empty "ionization": no TPC activity
+    if (ndepos == 0) {
+	    WireCell::Point wpt(0, 0, 0);
+	    WireCell::IDepo::pointer depo
+		    = std::make_shared<WireCell::SimpleDepo>(0, wpt, 0, nullptr, 0.0, 0.0);
+	    m_depos.push_back(depo);
+    }
+
     // don't trust user to honor time ordering.
     std::sort(m_depos.begin(), m_depos.end(), WireCell::ascending_time);
     std::cerr << "SimDepoSource: ready with " << m_depos.size() << " depos spanning: ["
