@@ -220,7 +220,6 @@ struct PU {
 
 void FrameSaver::save_as_raw(art::Event & event)
 {
-    PU pu(m_pedestal_mean);
 
     const int ntags = m_frame_tags.size();
     for (int ind=0; ind<ntags; ++ind) {
@@ -265,7 +264,14 @@ void FrameSaver::save_as_raw(art::Event & event)
 		adcv[ind] = scale * charge[ind]; // scale + truncate/redigitize
 	    }
 	    out->emplace_back(raw::RawDigit(chid, nticks, adcv, raw::kNone));
-	    out->back().SetPedestal(pu(chid), m_pedestal_sigma);
+	    if (m_pedestal_mean.asString() == "native") {
+		short baseline = Waveform::most_frequent(adcv);
+		out->back().SetPedestal(baseline, m_pedestal_sigma);
+	    }
+	    else {
+		PU pu(m_pedestal_mean);
+		out->back().SetPedestal(pu(chid), m_pedestal_sigma);
+	    }
 	}
 	event.put(std::move(out), tag);
     }
