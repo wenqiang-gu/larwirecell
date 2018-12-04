@@ -1,12 +1,12 @@
-/** A WCT component which is a source of raw frames which it produces
- * by also being an art::Event visitor.
+/** A WCT component which is a source of "cooked" frames which it
+ * produces by also being an art::Event visitor.
  *
- * Raw means that the waveforms are taken from the art::Event as a
- * labeled std::vector<raw::RawDigit> collection.
+ * Cooked means that the waveforms are taken from the art::Event as a
+ * labeled std::vector<recob::Wire> collection.
  */
 
-#ifndef LARWIRECELL_COMPONENTS_RAWFRAMESOURCE
-#define LARWIRECELL_COMPONENTS_RAWFRAMESOURCE
+#ifndef LARWIRECELL_COMPONENTS_COOKEDFRAMESOURCE
+#define LARWIRECELL_COMPONENTS_COOKEDFRAMESOURCE
 
 #include "larwirecell/Interfaces/IArtEventVisitor.h"
 #include "WireCellIface/IFrameSource.h"
@@ -19,12 +19,12 @@
 #include <deque>
 
 namespace wcls {
-    class RawFrameSource : public IArtEventVisitor, 
-                           public WireCell::IFrameSource,
-                           public WireCell::IConfigurable { 
+    class CookedFrameSource : public IArtEventVisitor, 
+                              public WireCell::IFrameSource,
+                              public WireCell::IConfigurable { 
     public:
-        RawFrameSource();
-        virtual ~RawFrameSource();
+        CookedFrameSource();
+        virtual ~CookedFrameSource();
 
         /// IArtEventVisitor 
         virtual void visit(art::Event & event);

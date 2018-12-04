@@ -80,6 +80,9 @@ namespace wcls {
         virtual channel_group_t bad_channels() const {
             return m_pimpl->bad_channels();
         }
+        virtual channel_group_t miscfg_channels() const {
+            return m_pimpl->miscfg_channels();
+        }
 
     private:
 

@@ -1,9 +1,7 @@
-#include "RawFrameSource.h"
+#include "CookedFrameSource.h"
 #include "art/Framework/Principal/Handle.h" 
 
-// for tick
-//#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
-#include "lardataobj/RawData/RawDigit.h"
+#include "lardataobj/RecoBase/Wire.h"
 #include "art/Framework/Principal/Event.h"
 
 #include "TTimeStamp.h"
@@ -13,38 +11,38 @@
 #include "WireCellIface/SimpleTrace.h"
 #include "WireCellUtil/NamedFactory.h"
 
-WIRECELL_FACTORY(wclsRawFrameSource, wcls::RawFrameSource,
+WIRECELL_FACTORY(wclsCookedFrameSource, wcls::CookedFrameSource,
 		 wcls::IArtEventVisitor, WireCell::IFrameSource)
 
 
 using namespace wcls;
 using namespace WireCell;
 
-RawFrameSource::RawFrameSource()
+CookedFrameSource::CookedFrameSource()
     : m_nticks(0)
 {
 }
 
-RawFrameSource::~RawFrameSource()
+CookedFrameSource::~CookedFrameSource()
 {
 }
 
 
-WireCell::Configuration RawFrameSource::default_configuration() const
+WireCell::Configuration CookedFrameSource::default_configuration() const
 {
     Configuration cfg;
-    cfg["art_tag"] = "";        // how to look up the raw digits
+    cfg["art_tag"] = "";        // how to look up the cooked digits
     cfg["tick"] = 0.5*WireCell::units::us;
     cfg["frame_tags"][0] = "orig"; // the tags to apply to this frame
-    cfg["nticks"] = m_nticks; // if nonzero, truncate or baseline-pad frame to this number of ticks.
+    cfg["nticks"] = m_nticks; // if nonzero, truncate or zero-pad frame to this number of ticks.
     return cfg;
 }
 
-void RawFrameSource::configure(const WireCell::Configuration& cfg)
+void CookedFrameSource::configure(const WireCell::Configuration& cfg)
 {
     const std::string art_tag = cfg["art_tag"].asString();
     if (art_tag.empty()) {
-        THROW(ValueError() << errmsg{"RawFrameSource requires a source_label"});
+        THROW(ValueError() << errmsg{"CookedFrameSource requires a source_label"});
     }
     m_inputTag = cfg["art_tag"].asString();
 
@@ -68,56 +66,53 @@ double tdiff(const art::Timestamp& ts1, const art::Timestamp& ts2)
 
 
 static
-SimpleTrace* make_trace(const raw::RawDigit& rd, unsigned int nticks_want)
+SimpleTrace* make_trace(const recob::Wire& rw, unsigned int nticks_want)
 {
-    const int chid = rd.Channel();
+    // uint
+    const raw::ChannelID_t chid = rw.Channel();
     const int tbin = 0;
-    const raw::RawDigit::ADCvector_t& adcv = rd.ADCs();
+    const std::vector<float> sig = rw.Signal();
 
-    short baseline = 0;
-    unsigned int nadcs = adcv.size();
-    int npad = nticks_want - nadcs;
-    if (npad > 0) {		// need to pad
-	baseline = Waveform::most_frequent(adcv);
-    }
-    else {			// either exact or need to truncate
-	npad = 0;
-	nadcs = std::min(nadcs, nticks_want);
+    const float baseline = 0.0;
+    unsigned int nsamp = sig.size();
+    if (nticks_want > 0) {
+	nsamp = std::min(nsamp, nticks_want);
     }
 
     auto strace = new SimpleTrace(chid, tbin, nticks_want);
-    for (unsigned int itick=0; itick < nadcs; ++ itick) {
-	strace->charge()[itick] = adcv[itick];
+    auto& q = strace->charge();
+    for (unsigned int itick=0; itick < nsamp; ++ itick) {
+	q[itick] = sig[itick];
     }
-    for (unsigned int itick = nadcs; itick < nticks_want; ++itick) {
-	strace->charge()[itick] = baseline;
+    for (unsigned int itick = nsamp; itick < nticks_want; ++itick) {
+	q[itick] = baseline;
     }
     return strace;
 }
 
-void RawFrameSource::visit(art::Event & event)
+void CookedFrameSource::visit(art::Event & event)
 {
     // fixme: want to avoid depending on DetectorPropertiesService for now.
     const double tick = m_tick; 
-    art::Handle< std::vector<raw::RawDigit> > rdvh;
-    bool okay = event.getByLabel(m_inputTag, rdvh);
+    art::Handle< std::vector<recob::Wire> > rwvh;
+    bool okay = event.getByLabel(m_inputTag, rwvh);
     if (!okay) {
-        std::string msg = "RawFrameSource failed to get raw::RawDigits: " + m_inputTag.encode();
+        std::string msg = "CookedFrameSource failed to get raw::RawDigits: " + m_inputTag.encode();
         std::cerr << msg << std::endl;
         THROW(RuntimeError() << errmsg{msg});
     }
-    else if (rdvh->size() == 0) return;
+    else if (rwvh->size() == 0) return;
 
-    const std::vector<raw::RawDigit>& rdv(*rdvh);
-    const size_t nchannels = rdv.size();
-    std::cerr << "RawFrameSource: got " << nchannels << " raw::RawDigit objects\n";
+    const std::vector<recob::Wire>& rwv(*rwvh);
+    const size_t nchannels = rwv.size();
+    std::cerr << "CookedFrameSource: got " << nchannels << " raw::RawDigit objects\n";
 
     WireCell::ITrace::vector traces(nchannels);
     for (size_t ind=0; ind<nchannels; ++ind) {
-        auto const& rd = rdv.at(ind);
-        traces[ind] = ITrace::pointer(make_trace(rd, m_nticks));
-	if (!ind) {
-	    std::cerr << "\tnticks=" << rd.ADCs().size() << " setting to " << m_nticks << std::endl;
+        auto const& rw = rwv.at(ind);
+        traces[ind] = ITrace::pointer(make_trace(rw, m_nticks));
+	if (!ind) {             // first time through
+	    std::cerr << "\tnticks=" << rw.NSignal() << " setting to " << m_nticks << std::endl;
 	}
     }
 
@@ -131,7 +126,7 @@ void RawFrameSource::visit(art::Event & event)
     m_frames.push_back(nullptr);
 }
 
-bool RawFrameSource::operator()(WireCell::IFrame::pointer& frame)
+bool CookedFrameSource::operator()(WireCell::IFrame::pointer& frame)
 {
     frame = nullptr;
     if (m_frames.empty()) {

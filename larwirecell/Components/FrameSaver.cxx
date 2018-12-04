@@ -220,7 +220,6 @@ struct PU {
 
 void FrameSaver::save_as_raw(art::Event & event)
 {
-    PU pu(m_pedestal_mean);
 
     const int ntags = m_frame_tags.size();
     for (int ind=0; ind<ntags; ++ind) {
@@ -265,7 +264,14 @@ void FrameSaver::save_as_raw(art::Event & event)
 		adcv[ind] = scale * charge[ind]; // scale + truncate/redigitize
 	    }
 	    out->emplace_back(raw::RawDigit(chid, nticks, adcv, raw::kNone));
-	    out->back().SetPedestal(pu(chid), m_pedestal_sigma);
+	    if (m_pedestal_mean.asString() == "native") {
+		short baseline = Waveform::most_frequent(adcv);
+		out->back().SetPedestal(baseline, m_pedestal_sigma);
+	    }
+	    else {
+		PU pu(m_pedestal_mean);
+		out->back().SetPedestal(pu(chid), m_pedestal_sigma);
+	    }
 	}
 	event.put(std::move(out), tag);
     }
@@ -398,20 +404,21 @@ void FrameSaver::save_cmms(art::Event & event)
 	std::cerr << "wclsFrameSaver: wrong type for configuration array of channel mask maps to save\n";
 	return;
     }
-    if (!m_frame) {
-        return;
-    }
-    auto cmm = m_frame->masks();
+    //if (!m_frame) {
+    //    return;
+    //}
     for (auto jcmm : m_cmms) {
 	std::string name = jcmm.asString();
+	std::unique_ptr< channel_list > out_list(new channel_list);
+	std::unique_ptr< channel_masks > out_masks(new channel_masks);
 
+	if(m_frame){
+    	auto cmm = m_frame->masks();
 	auto it = cmm.find(name);
 	if (it == cmm.end()) {
 	    std::cerr << "wclsFrameSaver: failed to find requested channel masks \"" << name << "\"\n";
 	    continue;
 	}
-	std::unique_ptr< channel_list > out_list(new channel_list);
-	std::unique_ptr< channel_masks > out_masks(new channel_masks);
 	for (auto cmit : it->second) { // int->vec<pair<int,int>>
 	    out_list->push_back(cmit.first);
 	    for (auto be : cmit.second) {
@@ -419,6 +426,7 @@ void FrameSaver::save_cmms(art::Event & event)
 		out_masks->push_back(be.first);
 		out_masks->push_back(be.second);
 	    }
+	}
 	}
 	if (out_list->empty()) {
 	    std::cerr << "wclsFrameSaver: found empty channel masks for \"" << name << "\"\n";
