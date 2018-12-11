@@ -56,11 +56,20 @@ namespace wcls {
         virtual float coherent_nf_decon_limit(int channel) const {
             return m_pimpl->coherent_nf_decon_limit(channel);
         }
-        virtual float coherent_nf_decon_limit1(int channel) const {
-            return m_pimpl->coherent_nf_decon_limit1(channel);
+        virtual float coherent_nf_decon_lf_cutoff(int channel) const {
+            return m_pimpl->coherent_nf_decon_lf_cutoff(channel);
         }
         virtual float coherent_nf_adc_limit(int channel) const {
             return m_pimpl->coherent_nf_adc_limit(channel);
+        }
+        virtual float coherent_nf_decon_limit1(int channel) const {
+            return m_pimpl->coherent_nf_decon_limit1(channel);
+        }
+        virtual float coherent_nf_protection_factor(int channel) const {
+            return m_pimpl->coherent_nf_protection_factor(channel);
+        }
+        virtual float coherent_nf_min_adc_limit(int channel) const {
+            return m_pimpl->coherent_nf_min_adc_limit(channel);
         }
         virtual const filter_t& rcrc(int channel) const {
             return m_pimpl->rcrc(channel);
