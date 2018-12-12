@@ -1,5 +1,6 @@
 #include "art/Framework/Core/ModuleMacros.h" 
 #include "art/Framework/Core/EDProducer.h"
+#include "art/Framework/Principal/Event.h"
 
 #include "art/Persistency/Common/PtrMaker.h"
 
@@ -106,8 +107,8 @@ void butcher::EventButcher::produce(art::Event & event)
     const size_t nsig = sig->size();
 
     // https://cdcvs.fnal.gov/redmine/projects/art/wiki/The_PtrMaker_utility
-    art::PtrMaker<raw::RawDigit> RawPtr(event, *this, m_cfg.outRawTag());
-    art::PtrMaker<recob::Wire> SigPtr(event, *this, m_cfg.outSigTag());
+    art::PtrMaker<raw::RawDigit> RawPtr(event, m_cfg.outRawTag());
+    art::PtrMaker<recob::Wire> SigPtr(event, m_cfg.outSigTag());
 
     // keep track of raw digit Ptr by its channel id, for later look
     // up in making associations.
