@@ -19,6 +19,7 @@
 #include "WireCellUtil/NamedFactory.h"
 
 #include <algorithm>
+#include <unordered_map>
 
 WIRECELL_FACTORY(wclsFrameSaver, wcls::FrameSaver,
 		 wcls::IArtEventVisitor, WireCell::IFrameFilter)
@@ -49,7 +50,10 @@ WireCell::Configuration FrameSaver::default_configuration() const
 
     // If true, break full waveforms into smaller ones by removing
     // zeros, otherwise leave waveforms as is.  This option is only
-    // applicable if saving to recob::Wire (digitize==false).
+    // applicable if saving to recob::Wire (digitize==false).  Note,
+    // WCT SP (maybe others) also has a sparse option which will
+    // pre-sparsify the input IFrame we may receive.  If the input
+    // frame is already sparse, this flag effectively doesn't matter.
     cfg["sparse"] = true;
 
     // If digitize, raw::RawDigit has slots for pedestal mean and
@@ -280,6 +284,7 @@ void FrameSaver::save_as_raw(art::Event & event)
 
 void FrameSaver::save_as_cooked(art::Event & event)
 {
+
     const int ntags = m_frame_tags.size();
     for (int ind=0; ind<ntags; ++ind) {
 	auto tag = m_frame_tags[ind];
@@ -302,6 +307,9 @@ void FrameSaver::save_as_cooked(art::Event & event)
 	double scale = m_frame_scale[ind];
 	std::unique_ptr<std::vector<recob::Wire> > outwires(new std::vector<recob::Wire>);
 
+        // collect over channels to allow one-wire-one-channel-many-rois
+        std::unordered_map<int, recob::Wire::RegionsOfInterest_t> rois;
+
 	// what about the frame's time() and ident()?
 	for (const auto& trace : traces) {
 	    const int tbin = trace->tbin();
@@ -317,7 +325,13 @@ void FrameSaver::save_as_cooked(art::Event & event)
 		}
 		nticks = m_nticks;
 	    }
-	    recob::Wire::RegionsOfInterest_t roi(nticks);
+
+            auto roiit = rois.find(chid);
+            if (roiit == rois.end()) {
+                rois[chid] = recob::Wire::RegionsOfInterest_t(nticks);
+                roiit = rois.find(chid);
+            }
+            recob::Wire::RegionsOfInterest_t& roi = roiit->second;
 
 	    if (m_sparse) {
 		auto first = charge.begin();
@@ -339,8 +353,17 @@ void FrameSaver::save_as_cooked(art::Event & event)
 		}
 	    }
 	    else {
-		roi.add_range(tbin, charge.begin(), charge.begin() + ncharge);
+                std::vector<float> scaled(charge.begin(), charge.end());
+                for (size_t ind=0; ind < ncharge; ++ind) {
+                    scaled[ind] *= scale;
+                }
+		roi.add_range(tbin, scaled.begin(), scaled.begin() + ncharge);
 	    }
+        }
+
+        for (auto& roiit : rois) {
+            int chid = roiit.first;
+            recob::Wire::RegionsOfInterest_t& roi = roiit.second;
 
 	    // geo::kU, geo::kV, geo::kW
 	    auto wpid = m_anode->resolve(chid);
@@ -365,7 +388,7 @@ void FrameSaver::save_as_cooked(art::Event & event)
 	    outwires->emplace_back(recob::Wire(roi, chid, view));
 	}
 	event.put(std::move(outwires), tag);
-    }
+    } // loop over tags
 }
 
 void FrameSaver::save_summaries(art::Event & event)
