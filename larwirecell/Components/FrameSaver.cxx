@@ -49,6 +49,11 @@ WireCell::Configuration FrameSaver::default_configuration() const
     // else leave as floating point recob::Wire
     cfg["digitize"] = false;
 
+    // If true, save recob::Wires as sparse (true zero suppressed).
+    // Note, this sparsification is performed independently from if
+    // the input IFrame itself is sparse or not.
+    cfg["sparse"] = true;
+
     // If digitize, raw::RawDigit has slots for pedestal mean and
     // sigma.  Legacy/obsolete code stuff unrelated values into these
     // slots.  If pedestal_mean is a number, it will be stuffed.  If
@@ -124,6 +129,7 @@ void FrameSaver::configure(const WireCell::Configuration& cfg)
     }
 
     m_digitize = get(cfg, "digitize", false);
+    m_sparse = get(cfg, "sparse", true);
 
     m_cmms = cfg["chanmaskmaps"];
 
@@ -359,8 +365,9 @@ void FrameSaver::save_as_cooked(art::Event & event)
                 const auto& charge = trace->charge();
                 
                 auto beg = charge.begin();
+                const auto first = beg;
                 auto end = charge.end();
-                if (m_nticks) {
+                if (m_nticks) { // user wants max waveform size
                     if (tbin >= m_nticks) {
                         beg = end;
                     }
@@ -371,11 +378,30 @@ void FrameSaver::save_as_cooked(art::Event & event)
                         }
                     }
                 }
-                if (beg < end) {
-                    // prefer combine_range() but it segfaults.
+                if (beg >= end) {
+                    continue;
+                }
+                if (!m_sparse) {
                     std::vector<float> scaled(beg,end);
                     for (size_t i=0; i<scaled.size(); ++i) scaled[i] *= scale;
+                    // prefer combine_range() but it segfaults.
                     rois.add_range(tbin, scaled.begin(), scaled.end());
+                    continue;
+                }
+                // sparsify trace whether or not it may itself already
+                // represents a sparse ROI
+                while (true) {
+                    beg = std::find_if(beg, end, [](float v){return v!= 0.0;});
+                    if (beg == end) {
+                        break;
+                    }
+                    auto mid = std::find_if(beg, end, [](float v){return v == 0.0;});
+                    std::vector<float> scaled(beg, mid);
+                    for (int ind=0; ind<mid-beg; ++ind) {
+                        scaled[ind] *= scale;
+                    }
+                    rois.add_range(tbin + beg-first, scaled.begin(), scaled.end());
+                    beg = mid;
                 }
             }
 

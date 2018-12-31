@@ -83,7 +83,7 @@ namespace wcls {
         std::unordered_map< std::string, summarizer_function> m_summary_operators;
 
 	int m_nticks;
-	bool m_digitize;
+	bool m_digitize, m_sparse;
 	Json::Value m_cmms, m_pedestal_mean;
 	double m_pedestal_sigma;
 
