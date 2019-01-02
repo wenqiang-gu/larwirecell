@@ -423,10 +423,19 @@ void FrameSaver::save_summaries(art::Event & event)
     const size_t nchans = m_chview.size();
 
     // for each summary
-    for (int ind=0; ind<ntags; ++ind) {
+    for (int tag_ind=0; tag_ind<ntags; ++tag_ind) {
+        // The scale set for the tag.
+        const double scale = m_summary_scale[tag_ind];
+
         std::unique_ptr<std::vector<double> > outsum(new std::vector<double>(nchans, 0.0));
 
-	auto tag = m_summary_tags[ind];
+
+        // The "summary" and "traces" vectors of the same tag are
+        // synced, element-by-element.  Each element corresponds to
+        // one trace (ROI).  No particular order or correlation by
+        // channel exists, and that's what the rest of this code
+        // creates.
+	auto tag = m_summary_tags[tag_ind];
         const auto& summary = m_frame->trace_summary(tag);
         ITrace::vector traces;
         tagged_traces(m_frame, tag, traces);
@@ -435,11 +444,11 @@ void FrameSaver::save_summaries(art::Event & event)
         std::unordered_map<int, std::vector<float> > bychan;
         for (size_t itrace=0; itrace < ntraces; ++itrace) {
             const int chid = traces[itrace]->channel();
-            bychan[chid].push_back(summary[ind]);
+            const double summary_value = summary[itrace];
+            bychan[chid].push_back(summary_value);
         }
         auto oper = m_summary_operators[tag];
 
-        const double scale = m_summary_scale[ind];
 
         size_t chanind=0;
         for (auto chv : m_chview) {
