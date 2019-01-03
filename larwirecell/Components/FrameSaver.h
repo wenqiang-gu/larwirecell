@@ -2,13 +2,13 @@
  * their content as:
 
  - waveform content as vector collections of either raw::RawDigit or
-   recob::Wire,
+   recob::Wire.  
 
  - summaries as vector<double>
 
  - channel mask maps as vector<int> holding channel numbers
 
-It can be configured to scale waveform or summary values by some constant.
+ It can be configured to scale waveform or summary values by some constant.
 */
 
 #ifndef LARWIRECELL_COMPONENTS_FRAMESAVER
@@ -19,11 +19,15 @@ It can be configured to scale waveform or summary values by some constant.
 #include "WireCellIface/IAnodePlane.h"
 #include "larwirecell/Interfaces/IArtEventVisitor.h"
 
+#include "larcore/Geometry/Geometry.h"
+
 #include <string>
+#include <functional>
 #include <vector>
 #include <map>
 
 namespace wcls {
+
     class FrameSaver : public IArtEventVisitor, 
                             public WireCell::IFrameFilter,
                             public WireCell::IConfigurable {
@@ -66,10 +70,18 @@ namespace wcls {
 	
 
     private:
+
+        // ordered.
+        std::map<int, geo::View_t> m_chview;
+
+
         WireCell::IFrame::pointer m_frame;
-        WireCell::IAnodePlane::pointer m_anode;
 	std::vector<std::string> m_frame_tags, m_summary_tags;
 	std::vector<double> m_frame_scale, m_summary_scale;
+
+        typedef std::function<float(const std::vector<float>& tsvals)> summarizer_function;
+        std::unordered_map< std::string, summarizer_function> m_summary_operators;
+
 	int m_nticks;
 	bool m_digitize, m_sparse;
 	Json::Value m_cmms, m_pedestal_mean;
@@ -79,6 +91,7 @@ namespace wcls {
 	void save_as_cooked(art::Event & event);
 	void save_summaries(art::Event & event);
 	void save_cmms(art::Event & event);
+        void save_empty(art::Event& event);
 
     };
 }

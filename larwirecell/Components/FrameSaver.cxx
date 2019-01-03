@@ -1,15 +1,11 @@
+/*
+ */
 
 #include "FrameSaver.h"
 //#include "art/Framework/Principal/Handle.h" 
 
 #include "lardataobj/RecoBase/Wire.h"
 #include "lardataobj/RawData/RawDigit.h"
-
-// it would be nice to remove this dependency since it is needed only
-// to add bogus information to raw::RawDigit.  
-#include "larevt/CalibrationDBI/Interface/DetPedestalService.h"
-#include "larevt/CalibrationDBI/Interface/DetPedestalProvider.h"
-
 
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Core/EDProducer.h"
@@ -18,7 +14,13 @@
 #include "WireCellIface/ITrace.h"
 #include "WireCellUtil/NamedFactory.h"
 
+// it would be nice to remove this dependency since it is needed only
+// to add bogus information to raw::RawDigit.  
+#include "larevt/CalibrationDBI/Interface/DetPedestalService.h"
+#include "larevt/CalibrationDBI/Interface/DetPedestalProvider.h"
+
 #include <algorithm>
+#include <map>
 
 WIRECELL_FACTORY(wclsFrameSaver, wcls::FrameSaver,
 		 wcls::IArtEventVisitor, WireCell::IFrameFilter)
@@ -47,9 +49,9 @@ WireCell::Configuration FrameSaver::default_configuration() const
     // else leave as floating point recob::Wire
     cfg["digitize"] = false;
 
-    // If true, break full waveforms into smaller ones by removing
-    // zeros, otherwise leave waveforms as is.  This option is only
-    // applicable if saving to recob::Wire (digitize==false).
+    // If true, save recob::Wires as sparse (true zero suppressed).
+    // Note, this sparsification is performed independently from if
+    // the input IFrame itself is sparse or not.
     cfg["sparse"] = true;
 
     // If digitize, raw::RawDigit has slots for pedestal mean and
@@ -72,11 +74,30 @@ WireCell::Configuration FrameSaver::default_configuration() const
     // Summaries to output, if any
     cfg["summary_tags"] = Json::arrayValue;
     cfg["summary_scale"] = 1.0;
+    // Sumaries are *per trace* quantities coming in but it is likely
+    // that some (most?) consumers of the output will expect *per
+    // channel* quantities.  Aggregating by channel requires some
+    // operator to be applied to the sequence of summary values from a
+    // common channel.  The operator is defined as an object keyed by
+    // the summary tag.  Values may be "set" which will simply save a
+    // summary value to the output element (last one from a channel
+    // wins) or "sum" (the default) which will add up the values.
+    cfg["summary_operator"] = Json::objectValue;
 
     // Names of channel mask maps to save, if any.
     cfg["chanmaskmaps"] = Json::arrayValue;
 
     return cfg;
+}
+
+static float summary_sum(const std::vector<float> &tsvals) {
+    return std::accumulate(tsvals.begin(), tsvals.end(), 0);
+}
+static float summary_set(const std::vector<float> &tsvals) {
+    if (tsvals.empty()) {
+        return 0.0; 
+    }
+    return tsvals.back();
 }
 
 void FrameSaver::configure(const WireCell::Configuration& cfg)
@@ -85,7 +106,27 @@ void FrameSaver::configure(const WireCell::Configuration& cfg)
     if (anode_tn.empty()) {
         THROW(ValueError() << errmsg{"FrameSaver requires an anode plane"});
     }
-    m_anode = Factory::find_tn<IAnodePlane>(anode_tn);
+
+    WireCell::IAnodePlane::pointer anode = Factory::find_tn<IAnodePlane>(anode_tn);
+    for (auto chid : anode->channels()) {
+        // geo::kU, geo::kV, geo::kW
+        auto wpid = anode->resolve(chid);
+        geo::View_t view;
+        switch(wpid.layer()) {
+        case WireCell::kUlayer:
+            view = geo::kU;
+            break;
+        case WireCell::kVlayer:
+            view = geo::kV;
+            break;
+        case WireCell::kWlayer:
+            view = geo::kW;
+            break;
+        default:
+            view = geo::kUnknown;
+        }
+        m_chview[chid] = view;
+    }
 
     m_digitize = get(cfg, "digitize", false);
     m_sparse = get(cfg, "sparse", true);
@@ -122,6 +163,8 @@ void FrameSaver::configure(const WireCell::Configuration& cfg)
 	m_nticks = get(cfg, "nticks", m_nticks);
     }
 
+    auto jso = cfg["summary_operator"];
+
     if (! cfg["summary_tags"].isNull()) {
 	m_summary_scale.clear();
 	auto jscale = cfg["summary_scale"];
@@ -143,6 +186,13 @@ void FrameSaver::configure(const WireCell::Configuration& cfg)
 
 	    m_summary_tags.push_back(tag);
 	    m_summary_scale.push_back(scale);
+            auto so = get<std::string>(jso, tag, "sum");
+            if (so == "set") {
+                m_summary_operators[tag] = summary_set;
+            }
+            else {
+                m_summary_operators[tag] = summary_sum;
+            }
 	}
     }
 }
@@ -177,24 +227,35 @@ void FrameSaver::produces(art::EDProducer* prod)
     }
 }
 
-// fixme: this is copied from sigproc/FrameUtil but it's currently private code.  
+
 static
-ITrace::vector tagged_traces(IFrame::pointer frame, IFrame::tag_t tag)
+void tagged_traces(IFrame::pointer frame, std::string tag, ITrace::vector& ret)
 {
-    ITrace::vector ret;
     auto const& all_traces = frame->traces();
-    for (size_t index : frame->tagged_traces(tag)) {
-        ret.push_back(all_traces->at(index));
-    }
-    if (!ret.empty()) {
-        return ret;
+    const auto& ttinds = frame->tagged_traces(tag);
+    if (ttinds.size()) {
+        for (size_t index: ttinds) {
+            ret.push_back(all_traces->at(index));
+        }
+        return;
     }
     auto ftags = frame->frame_tags();
     if (std::find(ftags.begin(), ftags.end(), tag) == ftags.end()) {
-        return ret;
+        return;
     }
-    return *all_traces;		// must make copy of shared pointers
+    ret.insert(ret.begin(), all_traces->begin(), all_traces->end());
 }
+
+
+typedef std::unordered_map<int, ITrace::vector> traces_bychan_t;
+static void traces_bychan(ITrace::vector& traces, traces_bychan_t& ret)
+{
+    for (auto trace : traces) {
+        int chid = trace->channel();
+        ret[chid].push_back(trace);
+    }
+}
+
 
 // Issolate some silly legacy shenanigans to keep the rest of the code
 // blissfully ignorant of the evilness this implies.
@@ -220,178 +281,183 @@ struct PU {
 
 void FrameSaver::save_as_raw(art::Event & event)
 {
+    size_t nftags = m_frame_tags.size();
+    for (size_t iftag = 0; iftag < nftags; ++iftag) {
+        std::string ftag = m_frame_tags[iftag];
+        std::cerr << "wclsFrameSaver: saving raw::RawDigits tagged \"" << ftag << "\"\n";
 
-    const int ntags = m_frame_tags.size();
-    for (int ind=0; ind<ntags; ++ind) {
-	auto tag = m_frame_tags[ind];
-        std::cerr << "wclsFrameSaver: saving raw::RawDigits tagged \"" << tag << "\"\n";
+        double scale = m_frame_scale[iftag];
 
-        if (!m_frame) { // is there someway to avoid this empty collection
-                        // without annoying produces()?
-            std::unique_ptr<std::vector<raw::RawDigit> > out(new std::vector<raw::RawDigit>);
-            event.put(std::move(out), tag);
-            continue;
+        ITrace::vector traces;
+	tagged_traces(m_frame, ftag, traces);
+        traces_bychan_t bychan;
+        traces_bychan(traces, bychan);
+
+        std::unique_ptr<std::vector<raw::RawDigit> > out(new std::vector<raw::RawDigit>);
+
+        for (auto chv : m_chview) {
+            const int chid = chv.first;
+            const auto& traces = bychan[chid];
+            const size_t ntraces = traces.size();
+
+            int tbin = 0;
+            std::vector<float> charge;
+            if (ntraces) {
+                auto trace = traces[0];
+                tbin = trace->tbin();
+                charge = trace->charge();
+            }
+            // charge may be empty here
+
+            // enforce number of ticks if we are so configured.
+            size_t ncharge = charge.size();
+            int nticks = tbin + ncharge;
+            if (m_nticks) {	// force output waveform size
+                if (m_nticks < nticks) {
+                    ncharge  = m_nticks - tbin;
+                }
+                nticks = m_nticks;
+            }
+            raw::RawDigit::ADCvector_t adcv(nticks);
+            for (size_t ind=0; ind<ncharge; ++ind) {
+                adcv[tbin+ind] = scale * charge[ind]; // scale + truncate/redigitize
+            }
+            out->emplace_back(raw::RawDigit(chid, nticks, adcv, raw::kNone));
+            if (m_pedestal_mean.asString() == "native") {
+                short baseline = Waveform::most_frequent(adcv);
+                out->back().SetPedestal(baseline, m_pedestal_sigma);
+            }
+            else {
+                PU pu(m_pedestal_mean);
+                out->back().SetPedestal(pu(chid), m_pedestal_sigma);
+            }
         }
-
-	auto traces = tagged_traces(m_frame, tag);
-	if (traces.empty()) {
-	    std::cerr << "wclsFrameSaver: no traces for tag \"" << tag << "\"\n";
-	    continue;
-	}
-
-	//std::cerr << "wclsFrameSaver: got "<<traces.size()<<" traces for tag \"" << tag << "\"\n";
-	std::unique_ptr<std::vector<raw::RawDigit> > out(new std::vector<raw::RawDigit>);
-
-	double scale = m_frame_scale[ind];
-
-	// what about the frame's time() and ident()?
-	for (const auto& trace : traces) {
-	    const int tbin = trace->tbin();
-	    const int chid = trace->channel();
-	    const auto& charge = trace->charge();
-
-	    // enforce number of ticks if we are so configured.
-	    size_t ncharge = charge.size();
-	    int nticks = tbin + ncharge;
-	    if (m_nticks) {	// force output waveform size
-		if (m_nticks < nticks) {
-		    ncharge  = m_nticks - tbin;
-		}
-		nticks = m_nticks;
-	    }
-	    raw::RawDigit::ADCvector_t adcv(nticks);
-	    for (int ind=0; ind<nticks; ++ind) {
-		adcv[ind] = scale * charge[ind]; // scale + truncate/redigitize
-	    }
-	    out->emplace_back(raw::RawDigit(chid, nticks, adcv, raw::kNone));
-	    if (m_pedestal_mean.asString() == "native") {
-		short baseline = Waveform::most_frequent(adcv);
-		out->back().SetPedestal(baseline, m_pedestal_sigma);
-	    }
-	    else {
-		PU pu(m_pedestal_mean);
-		out->back().SetPedestal(pu(chid), m_pedestal_sigma);
-	    }
-	}
-	event.put(std::move(out), tag);
+        event.put(std::move(out), ftag);
     }
 }
+
 
 
 void FrameSaver::save_as_cooked(art::Event & event)
 {
-    const int ntags = m_frame_tags.size();
-    for (int ind=0; ind<ntags; ++ind) {
-	auto tag = m_frame_tags[ind];
-        std::cerr << "wclsFrameSaver: saving recob::Wires tagged \"" << tag << "\"\n";
+    size_t nftags = m_frame_tags.size();
+    for (size_t iftag = 0; iftag < nftags; ++iftag) {
+        std::string ftag = m_frame_tags[iftag];
+        std::cerr << "wclsFrameSaver: saving recob::Wires tagged \"" << ftag << "\"\n";
 
-        if (!m_frame) { // is there someway to avoid this empty collection
-                        // without annoying produces()?
-            std::unique_ptr<std::vector<recob::Wire> > outwires(new std::vector<recob::Wire>);
-            event.put(std::move(outwires), tag);
-            continue;
-        }
-        
+        double scale = m_frame_scale[iftag];
 
-	auto traces = tagged_traces(m_frame, tag);
-	if (traces.empty()) {
-	    std::cerr << "wclsFrameSaver: no traces for tag \"" << tag << "\"\n";
-	    continue;
+        ITrace::vector traces;
+	tagged_traces(m_frame, ftag, traces);
+        traces_bychan_t bychan;
+        traces_bychan(traces, bychan);
+
+        std::unique_ptr<std::vector<recob::Wire> > outwires(new std::vector<recob::Wire>);
+
+        for (auto chv : m_chview) {
+            const int chid = chv.first;
+            const auto& traces = bychan[chid];
+
+            recob::Wire::RegionsOfInterest_t rois(m_nticks);
+
+            for (const auto& trace : traces) {
+                const int tbin = trace->tbin();
+                const auto& charge = trace->charge();
+                
+                auto beg = charge.begin();
+                const auto first = beg;
+                auto end = charge.end();
+                if (m_nticks) { // user wants max waveform size
+                    if (tbin >= m_nticks) {
+                        beg = end;
+                    }
+                    else {
+                        int backup = tbin + charge.size() - m_nticks;
+                        if (backup > 0) {
+                            end -= backup;
+                        }
+                    }
+                }
+                if (beg >= end) {
+                    continue;
+                }
+                if (!m_sparse) {
+                    std::vector<float> scaled(beg,end);
+                    for (size_t i=0; i<scaled.size(); ++i) scaled[i] *= scale;
+                    // prefer combine_range() but it segfaults.
+                    rois.add_range(tbin, scaled.begin(), scaled.end());
+                    continue;
+                }
+                // sparsify trace whether or not it may itself already
+                // represents a sparse ROI
+                while (true) {
+                    beg = std::find_if(beg, end, [](float v){return v!= 0.0;});
+                    if (beg == end) {
+                        break;
+                    }
+                    auto mid = std::find_if(beg, end, [](float v){return v == 0.0;});
+                    std::vector<float> scaled(beg, mid);
+                    for (int ind=0; ind<mid-beg; ++ind) {
+                        scaled[ind] *= scale;
+                    }
+                    rois.add_range(tbin + beg-first, scaled.begin(), scaled.end());
+                    beg = mid;
+                }
+            }
+
+	    const geo::View_t view = chv.second;
+	    outwires->emplace_back(recob::Wire(rois, chid, view));
 	}
-
-	double scale = m_frame_scale[ind];
-	std::unique_ptr<std::vector<recob::Wire> > outwires(new std::vector<recob::Wire>);
-
-	// what about the frame's time() and ident()?
-	for (const auto& trace : traces) {
-	    const int tbin = trace->tbin();
-	    const int chid = trace->channel();
-	    const auto& charge = trace->charge();
-
-	    // enforce number of ticks if we are so configured.
-	    size_t ncharge = charge.size();
-	    int nticks = tbin + ncharge;
-	    if (m_nticks) {	// force output waveform size
-		if (m_nticks < nticks) {
-		    ncharge  = m_nticks - tbin;
-		}
-		nticks = m_nticks;
-	    }
-	    recob::Wire::RegionsOfInterest_t roi(nticks);
-
-	    if (m_sparse) {
-		auto first = charge.begin();
-		auto done = charge.end();
-		auto beg = first;
-		while (true) {
-		    beg = std::find_if(beg, done, [](float v){return v != 0.0;});
-		    if (beg == done) {
-			break;
-		    }
-		    auto end = std::find_if(beg, done, [](float v){return v == 0.0;});
-
-		    std::vector<float> scaled(beg, end);
-		    for (int ind=0; ind<end-beg; ++ind) {
-			scaled[ind] *= scale;
-		    }
-		    roi.add_range(tbin + beg-first, scaled.begin(), scaled.end());
-		    beg = end;
-		}
-	    }
-	    else {
-		roi.add_range(tbin, charge.begin(), charge.begin() + ncharge);
-	    }
-
-	    // geo::kU, geo::kV, geo::kW
-	    auto wpid = m_anode->resolve(chid);
-	    geo::View_t view;
-	    switch(wpid.layer()) {
-	    case WireCell::kUlayer:
-		view = geo::kU;
-		break;
-	    case WireCell::kVlayer:
-		view = geo::kV;
-		break;
-	    case WireCell::kWlayer:
-		view = geo::kW;
-		break;
-	    default:
-		view = geo::kUnknown;
-	    }
-	    
-	    // what about those pesky channel map masks?
-	    // they are dropped for now.
-
-	    outwires->emplace_back(recob::Wire(roi, chid, view));
-	}
-	event.put(std::move(outwires), tag);
-    }
+	event.put(std::move(outwires), ftag);
+    } // loop over tags
 }
+
 
 void FrameSaver::save_summaries(art::Event & event)
 {
     const int ntags = m_summary_tags.size();
-    //std::cerr << "wclsFrameSaver: " << ntags << " summary tags to save\n";
-    for (int ind=0; ind<ntags; ++ind) {
-	auto tag = m_summary_tags[ind];
-        //std::cerr << "\t" << tag << "\n";
+    if (0 == ntags) {
+        return;                 // no tags
+    }
 
-        std::unique_ptr<std::vector<double> > outsum(new std::vector<double>);
+    const size_t nchans = m_chview.size();
 
-        if (m_frame) {
-            const auto& summary = m_frame->trace_summary(tag);
-            if (summary.empty()) {
-                std::cerr << "wclsFrameSaver: no summary for tag \"" << tag << "\"\n";
-                continue;
-            }
-            const double scale = m_summary_scale[ind];
+    // for each summary
+    for (int tag_ind=0; tag_ind<ntags; ++tag_ind) {
+        // The scale set for the tag.
+        const double scale = m_summary_scale[tag_ind];
 
-            for (auto val : summary) {
-                outsum->push_back(scale * val);
-            }
+        std::unique_ptr<std::vector<double> > outsum(new std::vector<double>(nchans, 0.0));
+
+
+        // The "summary" and "traces" vectors of the same tag are
+        // synced, element-by-element.  Each element corresponds to
+        // one trace (ROI).  No particular order or correlation by
+        // channel exists, and that's what the rest of this code
+        // creates.
+	auto tag = m_summary_tags[tag_ind];
+        const auto& summary = m_frame->trace_summary(tag);
+        ITrace::vector traces;
+        tagged_traces(m_frame, tag, traces);
+        const size_t ntraces = traces.size();
+
+        std::unordered_map<int, std::vector<float> > bychan;
+        for (size_t itrace=0; itrace < ntraces; ++itrace) {
+            const int chid = traces[itrace]->channel();
+            const double summary_value = summary[itrace];
+            bychan[chid].push_back(summary_value);
         }
+        auto oper = m_summary_operators[tag];
 
-	event.put(std::move(outsum), tag);
+
+        size_t chanind=0;
+        for (auto chv : m_chview) {
+            const int chid = chv.first;
+            const float val = oper(bychan[chid]);
+            outsum->at(chanind) = val * scale;
+            ++chanind;
+        }
+        event.put(std::move(outsum), tag);
     }
 }
 
@@ -404,15 +470,11 @@ void FrameSaver::save_cmms(art::Event & event)
 	std::cerr << "wclsFrameSaver: wrong type for configuration array of channel mask maps to save\n";
 	return;
     }
-    //if (!m_frame) {
-    //    return;
-    //}
     for (auto jcmm : m_cmms) {
 	std::string name = jcmm.asString();
 	std::unique_ptr< channel_list > out_list(new channel_list);
 	std::unique_ptr< channel_masks > out_masks(new channel_masks);
 
-	if(m_frame){
     	auto cmm = m_frame->masks();
 	auto it = cmm.find(name);
 	if (it == cmm.end()) {
@@ -427,7 +489,7 @@ void FrameSaver::save_cmms(art::Event & event)
 		out_masks->push_back(be.second);
 	    }
 	}
-	}
+
 	if (out_list->empty()) {
 	    std::cerr << "wclsFrameSaver: found empty channel masks for \"" << name << "\"\n";
 	}
@@ -436,28 +498,50 @@ void FrameSaver::save_cmms(art::Event & event)
     }
 }
 
+
+void FrameSaver::save_empty(art::Event& event)
+{
+    // art (apparently?) requires something to be saved if a produces() is promised.
+    std::cerr << "wclsFrameSaver: saving empty frame to art::Event\n";
+
+    for (auto ftag : m_frame_tags) {
+        if (m_digitize) {
+            std::unique_ptr<std::vector<raw::RawDigit> > out(new std::vector<raw::RawDigit>);
+            event.put(std::move(out), ftag);
+
+        }
+        else {
+            std::unique_ptr<std::vector<recob::Wire> > outwires(new std::vector<recob::Wire>);
+            event.put(std::move(outwires), ftag);
+        }
+    }
+
+    for (auto stag : m_summary_tags) {
+        std::unique_ptr<std::vector<double> > outsum(new std::vector<double>);
+        event.put(std::move(outsum), stag);
+    }        
+        
+    for (auto jcmm : m_cmms) {
+	std::string name = jcmm.asString();
+	std::unique_ptr< channel_list > out_list(new channel_list);
+	std::unique_ptr< channel_masks > out_masks(new channel_masks);
+	event.put(std::move(out_list), name + "channels");
+	event.put(std::move(out_masks), name + "masks");
+    }
+}
+
 void FrameSaver::visit(art::Event & event)
 {
-    if (m_frame) {
-        std::cerr << "wclsFrameSaver: saving frame to art::Event, frame has trace tags:[";
-        for (auto tag : m_frame->trace_tags()) {
-            std::cerr << " " << tag;
-        }
-        std::cerr << " ], and frame tags:[";
-        for (auto tag : m_frame->frame_tags()) {
-            std::cerr << " " << tag;
-        }
-        std::cerr << " ]\n";
-    }
-    else {
-        std::cerr << "wclsFrameSaver: saving empty frame to art::Event\n";
+    if (!m_frame) {
+        save_empty(event);
+        return;
     }
 
     if (m_digitize) {
-	save_as_raw(event);
+        save_as_raw(event);
     }
     else {
-	save_as_cooked(event);
+        save_as_cooked(event);
     }
 
     save_summaries(event);
