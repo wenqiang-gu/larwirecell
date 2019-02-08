@@ -13,7 +13,6 @@ namespace bogoblip {
 	using Parameters = art::EDProducer::Table<BlipMakerConfig>;
 
         explicit BlipMaker(Parameters const& params);
-        virtual ~BlipMaker();
 
         void produce(art::Event & evt);
     
@@ -28,14 +27,13 @@ namespace bogoblip {
 const std::string instance = "bogus"; // fixme: make configurable
 
 bogoblip::BlipMaker::BlipMaker(Parameters const& params)
-    : m_cfg(params())
+  : EDProducer{params}
+  , m_cfg(params())
     , m_count(0)
 {
     produces< std::vector<sim::SimEnergyDeposit> >(instance);
 }
-bogoblip::BlipMaker::~BlipMaker()
-{
-}
+
 void bogoblip::BlipMaker::produce(art::Event & event)
 {
     ++m_count;

@@ -74,7 +74,8 @@ namespace butcher {
 using namespace std;
 
 butcher::EventButcher::EventButcher(Parameters const& params)
-    : m_cfg(params())
+    : EDProducer{params}
+    , m_cfg(params())
     , m_rawtag{m_cfg.inRawTag()}
     , m_sigtag{m_cfg.inSigTag()}
 //    , m_rawtok{consumes< std::vector<raw::RawDigit> >(m_rawtag)}
