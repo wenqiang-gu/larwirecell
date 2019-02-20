@@ -76,13 +76,14 @@ SimpleTrace* make_trace(const raw::RawDigit& rd, unsigned int nticks_want)
 
     short baseline = 0;
     unsigned int nadcs = adcv.size();
-    int npad = nticks_want - nadcs;
-    if (npad > 0) {		// need to pad
-	baseline = Waveform::most_frequent(adcv);
+    if (nticks_want > 0) {      // don't want natural input size
+        if (nticks_want > nadcs) {
+            baseline = Waveform::most_frequent(adcv);
+        }
+        nadcs = std::min(nadcs, nticks_want);
     }
-    else {			// either exact or need to truncate
-	npad = 0;
-	nadcs = std::min(nadcs, nticks_want);
+    else {
+        nticks_want = nadcs;
     }
 
     auto strace = new SimpleTrace(chid, tbin, nticks_want);
@@ -102,7 +103,7 @@ void RawFrameSource::visit(art::Event & event)
     art::Handle< std::vector<raw::RawDigit> > rdvh;
     bool okay = event.getByLabel(m_inputTag, rdvh);
     if (!okay) {
-        std::string msg = "RawFrameSource failed to get raw::RawDigits: " + m_inputTag.encode();
+        std::string msg = "RawFrameSource failed to get vector<raw::RawDigit>: " + m_inputTag.encode();
         std::cerr << msg << std::endl;
         THROW(RuntimeError() << errmsg{msg});
     }
@@ -117,7 +118,16 @@ void RawFrameSource::visit(art::Event & event)
         auto const& rd = rdv.at(ind);
         traces[ind] = ITrace::pointer(make_trace(rd, m_nticks));
 	if (!ind) {
-	    std::cerr << "\tnticks=" << rd.ADCs().size() << " setting to " << m_nticks << std::endl;
+            if (m_nticks) {
+                std::cerr
+                    << "\tinput nticks=" << rd.ADCs().size() << " setting to " << m_nticks
+                    << std::endl;
+            }
+            else {
+                std::cerr
+                    << "\tinput nticks=" << rd.ADCs().size() << " keeping as is"
+                    << std::endl;
+            }
 	}
     }
 
