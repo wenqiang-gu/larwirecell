@@ -78,6 +78,9 @@ SimpleTrace* make_trace(const recob::Wire& rw, unsigned int nticks_want)
     if (nticks_want > 0) {
 	nsamp = std::min(nsamp, nticks_want);
     }
+    else {
+        nticks_want = nsamp;
+    }
 
     auto strace = new SimpleTrace(chid, tbin, nticks_want);
     auto& q = strace->charge();
@@ -112,7 +115,16 @@ void CookedFrameSource::visit(art::Event & event)
         auto const& rw = rwv.at(ind);
         traces[ind] = ITrace::pointer(make_trace(rw, m_nticks));
 	if (!ind) {             // first time through
-	    std::cerr << "\tnticks=" << rw.NSignal() << " setting to " << m_nticks << std::endl;
+            if (m_nticks) {
+                std::cerr
+                    << "\tinput nticks=" << rw.NSignal() << " setting to " << m_nticks
+                    << std::endl;
+            }
+            else {
+                std::cerr
+                    << "\tinput nticks=" << rw.NSignal() << " keeping as is"
+                    << std::endl;
+            }
 	}
     }
 
