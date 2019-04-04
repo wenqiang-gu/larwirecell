@@ -70,7 +70,7 @@ private:
 
 //-------------------------------------------------------------------
 WireCellNoiseFilter::WireCellNoiseFilter(fhicl::ParameterSet const& pset)
-    : EDProducer()
+    : EDProducer(pset)
 {
     this->reconfigure(pset);
     produces<std::vector<raw::RawDigit> >();
