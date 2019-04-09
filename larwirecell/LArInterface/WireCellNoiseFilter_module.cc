@@ -1,6 +1,3 @@
-#ifndef WIRECELLNOISEFILTERMODULE_H   // <--- this is not necessary since this file is not included...
-#define WIRECELLNOISEFILTERMODULE_H
-
 // Framework includes
 #include "art/Framework/Principal/Event.h"
 
@@ -406,5 +403,3 @@ void WireCellNoiseFilter::DoNoiseFilter(unsigned int runNum, const std::vector<r
 DEFINE_ART_MODULE(WireCellNoiseFilter)
 
 } //end namespace WireCellNoiseFilteralg
-
-#endif //WireCellNoiseFilterMODULE_H
