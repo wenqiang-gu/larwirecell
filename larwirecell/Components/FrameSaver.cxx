@@ -269,7 +269,7 @@ struct PU {
 	    return pu.asFloat();
 	}
 	if (pu.asString() == "fiction") {
-	    art::ServiceHandle<lariov::DetPedestalService> dps;
+	    art::ServiceHandle<lariov::DetPedestalService const> dps;
 	    const auto& pv = dps->GetPedestalProvider();
 	    return pv.PedMean(chid);
 	}

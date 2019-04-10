@@ -86,21 +86,21 @@ void WireCellNoiseFilter::reconfigure(fhicl::ParameterSet const& pset){
 
 //-------------------------------------------------------------------
 void WireCellNoiseFilter::beginJob(){
-    art::ServiceHandle<art::TFileService> tfs;
-    //art::ServiceHandle<util::LArWireCellNoiseFilterService> larWireCellNF;
+    art::ServiceHandle<art::TFileService const> tfs;
+    //art::ServiceHandle<util::LArWireCellNoiseFilterService const> larWireCellNF;
     //larWireCellNF->print(17);
 }
 
 //-------------------------------------------------------------------
 void WireCellNoiseFilter::endJob(){
-    art::ServiceHandle<art::TFileService> tfs;
+    art::ServiceHandle<art::TFileService const> tfs;
 }
   
 //-------------------------------------------------------------------
 void WireCellNoiseFilter::produce(art::Event & evt)
 {
     // Recover services we will need
-    const lariov::DetPedestalProvider& pedestalValues = art::ServiceHandle<lariov::DetPedestalService>()->GetPedestalProvider();
+    const lariov::DetPedestalProvider& pedestalValues = art::ServiceHandle<lariov::DetPedestalService const>()->GetPedestalProvider();
     
     art::Handle< std::vector<raw::RawDigit> > rawDigitHandle;
     evt.getByLabel(fDigitModuleLabel,rawDigitHandle);
@@ -152,9 +152,9 @@ void WireCellNoiseFilter::DoNoiseFilter(unsigned int runNum, const std::vector<r
 {
 
     // Recover services we will need
-    const lariov::ChannelStatusProvider& channelStatus      = art::ServiceHandle<lariov::ChannelStatusService>()->GetProvider();
-    const lariov::DetPedestalProvider&   pedestalValues     = art::ServiceHandle<lariov::DetPedestalService>()->GetPedestalProvider();
-    const lariov::ElectronicsCalibProvider& elec_provider = art::ServiceHandle<lariov::ElectronicsCalibService>()->GetProvider();
+    const lariov::ChannelStatusProvider& channelStatus      = art::ServiceHandle<lariov::ChannelStatusService const>()->GetProvider();
+    const lariov::DetPedestalProvider&   pedestalValues     = art::ServiceHandle<lariov::DetPedestalService const>()->GetPedestalProvider();
+    const lariov::ElectronicsCalibProvider& elec_provider = art::ServiceHandle<lariov::ElectronicsCalibService const>()->GetProvider();
     const geo::GeometryCore&             geometry           = *lar::providerFrom<geo::Geometry>();
     const detinfo::DetectorProperties&   detectorProperties = *lar::providerFrom<detinfo::DetectorPropertiesService>();
     

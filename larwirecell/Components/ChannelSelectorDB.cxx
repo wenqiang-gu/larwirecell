@@ -40,7 +40,7 @@ void wcls::ChannelSelectorDB::visit(art::Event & event)
 
 
     if (m_type == "bad") {
-	auto const& csvc = art::ServiceHandle<lariov::ChannelStatusService>()->GetProvider();
+	auto const& csvc = art::ServiceHandle<lariov::ChannelStatusService const>()->GetProvider();
 
 	for(size_t ich=0; ich<nchans; ++ich) {
 	    if (csvc.IsBad(ich)) {
@@ -50,7 +50,7 @@ void wcls::ChannelSelectorDB::visit(art::Event & event)
     }
 
     if (m_type == "misconfigured") {
-    const auto& esvc = art::ServiceHandle<lariov::ElectronicsCalibService>()->GetProvider();
+    const auto& esvc = art::ServiceHandle<lariov::ElectronicsCalibService const>()->GetProvider();
 
 	std::vector<int> mc_channels;
 	for(size_t ich=0; ich<nchans; ++ich) {
