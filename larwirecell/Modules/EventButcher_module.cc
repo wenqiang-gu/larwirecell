@@ -70,7 +70,6 @@ namespace butcher {
 
 }
 
-#include <iostream>
 using namespace std;
 
 butcher::EventButcher::EventButcher(Parameters const& params)

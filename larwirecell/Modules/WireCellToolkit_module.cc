@@ -6,7 +6,6 @@
 // fixme: this should be removed once produces<>() is moved to sink components.
 #include "lardataobj/RecoBase/Wire.h"
 
-#include <iostream>
 
 using namespace std;
 

@@ -16,9 +16,7 @@
 #include "WireCellApps/Main.h"
 #include "WireCellUtil/NamedFactory.h"
 
-#include <vector>
 #include <string>
-#include <map>
 
 
 namespace wcls {

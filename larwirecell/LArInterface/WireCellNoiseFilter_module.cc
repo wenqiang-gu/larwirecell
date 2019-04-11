@@ -31,7 +31,6 @@
 
 #include <numeric>		// iota
 #include <string>
-#include <vector>
 #include <iostream>
 
 using namespace WireCell;
