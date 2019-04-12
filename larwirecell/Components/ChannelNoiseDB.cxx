@@ -112,7 +112,7 @@ wcls::ChannelNoiseDB::OverridePolicy_t wcls::ChannelNoiseDB::parse_policy(const 
     if (pol == "replace") {
 	return kReplace;
     }
-    
+
     THROW(ValueError() << errmsg{"ChannelNoiseDB: unknown override policy given: " + pol});
 }
 
@@ -125,7 +125,7 @@ void wcls::ChannelNoiseDB::configure(const WireCell::Configuration& cfg)
     if (!jbc.empty()) {
 	m_bad_channel_policy = parse_policy(jbc["policy"]);
     }
-    
+
     auto jmc = cfg["misconfig_channel"];
     if (!jmc.empty()) {
 	m_misconfig_channel_policy = parse_policy(jmc["policy"]);

@@ -4,14 +4,14 @@
 #include "larwirecell/Interfaces/MainTool.h"
 #include "larwirecell/Interfaces/IArtEventVisitor.h"
 
-#include "fhiclcpp/ParameterSet.h" 
-#include "fhiclcpp/types/Sequence.h" 
-#include "fhiclcpp/types/OptionalSequence.h" 
-#include "fhiclcpp/types/OptionalTable.h" 
-#include "fhiclcpp/types/DelegatedParameter.h" 
-#include "fhiclcpp/types/OptionalDelegatedParameter.h" 
-#include "fhiclcpp/types/Comment.h" 
-#include "fhiclcpp/types/Table.h" 
+#include "fhiclcpp/ParameterSet.h"
+#include "fhiclcpp/types/Sequence.h"
+#include "fhiclcpp/types/OptionalSequence.h"
+#include "fhiclcpp/types/OptionalTable.h"
+#include "fhiclcpp/types/DelegatedParameter.h"
+#include "fhiclcpp/types/OptionalDelegatedParameter.h"
+#include "fhiclcpp/types/Comment.h"
+#include "fhiclcpp/types/Table.h"
 
 #include "WireCellApps/Main.h"
 #include "WireCellUtil/NamedFactory.h"
@@ -63,7 +63,7 @@ namespace wcls {
         optional_string_list_t outputers { fhicl::Name("outputers"),
                 fhicl::Comment("List of WCT components which act as WCT sinks.\n"
                                "They are called after WCT executes on each Art Event object.") };
-        
+
     };
 
     class WCLS : public MainTool {
@@ -102,7 +102,7 @@ wcls::WCLS::WCLS(wcls::WCLS::Parameters const& params)
     for (auto cfg : wclscfg.configs()) {
         m_wcmain.add_config(cfg);
     }
-    
+
     for (auto app : wclscfg.apps()) {
         m_wcmain.add_app(app);
     }
@@ -182,7 +182,7 @@ void wcls::WCLS::process(art::Event& event)
     //std::cerr << "Running Wire Cell Toolkit...\n";
     m_wcmain();
     //std::cerr << "... Wire Cell Toolkit done\n";
-    
+
     for (auto iaev : m_outputers) {
         //std::cerr << "post visit\n";
         iaev->visit(event);

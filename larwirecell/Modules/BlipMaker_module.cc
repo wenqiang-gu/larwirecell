@@ -1,4 +1,4 @@
-#include "art/Framework/Core/ModuleMacros.h" 
+#include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Principal/Event.h"
 
@@ -15,7 +15,7 @@ namespace bogoblip {
         explicit BlipMaker(Parameters const& params);
 
         void produce(art::Event & evt);
-    
+
     private:
 
 	const BlipMakerConfig m_cfg;
@@ -39,7 +39,7 @@ void bogoblip::BlipMaker::produce(art::Event & event)
     ++m_count;
 
     auto out = std::make_unique< std::vector<sim::SimEnergyDeposit> >();
-    
+
     int nphotons = 0;
     const  int nelepercm = 50000;
     const double mevpercm = 2.0;
@@ -47,7 +47,7 @@ void bogoblip::BlipMaker::produce(art::Event & event)
     double t0 = 0.;
     double t1 = 0.;
     int trackid = 0;
-    
+
     // implicit units are cm, ns and MeV.
     sim::SimEnergyDeposit::Point_t start = {100.,0.,0.};
     sim::SimEnergyDeposit::Point_t end = {150.,10.,50.};

@@ -2,7 +2,7 @@
  */
 
 #include "FrameSaver.h"
-//#include "art/Framework/Principal/Handle.h" 
+//#include "art/Framework/Principal/Handle.h"
 
 #include "lardataobj/RecoBase/Wire.h"
 #include "lardataobj/RawData/RawDigit.h"
@@ -15,7 +15,7 @@
 #include "WireCellUtil/NamedFactory.h"
 
 // it would be nice to remove this dependency since it is needed only
-// to add bogus information to raw::RawDigit.  
+// to add bogus information to raw::RawDigit.
 #include "larevt/CalibrationDBI/Interface/DetPedestalService.h"
 #include "larevt/CalibrationDBI/Interface/DetPedestalProvider.h"
 
@@ -43,7 +43,7 @@ FrameSaver::~FrameSaver()
 WireCell::Configuration FrameSaver::default_configuration() const
 {
     Configuration cfg;
-    cfg["anode"] = "AnodePlane"; 
+    cfg["anode"] = "AnodePlane";
 
     // If true, truncate frame waveforms and save as raw::RawDigit,
     // else leave as floating point recob::Wire
@@ -69,7 +69,7 @@ WireCell::Configuration FrameSaver::default_configuration() const
     cfg["frame_scale"] = 1.0; 	// multiply this number to all
 				// waveform samples.  If list, then
 				// one number per frame tags.
-    cfg["nticks"] = m_nticks; // if nonzero, force number of ticks in output waveforms. 
+    cfg["nticks"] = m_nticks; // if nonzero, force number of ticks in output waveforms.
 
     // Summaries to output, if any
     cfg["summary_tags"] = Json::arrayValue;
@@ -95,7 +95,7 @@ static float summary_sum(const std::vector<float> &tsvals) {
 }
 static float summary_set(const std::vector<float> &tsvals) {
     if (tsvals.empty()) {
-        return 0.0; 
+        return 0.0;
     }
     return tsvals.back();
 }
@@ -203,24 +203,24 @@ void FrameSaver::produces(art::EDProducer* prod)
 
     for (auto tag : m_frame_tags) {
 	if (!m_digitize) {
-	    std::cerr << "wclsFrameSaver: promising to produce recob::Wires named \"" 
+	    std::cerr << "wclsFrameSaver: promising to produce recob::Wires named \""
 		      << tag << "\"\n";
 	    prod->produces< std::vector<recob::Wire> >(tag);
 	}
 	else {
-	    std::cerr << "wclsFrameSaver: promising to produce raw::RawDigits named \"" 
+	    std::cerr << "wclsFrameSaver: promising to produce raw::RawDigits named \""
 		      << tag << "\"\n";
 	    prod->produces< std::vector<raw::RawDigit> >(tag);
 	}
     }
     for (auto tag : m_summary_tags) {
-	std::cerr << "wclsFrameSaver: promising to produce channel summary named \"" 
+	std::cerr << "wclsFrameSaver: promising to produce channel summary named \""
 		  << tag << "\"\n";
 	prod->produces< std::vector<double> >(tag);
     }
     for (auto cmm : m_cmms) {
 	const std::string cmm_name = cmm.asString();
-	std::cerr << "wclsFrameSaver: promising to produce channel masks named \"" 
+	std::cerr << "wclsFrameSaver: promising to produce channel masks named \""
 		  << cmm_name << "\"\n";
 	prod->produces< channel_list > (cmm_name + "channels");
 	prod->produces< channel_masks > (cmm_name + "masks");
@@ -276,8 +276,8 @@ struct PU {
 	return 0.0;
     }
 };
-    
-	
+
+
 
 void FrameSaver::save_as_raw(art::Event & event)
 {
@@ -363,7 +363,7 @@ void FrameSaver::save_as_cooked(art::Event & event)
             for (const auto& trace : traces) {
                 const int tbin = trace->tbin();
                 const auto& charge = trace->charge();
-                
+
                 auto beg = charge.begin();
                 const auto first = beg;
                 auto end = charge.end();
@@ -519,8 +519,8 @@ void FrameSaver::save_empty(art::Event& event)
     for (auto stag : m_summary_tags) {
         std::unique_ptr<std::vector<double> > outsum(new std::vector<double>);
         event.put(std::move(outsum), stag);
-    }        
-        
+    }
+
     for (auto jcmm : m_cmms) {
 	std::string name = jcmm.asString();
 	std::unique_ptr< channel_list > out_list(new channel_list);

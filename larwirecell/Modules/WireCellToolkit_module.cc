@@ -1,6 +1,6 @@
-#include "art/Framework/Core/ModuleMacros.h" 
+#include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Core/EDProducer.h"
-#include "art/Utilities/make_tool.h" 
+#include "art/Utilities/make_tool.h"
 #include "larwirecell/Interfaces/MainTool.h"
 
 // fixme: this should be removed once produces<>() is moved to sink components.
@@ -22,7 +22,7 @@ namespace wcls {
     private:
 
         std::unique_ptr<wcls::MainTool> m_wcls;
-        
+
     };
 }
 

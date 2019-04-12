@@ -2,7 +2,7 @@
  * their content as:
 
  - waveform content as vector collections of either raw::RawDigit or
-   recob::Wire.  
+   recob::Wire.
 
  - summaries as vector<double>
 
@@ -28,14 +28,14 @@
 
 namespace wcls {
 
-    class FrameSaver : public IArtEventVisitor, 
+    class FrameSaver : public IArtEventVisitor,
                             public WireCell::IFrameFilter,
                             public WireCell::IConfigurable {
     public:
         FrameSaver();
         virtual ~FrameSaver();
 
-        /// IArtEventVisitor 
+        /// IArtEventVisitor
         virtual void produces(art::EDProducer* prod);
         virtual void visit(art::Event & event);
 
@@ -67,7 +67,7 @@ namespace wcls {
 	/// configured to drop one or both.
 	typedef std::vector<int> channel_list;
 	typedef std::vector<int> channel_masks;
-	
+
 
     private:
 

@@ -1,5 +1,5 @@
 #include "CookedFrameSource.h"
-#include "art/Framework/Principal/Handle.h" 
+#include "art/Framework/Principal/Handle.h"
 
 #include "lardataobj/RecoBase/Wire.h"
 #include "art/Framework/Principal/Event.h"
@@ -55,7 +55,7 @@ void CookedFrameSource::configure(const WireCell::Configuration& cfg)
 
 
 
-// is this the right way to diff an art::Timestamp?  
+// is this the right way to diff an art::Timestamp?
 static
 double tdiff(const art::Timestamp& ts1, const art::Timestamp& ts2)
 {
@@ -96,7 +96,7 @@ SimpleTrace* make_trace(const recob::Wire& rw, unsigned int nticks_want)
 void CookedFrameSource::visit(art::Event & event)
 {
     // fixme: want to avoid depending on DetectorPropertiesService for now.
-    const double tick = m_tick; 
+    const double tick = m_tick;
     art::Handle< std::vector<recob::Wire> > rwvh;
     bool okay = event.getByLabel(m_inputTag, rwvh);
     if (!okay) {

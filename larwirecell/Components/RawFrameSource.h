@@ -19,18 +19,18 @@
 #include <deque>
 
 namespace wcls {
-    class RawFrameSource : public IArtEventVisitor, 
+    class RawFrameSource : public IArtEventVisitor,
                            public WireCell::IFrameSource,
-                           public WireCell::IConfigurable { 
+                           public WireCell::IConfigurable {
     public:
         RawFrameSource();
         virtual ~RawFrameSource();
 
-        /// IArtEventVisitor 
+        /// IArtEventVisitor
         virtual void visit(art::Event & event);
 
         /// IFrameSource
-        virtual bool operator()(WireCell::IFrame::pointer& frame);            
+        virtual bool operator()(WireCell::IFrame::pointer& frame);
 
         /// IConfigurable
         virtual WireCell::Configuration default_configuration() const;

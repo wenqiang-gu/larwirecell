@@ -1,4 +1,4 @@
-/** A sim depo source provides IDepo objects to WCT from LS simulation objects. 
+/** A sim depo source provides IDepo objects to WCT from LS simulation objects.
 
     Multiple strategies are possible for ingesting depositions into
     WCT simulation.
@@ -46,7 +46,7 @@ namespace wcls {
         SimDepoSource();
         virtual ~SimDepoSource();
 
-        /// IArtEventVisitor 
+        /// IArtEventVisitor
         virtual void visit(art::Event & event);
 
         /// IDepoSource
@@ -59,7 +59,7 @@ namespace wcls {
     private:
         std::deque<WireCell::IDepo::pointer> m_depos;
         bits::DepoAdapter* m_adapter;
-                               
+
         art::InputTag m_inputTag;
     };
 }

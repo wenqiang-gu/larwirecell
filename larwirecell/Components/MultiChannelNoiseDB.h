@@ -21,7 +21,7 @@ namespace wcls {
 	// entry to refresh info from services in case they change
 	// event-to-event.
         virtual void visit(art::Event & event);
-	
+
         /// IConfigurable.
         virtual WireCell::Configuration default_configuration() const;
         virtual void configure(const WireCell::Configuration& cfg);
@@ -110,7 +110,7 @@ namespace wcls {
         IArtEventVisitor::pointer m_pimpl_visitor;
 
     };
-    
+
 
 }  // wcls
 

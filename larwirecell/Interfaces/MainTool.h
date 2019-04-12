@@ -1,4 +1,4 @@
-/** A wcls::MainTool is a main entry point to the WCT from LS 
+/** A wcls::MainTool is a main entry point to the WCT from LS
 
     See the WCLS_tool as the likely only implementation.
 

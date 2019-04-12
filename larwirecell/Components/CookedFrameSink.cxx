@@ -1,5 +1,5 @@
 #include "CookedFrameSink.h"
-//#include "art/Framework/Principal/Handle.h" 
+//#include "art/Framework/Principal/Handle.h"
 
 #include "lardataobj/RecoBase/Wire.h"
 
@@ -30,11 +30,11 @@ CookedFrameSink::~CookedFrameSink()
 WireCell::Configuration CookedFrameSink::default_configuration() const
 {
     Configuration cfg;
-    cfg["anode"] = "AnodePlane"; 
+    cfg["anode"] = "AnodePlane";
     // frames to output
     cfg["frame_tags"][0] = "gauss";
     cfg["frame_tags"][1] = "wiener";
-    cfg["nticks"] = m_nticks; // if nonzero, force number of ticks in output waveforms. 
+    cfg["nticks"] = m_nticks; // if nonzero, force number of ticks in output waveforms.
     return cfg;
 }
 
@@ -69,7 +69,7 @@ void CookedFrameSink::produces(art::EDProducer* prod)
     }
 }
 
-// fixme: this is copied from sigproc/FrameUtil but it's currently private code.  
+// fixme: this is copied from sigproc/FrameUtil but it's currently private code.
 static
 ITrace::vector tagged_traces(IFrame::pointer frame, IFrame::tag_t tag)
 {
@@ -110,15 +110,15 @@ void CookedFrameSink::visit(art::Event & event)
 	std::unique_ptr<std::vector<recob::Wire> > outwires(new std::vector<recob::Wire>);
 
 	// what about the frame's time() and ident()?
-      
+
 	for (const auto& trace : traces) {
-	    
+
 	    const int tbin = trace->tbin();
 	    const int chid = trace->channel();
 	    const auto& charge = trace->charge();
 
 	    //std::cerr << tag << ": chid=" << chid << " tbin=" << tbin << " nq=" << charge.size() << std::endl;
-	    
+
 	    // enforce number of ticks if we are so configured.
 	    size_t ncharge = charge.size();
 	    int nticks = tbin + ncharge;
@@ -147,7 +147,7 @@ void CookedFrameSink::visit(art::Event & event)
 	    default:
 		view = geo::kUnknown;
 	    }
-	    
+
 	    // what about those pesky channel map masks?
 	    // they are dropped for now.
 

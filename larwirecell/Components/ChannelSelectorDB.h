@@ -18,7 +18,7 @@ namespace wcls {
 	// entry to refresh info from services in case they change
 	// event-to-event.
         virtual void visit(art::Event & event);
-	
+
         /// IConfigurable.
         virtual void configure(const WireCell::Configuration& config);
 
@@ -34,7 +34,7 @@ namespace wcls {
         channel_group_t m_bad_channels;
         channel_group_t m_miscfg_channels;
     };
-    
+
 
 }  // wcls
 

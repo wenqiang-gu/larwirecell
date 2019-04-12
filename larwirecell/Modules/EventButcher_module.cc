@@ -1,4 +1,4 @@
-#include "art/Framework/Core/ModuleMacros.h" 
+#include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Principal/Event.h"
 
@@ -16,7 +16,7 @@ namespace butcher {
 	fhicl::Atom<std::string> inRawTag  {
 	    fhicl::Name("inRawTag"),
 		fhicl::Comment("Input tag for the raw::RawDigit collection.") };
-	
+
 	fhicl::Atom<std::string> inSigTag  { fhicl::Name("inSigTag"),
 		fhicl::Comment("Input tag for the recob::Wire collection.") };
 
@@ -26,7 +26,7 @@ namespace butcher {
 		"truncraw"};
 
 	fhicl::Atom<std::string> outSigTag  {
-	    fhicl::Name("outSigTag"), 
+	    fhicl::Name("outSigTag"),
 		fhicl::Comment("Label the output recob::Wire collection."),
 		"truncsig"};
 
@@ -35,10 +35,10 @@ namespace butcher {
 		fhicl::Comment("Label the output associations."),
 		"rawsigassns" };
 
-	fhicl::Atom<int> ndrop { fhicl::Name("ndrop"), 
+	fhicl::Atom<int> ndrop { fhicl::Name("ndrop"),
 		fhicl::Comment("Number of ticks from start of waveform to drop"),
 		0 };
-	fhicl::Atom<int> nkeep { fhicl::Name("nkeep"), 
+	fhicl::Atom<int> nkeep { fhicl::Name("nkeep"),
 		fhicl::Comment("Number of remaining ticks to keep after initial drop"),
 		-1 };
 
@@ -56,7 +56,7 @@ namespace butcher {
         virtual ~EventButcher();
 
         void produce(art::Event & evt);
-    
+
     private:
 
 	const EventButcherConfig m_cfg;
@@ -145,7 +145,7 @@ void butcher::EventButcher::produce(art::Event & event)
 
 	chid2rawptr[chid] = RawPtr(outind);
     }
-    
+
 
     // Truncate the signal and make assns
     for (size_t isig=0; isig != nsig; ++isig) {

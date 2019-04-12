@@ -17,19 +17,19 @@
 #include <vector>
 
 namespace wcls {
-    class CookedFrameSink : public IArtEventVisitor, 
+    class CookedFrameSink : public IArtEventVisitor,
                             public WireCell::IFrameSink,
                             public WireCell::IConfigurable {
     public:
         CookedFrameSink();
         virtual ~CookedFrameSink();
 
-        /// IArtEventVisitor 
+        /// IArtEventVisitor
         virtual void produces(art::EDProducer* prod);
         virtual void visit(art::Event & event);
 
         /// IFrameSink
-        virtual bool operator()(const WireCell::IFrame::pointer& frame);            
+        virtual bool operator()(const WireCell::IFrame::pointer& frame);
 
         /// IConfigurable
         virtual WireCell::Configuration default_configuration() const;

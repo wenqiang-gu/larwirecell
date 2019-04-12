@@ -1,4 +1,4 @@
-/** The WC/LS sim depo source adapts larsoft SimEnergyDeposit to WCT's IDepos.  
+/** The WC/LS sim depo source adapts larsoft SimEnergyDeposit to WCT's IDepos.
 
     Note, this WC/LS file unusually verbose.  Besides just data
     conversion, additional WCT guts are exposed allow optional
@@ -8,7 +8,7 @@
 
 #include "SimDepoSource.h"
 
-#include "art/Framework/Principal/Handle.h" 
+#include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Principal/Event.h"
 
 #include "lardataobj/Simulation/SimEnergyDeposit.h"
@@ -47,7 +47,7 @@ namespace wcls {
                 return m_scale * sed.NumElectrons();
             }
         };
-        
+
         // This one takes a recombination model which only requires dE
         // (ie, assumes MIP).
         class PointAdapter : public DepoAdapter {
@@ -99,7 +99,7 @@ SimDepoSource::~SimDepoSource()
 WireCell::Configuration SimDepoSource::default_configuration() const
 {
     WireCell::Configuration cfg;
-    
+
     // An empty model or the special model "electrons" means to take
     // precalcualted input NumElectrons.  Anything else means some
     // recombination model is used.
@@ -151,7 +151,7 @@ void SimDepoSource::configure(const WireCell::Configuration& cfg)
 void SimDepoSource::visit(art::Event & event)
 {
     art::Handle< std::vector<sim::SimEnergyDeposit> > sedvh;
-    
+
     bool okay = event.getByLabel(m_inputTag, sedvh);
     if (!okay) {
         std::string msg = "SimDepoSource failed to get sim::SimEnergyDeposit from art tag: " + m_inputTag.encode();
@@ -159,13 +159,13 @@ void SimDepoSource::visit(art::Event & event)
         THROW(WireCell::RuntimeError() << WireCell::errmsg{msg});
     }
     //else if (sedvh->empty()) return;
-    
+
     const size_t ndepos = sedvh->size();
-    
+
     std::cerr << "SimDepoSource got " << ndepos
               << " depos from art tag \"" << m_inputTag
               << "\" returns: " << (okay ? "okay" : "fail") << std::endl;
-    
+
     if (!m_depos.empty()) {
         std::cerr << "SimDepoSource dropping " << m_depos.size()
                   << " unused, prior depos\n";
@@ -187,7 +187,7 @@ void SimDepoSource::visit(art::Event & event)
         m_depos.push_back(depo);
         // std::cerr << ind << ": t=" << wt/units::us << "us,"
         //           << " r=" << wpt/units::cm << "cm, "
-        //           << " q=" << wq 
+        //           << " q=" << wq
         //           << " e=" << we/units::MeV << "\n";
     }
 

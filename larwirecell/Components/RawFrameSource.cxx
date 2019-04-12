@@ -1,5 +1,5 @@
 #include "RawFrameSource.h"
-#include "art/Framework/Principal/Handle.h" 
+#include "art/Framework/Principal/Handle.h"
 
 // for tick
 //#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
@@ -57,7 +57,7 @@ void RawFrameSource::configure(const WireCell::Configuration& cfg)
 
 
 
-// is this the right way to diff an art::Timestamp?  
+// is this the right way to diff an art::Timestamp?
 static
 double tdiff(const art::Timestamp& ts1, const art::Timestamp& ts2)
 {
@@ -99,7 +99,7 @@ SimpleTrace* make_trace(const raw::RawDigit& rd, unsigned int nticks_want)
 void RawFrameSource::visit(art::Event & event)
 {
     // fixme: want to avoid depending on DetectorPropertiesService for now.
-    const double tick = m_tick; 
+    const double tick = m_tick;
     art::Handle< std::vector<raw::RawDigit> > rdvh;
     bool okay = event.getByLabel(m_inputTag, rdvh);
     if (!okay) {

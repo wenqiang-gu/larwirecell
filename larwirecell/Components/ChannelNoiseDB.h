@@ -19,7 +19,7 @@ namespace wcls {
 	// entry to refresh info from services in case they change
 	// event-to-event.
         virtual void visit(art::Event & event);
-	
+
         /// IConfigurable.
 	//
 	// Defer default to parent.  By default this class does not
@@ -47,7 +47,7 @@ namespace wcls {
 	OverridePolicy_t m_misconfig_channel_policy;
 	double m_fgstgs[4];
     };
-    
+
 
 }  // wcls
 

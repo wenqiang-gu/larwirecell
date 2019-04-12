@@ -21,7 +21,7 @@ namespace wcls {
                            public WireCell::IDepoFilter,
                            public WireCell::IConfigurable {
 
-    public: 
+    public:
         SimChannelSink();
 	virtual ~SimChannelSink();
 
@@ -45,18 +45,18 @@ namespace wcls {
 	std::map<unsigned int,sim::SimChannel> m_mapSC;
 
 	void save_as_simchannel(const WireCell::IDepo::pointer& depo);
-	
+
 	double m_readout_time;
 	double m_tick;
 	double m_start_time;
-	double m_nsigma; 
+	double m_nsigma;
 	double m_drift_speed;
 	double m_uboone_u_to_rp;
 	double m_uboone_v_to_rp;
 	double m_uboone_y_to_rp;
 	double m_u_time_offset;
 	double m_v_time_offset;
-	double m_y_time_offset;	
+	double m_y_time_offset;
 	bool m_use_energy;
 
 	double Pi = 3.141592653589;
