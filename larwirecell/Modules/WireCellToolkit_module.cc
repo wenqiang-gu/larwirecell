@@ -28,7 +28,7 @@ namespace wcls {
 
 
 wcls::WireCellToolkit::WireCellToolkit(fhicl::ParameterSet const& pset)
-    : EDProducer()
+    : EDProducer(pset)
 {
     this->reconfigure(pset);
 }

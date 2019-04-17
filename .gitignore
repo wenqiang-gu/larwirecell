@@ -4,5 +4,6 @@ cut
 *Dict.cxx
 *Dict.o
 *.bak
+*.backup
 *.log
 *.root
