@@ -14,6 +14,9 @@
 #include "fhiclcpp/types/Table.h"
 
 #include "WireCellApps/Main.h"
+#include "WireCellUtil/String.h"
+#include "WireCellUtil/Logging.h"
+
 #include "WireCellUtil/NamedFactory.h"
 
 #include <string>
@@ -64,6 +67,15 @@ namespace wcls {
                 fhicl::Comment("List of WCT components which act as WCT sinks.\n"
                                "They are called after WCT executes on each Art Event object.") };
 
+        optional_string_list_t logsinks { fhicl::Name("logsinks"),
+                                          fhicl::Comment("List of WCT log sinks.\n"
+                                                         "Eg the strings 'stdout', 'stderr' or a file name.\n"
+                                                         "An optional log level may be appended with ':<level>'.") };
+        optional_string_list_t loglevels { fhicl::Name("loglevels"),
+                                          fhicl::Comment("List of minimum WCT logger levels.\n"
+                                                         "Specify as '<logger>:<level>' or as just '<level>' for default.") };
+
+                                          
     };
 
     class WCLS : public MainTool {
@@ -94,6 +106,35 @@ wcls::WCLS::WCLS(wcls::WCLS::Parameters const& params)
     : m_wcmain()
 {
     const auto& wclscfg = params();
+    WCLSConfig::optional_string_list_t::value_type slist;
+
+    if (wclscfg.logsinks(slist)) {
+        for (auto logsink : slist) {
+            //std::cerr << "Log sink: \"" << logsink << "\"\n";
+            auto ls = WireCell::String::split(logsink, ":");
+            if (ls.size() == 2) {
+                m_wcmain.add_logsink(ls[0], ls[1]);
+            }
+            else {
+                m_wcmain.add_logsink(ls[0]);
+            }
+        }
+    }
+    slist.clear();
+    if (wclscfg.loglevels(slist)) {
+        for (auto loglevel : slist) {
+            //std::cerr << "Log level: \"" << loglevel << "\"\n";
+            auto ll = WireCell::String::split(loglevel, ":");
+            if (ll.size() == 2) {
+                m_wcmain.set_loglevel(ll[0], ll[1]);
+            }
+            else{
+                m_wcmain.set_loglevel("", ll[0]);
+            }
+        }
+    }
+    slist.clear();
+    WireCell::Log::set_pattern("[%H:%M:%S.%03e] %L [%^%=8n%$] %v");
 
     // transfer configuration
 
@@ -113,7 +154,6 @@ wcls::WCLS::WCLS(wcls::WCLS::Parameters const& params)
 
     // optional
 
-    WCLSConfig::optional_string_list_t::value_type slist;
     if (wclscfg.paths(slist)) {
         for (auto path : slist) {
             m_wcmain.add_path(path);
