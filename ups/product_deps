@@ -12,8 +12,8 @@ defaultqual	e17
 #fcldir product_dir job
 #
 product         version
-larevt          v08_04_01
-wirecell	v0_11_2
+larevt          v08_04_00
+wirecell	vmaster
 
 cetbuildtools	v7_12_01   -   only_for_build
 end_product_list
