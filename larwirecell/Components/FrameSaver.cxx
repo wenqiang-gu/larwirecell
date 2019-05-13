@@ -18,6 +18,7 @@
 // to add bogus information to raw::RawDigit.
 #include "larevt/CalibrationDBI/Interface/DetPedestalService.h"
 #include "larevt/CalibrationDBI/Interface/DetPedestalProvider.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 
 #include <algorithm>
 #include <map>
@@ -69,7 +70,10 @@ WireCell::Configuration FrameSaver::default_configuration() const
     cfg["frame_scale"] = 1.0; 	// multiply this number to all
 				// waveform samples.  If list, then
 				// one number per frame tags.
-    cfg["nticks"] = m_nticks; // if nonzero, force number of ticks in output waveforms.
+    // If nonzero, force number of ticks in output waveforms.
+    // If zero, use whatever input data has.
+    // If -1, use value as per LS's detector properties service.
+    cfg["nticks"] = m_nticks; 
 
     // Summaries to output, if any
     cfg["summary_tags"] = Json::arrayValue;
@@ -281,6 +285,12 @@ struct PU {
 
 void FrameSaver::save_as_raw(art::Event & event)
 {
+    int nticks_want = m_nticks;
+    if (nticks_want < 0) {
+        art::ServiceHandle<detinfo::DetectorPropertiesService const> dps;
+        nticks_want = dps->provider()->NumberTimeSamples();
+    }
+
     size_t nftags = m_frame_tags.size();
     for (size_t iftag = 0; iftag < nftags; ++iftag) {
         std::string ftag = m_frame_tags[iftag];
@@ -312,11 +322,11 @@ void FrameSaver::save_as_raw(art::Event & event)
             // enforce number of ticks if we are so configured.
             size_t ncharge = charge.size();
             int nticks = tbin + ncharge;
-            if (m_nticks) {	// force output waveform size
-                if (m_nticks < nticks) {
-                    ncharge  = m_nticks - tbin;
+            if (nticks_want) {	// force output waveform size
+                if (nticks_want < nticks) {
+                    ncharge  = nticks_want - tbin;
                 }
-                nticks = m_nticks;
+                nticks = nticks_want;
             }
             raw::RawDigit::ADCvector_t adcv(nticks);
             for (size_t ind=0; ind<ncharge; ++ind) {
@@ -340,6 +350,13 @@ void FrameSaver::save_as_raw(art::Event & event)
 
 void FrameSaver::save_as_cooked(art::Event & event)
 {
+    int nticks_want = m_nticks;
+    if (nticks_want < 0) {
+        art::ServiceHandle<detinfo::DetectorPropertiesService const> dps;
+        nticks_want = dps->provider()->NumberTimeSamples();
+        std::cerr << "wclsFrameSaver saving cooked to " << nticks_want << " ticks\n";
+    }
+
     size_t nftags = m_frame_tags.size();
     for (size_t iftag = 0; iftag < nftags; ++iftag) {
         std::string ftag = m_frame_tags[iftag];
@@ -358,7 +375,7 @@ void FrameSaver::save_as_cooked(art::Event & event)
             const int chid = chv.first;
             const auto& traces = bychan[chid];
 
-            recob::Wire::RegionsOfInterest_t rois(m_nticks);
+            recob::Wire::RegionsOfInterest_t rois(nticks_want);
 
             for (const auto& trace : traces) {
                 const int tbin = trace->tbin();
@@ -367,12 +384,12 @@ void FrameSaver::save_as_cooked(art::Event & event)
                 auto beg = charge.begin();
                 const auto first = beg;
                 auto end = charge.end();
-                if (m_nticks) { // user wants max waveform size
-                    if (tbin >= m_nticks) {
+                if (nticks_want) { // user set waveform size
+                    if (tbin >= nticks_want) {
                         beg = end;
                     }
                     else {
-                        int backup = tbin + charge.size() - m_nticks;
+                        int backup = tbin + charge.size() - nticks_want;
                         if (backup > 0) {
                             end -= backup;
                         }
