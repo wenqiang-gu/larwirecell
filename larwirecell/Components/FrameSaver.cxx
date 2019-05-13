@@ -360,21 +360,31 @@ void FrameSaver::save_as_cooked(art::Event & event)
     size_t nftags = m_frame_tags.size();
     for (size_t iftag = 0; iftag < nftags; ++iftag) {
         std::string ftag = m_frame_tags[iftag];
-        std::cerr << "wclsFrameSaver: saving recob::Wires tagged \"" << ftag << "\"\n";
 
         double scale = m_frame_scale[iftag];
 
         ITrace::vector traces;
 	tagged_traces(m_frame, ftag, traces);
+        if (traces.empty()) {
+            std::cerr << "wclsFrameSaver: no traces tagged \"" << ftag << "\"\n";
+            // fall through loop so we put (empty) outwires
+        }
+        else {
+            std::cerr << "wclsFrameSaver: saving " << traces.size() << " traces tagged \"" << ftag << "\"\n";
+        }
+
         traces_bychan_t bychan;
-        traces_bychan(traces, bychan);
+        traces_bychan(traces, bychan);        
 
         std::unique_ptr<std::vector<recob::Wire> > outwires(new std::vector<recob::Wire>);
+
+        double total_charge = 0.0;
+        int total_samples = 0;
 
         for (auto chv : m_chview) {
             const int chid = chv.first;
             const auto& traces = bychan[chid];
-
+            
             recob::Wire::RegionsOfInterest_t rois(nticks_want);
 
             for (const auto& trace : traces) {
@@ -396,6 +406,8 @@ void FrameSaver::save_as_cooked(art::Event & event)
                     }
                 }
                 if (beg >= end) {
+                    std::cerr << "wclsFrameSaver: no samples within desired window for channel "
+                              << chid <<"\n";
                     continue;
                 }
                 if (!m_sparse) {
@@ -416,6 +428,8 @@ void FrameSaver::save_as_cooked(art::Event & event)
                     std::vector<float> scaled(beg, mid);
                     for (int ind=0; ind<mid-beg; ++ind) {
                         scaled[ind] *= scale;
+                        total_charge += scaled[ind];
+                        ++total_samples;
                     }
                     rois.add_range(tbin + beg-first, scaled.begin(), scaled.end());
                     beg = mid;
@@ -425,6 +439,7 @@ void FrameSaver::save_as_cooked(art::Event & event)
 	    const geo::View_t view = chv.second;
 	    outwires->emplace_back(recob::Wire(rois, chid, view));
 	}
+        std::cerr << "FrameSaver: q=" << total_charge << " n=" << total_samples << " tag="<< ftag <<"\n";
 	event.put(std::move(outwires), ftag);
     } // loop over tags
 }
