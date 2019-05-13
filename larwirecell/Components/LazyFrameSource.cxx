@@ -33,7 +33,7 @@ namespace wcls {
             if (m_charge.empty()) {
                 auto const& rd = m_rdvh->at(m_index);
                 const raw::RawDigit::ADCvector_t& adcv = rd.ADCs();
-                std::cerr << "trace " << m_index << " chan " << m_channel << " with " << adcv.size() << " samples\n";
+                //std::cerr << "trace " << m_index << " chan " << m_channel << " with " << adcv.size() << " samples\n";
                 m_charge.insert(m_charge.end(), adcv.begin(), adcv.end());
                 m_rdvh.clear(); // bye bye
             }
