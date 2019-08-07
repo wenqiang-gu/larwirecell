@@ -2,7 +2,6 @@
  */
 
 #include "FrameSaver.h"
-//#include "art/Framework/Principal/Handle.h"
 
 #include "lardataobj/RecoBase/Wire.h"
 #include "lardataobj/RawData/RawDigit.h"
@@ -10,6 +9,7 @@
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Core/EDProducer.h"
 
+#include "WireCellIface/IAnodePlane.h"
 #include "WireCellIface/IFrame.h"
 #include "WireCellIface/ITrace.h"
 #include "WireCellUtil/NamedFactory.h"

@@ -3,7 +3,6 @@
 #include "art/Framework/Principal/Event.h"
 
 #include "WireCellUtil/NamedFactory.h"
-#include "WireCellUtil/Type.h"
 
 WIRECELL_FACTORY(wclsMultiChannelNoiseDB, wcls::MultiChannelNoiseDB,
 		 wcls::IArtEventVisitor, WireCell::IChannelNoiseDatabase, WireCell::IConfigurable)
@@ -157,4 +156,3 @@ WireCell::Configuration wcls::MultiChannelNoiseDB::MultiChannelNoiseDB::default_
     cfg["rules"] = Json::arrayValue;
     return cfg;
 }
-

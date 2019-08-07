@@ -16,15 +16,14 @@
 
 #include "WireCellIface/IFrameFilter.h"
 #include "WireCellIface/IConfigurable.h"
-#include "WireCellIface/IAnodePlane.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
 #include "larwirecell/Interfaces/IArtEventVisitor.h"
-
-#include "larcore/Geometry/Geometry.h"
 
 #include <string>
 #include <functional>
 #include <vector>
 #include <map>
+#include <unordered_map>
 
 namespace wcls {
 

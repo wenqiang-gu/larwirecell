@@ -3,10 +3,6 @@
 #include "art/Utilities/make_tool.h"
 #include "larwirecell/Interfaces/MainTool.h"
 
-// fixme: this should be removed once produces<>() is moved to sink components.
-#include "lardataobj/RecoBase/Wire.h"
-
-
 using namespace std;
 
 namespace wcls {

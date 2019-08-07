@@ -6,7 +6,6 @@
 #include "art/Framework/Principal/Handle.h"
 #include "art_root_io/TFileService.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
-#include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include "larevt/CalibrationDBI/Interface/ElectronicsCalibService.h"
 #include "larevt/CalibrationDBI/Interface/ElectronicsCalibProvider.h"
@@ -18,11 +17,9 @@
 #include "larcore/Geometry/Geometry.h"
 
 #include "lardataobj/RawData/RawDigit.h"
-#include "lardataobj/RawData/raw.h"
 
 #include "WireCellUtil/Units.h"
 
-#include "WireCellUtil/Units.h"
 #include "WireCellIface/SimpleFrame.h"
 #include "WireCellIface/SimpleTrace.h"
 #include "WireCellSigProc/OmnibusNoiseFilter.h"
@@ -31,7 +28,6 @@
 
 #include <numeric>		// iota
 #include <string>
-#include <iostream>
 
 using namespace WireCell;
 

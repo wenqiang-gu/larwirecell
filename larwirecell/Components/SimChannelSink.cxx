@@ -2,14 +2,11 @@
 
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Core/EDProducer.h"
-#include "art/Framework/Services/Registry/ServiceHandle.h"
 
-#include "WireCellGen/BinnedDiffusion.h"
 #include "WireCellIface/IDepo.h"
+#include "WireCellGen/GaussianDiffusion.h"
 #include "WireCellUtil/NamedFactory.h"
 #include "WireCellUtil/Units.h"
-
-#include <algorithm>
 
 WIRECELL_FACTORY(wclsSimChannelSink, wcls::SimChannelSink,
 		 wcls::IArtEventVisitor, WireCell::IDepoFilter)
@@ -224,6 +221,3 @@ bool SimChannelSink::operator()(const WireCell::IDepo::pointer& indepo,
 
     return true;
 }
-
-
-

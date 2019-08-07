@@ -7,8 +7,6 @@
 #include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/types/Sequence.h"
 #include "fhiclcpp/types/OptionalSequence.h"
-#include "fhiclcpp/types/OptionalTable.h"
-#include "fhiclcpp/types/DelegatedParameter.h"
 #include "fhiclcpp/types/OptionalDelegatedParameter.h"
 #include "fhiclcpp/types/Comment.h"
 #include "fhiclcpp/types/Table.h"
