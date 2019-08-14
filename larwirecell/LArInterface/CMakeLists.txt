@@ -9,6 +9,7 @@ art_make(
   MODULE_LIBRARIES
     lardataobj_RawData
     larevt_CalibrationDBI_IOVData
+    larcorealg_Geometry
     ${ART_FRAMEWORK_SERVICES_REGISTRY}
     ${ART_ROOT_IO_TFILESERVICE_SERVICE}
     ${WIRECELL_LIBS}
