@@ -2,6 +2,9 @@
  * (converted from WireCell::IDepo) into an art::Event.
  *
  * Contact brussell@yale.edu for comments/questions.
+ *
+ * Modified by Wenqiang Gu (wgu@bnl.gov), 9/16/2019
+ * A generic SimChannel saver for multiple volumes
  */
 
 #ifndef LARWIRECELL_COMPONENTS_SIMCHANNELSINK
@@ -23,7 +26,7 @@ namespace wcls {
 
     public:
         SimChannelSink();
-	virtual ~SimChannelSink();
+	// virtual ~SimChannelSink();
 
 	/// IArtEventVisitor
 	virtual void produces(art::EDProducer* prod);
@@ -39,31 +42,33 @@ namespace wcls {
 
     private:
 	WireCell::IDepo::pointer m_depo;
-	WireCell::IAnodePlane::pointer m_anode;
+	// WireCell::IAnodePlane::pointer m_anode;
+	std::vector<WireCell::IAnodePlane::pointer> m_anodes; // multiple volumes
 	WireCell::IRandom::pointer m_rng;
 
 	std::map<unsigned int,sim::SimChannel> m_mapSC;
 
 	void save_as_simchannel(const WireCell::IDepo::pointer& depo);
 
+	std::string m_artlabel;
 	double m_readout_time;
 	double m_tick;
 	double m_start_time;
 	double m_nsigma;
 	double m_drift_speed;
-	double m_uboone_u_to_rp;
-	double m_uboone_v_to_rp;
-	double m_uboone_y_to_rp;
+	double m_u_to_rp;
+	double m_v_to_rp;
+	double m_y_to_rp;
 	double m_u_time_offset;
 	double m_v_time_offset;
 	double m_y_time_offset;
 	bool m_use_energy;
 
-	double Pi = 3.141592653589;
-	WireCell::Pimpos *uboone_u;
-	WireCell::Pimpos *uboone_v;
-	WireCell::Pimpos *uboone_y;
-	//WireCell::Pimpos *pimpos; // unused
+	// double Pi = 3.141592653589;
+	// WireCell::Pimpos *uboone_u;
+	// WireCell::Pimpos *uboone_v;
+	// WireCell::Pimpos *uboone_y;
+	// //WireCell::Pimpos *pimpos; // unused
   };
 }
 
