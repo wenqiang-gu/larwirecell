@@ -71,9 +71,9 @@ void bogoblip::BlipMaker::produce(art::Event & event)
         for (int istep=1; istep<nsteps; ++istep) {
             const sim::SimEnergyDeposit::Point_t next(start + stepsize*istep*vdir);
             //std::cerr << last << " -> " << next << "\n";
-            out->emplace_back(sim::SimEnergyDeposit(nphotons, 0, 0,
+            out->emplace_back(sim::SimEnergyDeposit(nphotons,
                                                     stepsize * nelepercm,
-                                                    1.0,
+                                                    1.0, //scintillatin yield ratio
                                                     stepsize * mevpercm,
                                                     last, next,
                                                     jump + t0,
