@@ -44,7 +44,7 @@ void RawFrameSource::configure(const WireCell::Configuration& cfg)
 {
     const std::string art_tag = cfg["art_tag"].asString();
     if (art_tag.empty()) {
-        THROW(ValueError() << errmsg{"RawFrameSource requires a source_label"});
+        THROW(ValueError() << errmsg{"WireCell::RawFrameSource requires a source_label"});
     }
     m_inputTag = cfg["art_tag"].asString();
 
@@ -103,7 +103,7 @@ void RawFrameSource::visit(art::Event & event)
     art::Handle< std::vector<raw::RawDigit> > rdvh;
     bool okay = event.getByLabel(m_inputTag, rdvh);
     if (!okay) {
-        std::string msg = "RawFrameSource failed to get vector<raw::RawDigit>: " + m_inputTag.encode();
+        std::string msg = "WireCell::RawFrameSource failed to get vector<raw::RawDigit>: " + m_inputTag.encode();
         std::cerr << msg << std::endl;
         THROW(RuntimeError() << errmsg{msg});
     }

@@ -49,6 +49,7 @@ WireCell::Configuration SimChannelSink::default_configuration() const
     cfg["v_time_offset"] = 0.0*units::us;
     cfg["y_time_offset"] = 0.0*units::us;
     cfg["use_energy"] = false;
+    cfg["use_extra_sigma"] = false;
     return cfg;
 }
 
@@ -95,6 +96,7 @@ void SimChannelSink::configure(const WireCell::Configuration& cfg)
     m_v_time_offset = get(cfg,"v_time_offset",0.0*units::us);
     m_y_time_offset = get(cfg,"y_time_offset",0.0*units::us);
     m_use_energy = get(cfg,"use_energy",false);
+    m_use_extra_sigma = get(cfg,"use_extra_sigma",false);
 
 }
 
@@ -130,7 +132,15 @@ void SimChannelSink::save_as_simchannel(const WireCell::IDepo::pointer& depo){
 	const double center_time = depo->time();
 	const double center_pitch = pimpos->distance(depo->pos());
 
-	Gen::GausDesc time_desc(center_time, depo->extent_long() / m_drift_speed);
+        double sigma_L = depo->extent_long();
+        if (m_use_extra_sigma) {
+          int nrebin=1;
+          double time_slice_width = nrebin * m_drift_speed * m_tick; // units::mm
+          double add_sigma_L = 1.428249  * time_slice_width / nrebin / (m_tick/units::us); // units::mm
+          sigma_L = sqrt( pow(depo->extent_long(),2) + pow(add_sigma_L,2) );// / time_slice_width;
+        }
+        Gen::GausDesc time_desc(center_time, sigma_L / m_drift_speed);
+	// Gen::GausDesc time_desc(center_time, depo->extent_long() / m_drift_speed);
 	{
 	  double nmin_sigma = time_desc.distance(tbins.min());
 	  double nmax_sigma = time_desc.distance(tbins.max());
@@ -144,7 +154,16 @@ void SimChannelSink::save_as_simchannel(const WireCell::IDepo::pointer& depo){
 	// auto ibins = pimpos->impact_binning();
 	auto wbins = pimpos->region_binning(); // wire binning
 
-	Gen::GausDesc pitch_desc(center_pitch, depo->extent_tran());
+        double sigma_T = depo->extent_tran();
+        if (m_use_extra_sigma) {
+          double add_sigma_T = wbins.binsize();
+          if (iplane==0) add_sigma_T *= (0.402993*0.3);
+          else if (iplane==1) add_sigma_T *= (0.402993*0.5);
+          else if (iplane==2) add_sigma_T *= (0.188060*0.2);
+          sigma_T = sqrt( pow(depo->extent_tran(),2) + pow(add_sigma_T,2) ); // / wbins.binsize();
+        }
+        Gen::GausDesc pitch_desc(center_pitch, sigma_T);
+	// Gen::GausDesc pitch_desc(center_pitch, depo->extent_tran());
 	{
 	  double nmin_sigma = pitch_desc.distance(wbins.min());
 	  double nmax_sigma = pitch_desc.distance(wbins.max());

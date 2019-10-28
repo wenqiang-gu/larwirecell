@@ -63,6 +63,7 @@ namespace wcls {
 	double m_v_time_offset;
 	double m_y_time_offset;
 	bool m_use_energy;
+	bool m_use_extra_sigma; // extra smearing from signal processing
 
 	// double Pi = 3.141592653589;
 	// WireCell::Pimpos *uboone_u;

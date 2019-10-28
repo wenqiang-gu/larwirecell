@@ -42,7 +42,7 @@ void CookedFrameSource::configure(const WireCell::Configuration& cfg)
 {
     const std::string art_tag = cfg["art_tag"].asString();
     if (art_tag.empty()) {
-        THROW(ValueError() << errmsg{"CookedFrameSource requires a source_label"});
+        THROW(ValueError() << errmsg{"WireCell::CookedFrameSource requires a source_label"});
     }
     m_inputTag = cfg["art_tag"].asString();
 
@@ -100,7 +100,7 @@ void CookedFrameSource::visit(art::Event & event)
     art::Handle< std::vector<recob::Wire> > rwvh;
     bool okay = event.getByLabel(m_inputTag, rwvh);
     if (!okay) {
-        std::string msg = "CookedFrameSource failed to get raw::RawDigits: " + m_inputTag.encode();
+        std::string msg = "WireCell::CookedFrameSource failed to get vector<recob::Wire>: " + m_inputTag.encode();
         std::cerr << msg << std::endl;
         THROW(RuntimeError() << errmsg{msg});
     }
@@ -108,7 +108,7 @@ void CookedFrameSource::visit(art::Event & event)
 
     const std::vector<recob::Wire>& rwv(*rwvh);
     const size_t nchannels = rwv.size();
-    std::cerr << "CookedFrameSource: got " << nchannels << " raw::RawDigit objects\n";
+    std::cerr << "CookedFrameSource: got " << nchannels << " recob::Wire objects\n";
 
     WireCell::ITrace::vector traces(nchannels);
     for (size_t ind=0; ind<nchannels; ++ind) {
