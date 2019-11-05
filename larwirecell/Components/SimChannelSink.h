@@ -29,7 +29,7 @@ namespace wcls {
 	// virtual ~SimChannelSink();
 
 	/// IArtEventVisitor
-	virtual void produces(art::EDProducer* prod);
+        virtual void produces(art::ProducesCollector& collector);
 	virtual void visit(art::Event & event);
 
 	/// IDepoFilter

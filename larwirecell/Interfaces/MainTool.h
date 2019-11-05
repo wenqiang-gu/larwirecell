@@ -12,7 +12,7 @@
 
 namespace art {
     class Event;
-    class EDProducer;
+    class ProducesCollector;
 }
 
 namespace wcls {
@@ -25,7 +25,7 @@ namespace wcls {
         /// Accept a base producer.  Typically needed in order to call
         /// prod.produces<Type>() for Type of any expected data
         /// products
-        virtual void produces(art::EDProducer* prod) = 0;
+        virtual void produces(art::ProducesCollector& collector) = 0;
 
         /// Accept an event to process.
         virtual void process(art::Event& event) = 0;

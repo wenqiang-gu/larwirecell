@@ -17,6 +17,7 @@
 namespace art {
     class Event;
     class EDProducer;
+    class ProducesCollector;
 }
 namespace wcls {
     class IArtEventVisitor : public WireCell::IComponent<IArtEventVisitor> {
@@ -24,9 +25,9 @@ namespace wcls {
         virtual ~IArtEventVisitor() {}
 
         /// If data is produced, must implement in order to call:
-        /// prod.<DataType>produces();
+        ///   collector.produces<DataType>();
         /// If only reading data, implementation is not required.
-        virtual void produces(art::EDProducer* prod) {}
+        virtual void produces(art::ProducesCollector& collector) {}
 
         /// Implement to visit an Art event.
         virtual void visit(art::Event & event) = 0;

@@ -100,10 +100,9 @@ void SimChannelSink::configure(const WireCell::Configuration& cfg)
 
 }
 
-void SimChannelSink::produces(art::EDProducer* prod)
+void SimChannelSink::produces(art::ProducesCollector& collector)
 {
-    assert(prod);
-    prod->produces< std::vector<sim::SimChannel> >(m_artlabel);
+    collector.produces< std::vector<sim::SimChannel> >(m_artlabel);
 }
 
 void SimChannelSink::save_as_simchannel(const WireCell::IDepo::pointer& depo){

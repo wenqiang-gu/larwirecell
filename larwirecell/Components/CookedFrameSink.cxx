@@ -58,14 +58,11 @@ void CookedFrameSink::configure(const WireCell::Configuration& cfg)
     m_nticks = get(cfg, "nticks", m_nticks);
 }
 
-void CookedFrameSink::produces(art::EDProducer* prod)
+void CookedFrameSink::produces(art::ProducesCollector& collector)
 {
-    assert(prod);
-    //prod->produces< std::vector<recob::Wire> >("CookedFrame");
-
     for (auto tag : m_frame_tags) {
 	std::cerr << "CookedFrameSink: promising to produce recob::Wires named \"" << tag << "\"\n";
-	prod->produces< std::vector<recob::Wire> >(tag);
+        collector.produces< std::vector<recob::Wire> >(tag);
     }
 }
 

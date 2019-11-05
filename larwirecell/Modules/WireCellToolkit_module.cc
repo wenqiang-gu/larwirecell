@@ -44,7 +44,7 @@ void wcls::WireCellToolkit::reconfigure(fhicl::ParameterSet const& pset)
     if (! m_wcls) {
         throw cet::exception("WireCellToolkit_module") << "Failed to get Art Tool \"wcls_main\"\n";
     }
-    m_wcls->produces(this);
+    m_wcls->produces(producesCollector());
 }
 
 namespace wcls{
