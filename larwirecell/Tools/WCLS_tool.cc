@@ -83,9 +83,9 @@ namespace wcls {
         explicit WCLS(Parameters const& ps);
         virtual ~WCLS() { }
 
-        void produces(art::EDProducer* prod) {
+        void produces(art::ProducesCollector& collector) {
             for (auto iaev : m_outputers) {
-                iaev->produces(prod);
+                iaev->produces(collector);
             }
         }
         void process(art::Event& event);

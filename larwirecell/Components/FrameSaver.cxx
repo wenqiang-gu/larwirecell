@@ -201,33 +201,31 @@ void FrameSaver::configure(const WireCell::Configuration& cfg)
     }
 }
 
-void FrameSaver::produces(art::EDProducer* prod)
+void FrameSaver::produces(art::ProducesCollector& collector)
 {
-    assert(prod);
-
     for (auto tag : m_frame_tags) {
 	if (!m_digitize) {
 	    std::cerr << "wclsFrameSaver: promising to produce recob::Wires named \""
 		      << tag << "\"\n";
-	    prod->produces< std::vector<recob::Wire> >(tag);
+            collector.produces< std::vector<recob::Wire> >(tag);
 	}
 	else {
 	    std::cerr << "wclsFrameSaver: promising to produce raw::RawDigits named \""
 		      << tag << "\"\n";
-	    prod->produces< std::vector<raw::RawDigit> >(tag);
+            collector.produces< std::vector<raw::RawDigit> >(tag);
 	}
     }
     for (auto tag : m_summary_tags) {
 	std::cerr << "wclsFrameSaver: promising to produce channel summary named \""
 		  << tag << "\"\n";
-	prod->produces< std::vector<double> >(tag);
+        collector.produces< std::vector<double> >(tag);
     }
     for (auto cmm : m_cmms) {
 	const std::string cmm_name = cmm.asString();
 	std::cerr << "wclsFrameSaver: promising to produce channel masks named \""
 		  << cmm_name << "\"\n";
-	prod->produces< channel_list > (cmm_name + "channels");
-	prod->produces< channel_masks > (cmm_name + "masks");
+        collector.produces< channel_list > (cmm_name + "channels");
+        collector.produces< channel_masks > (cmm_name + "masks");
     }
 }
 
