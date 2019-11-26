@@ -62,6 +62,7 @@ namespace wcls {
 	double m_u_time_offset;
 	double m_v_time_offset;
 	double m_y_time_offset;
+        double m_g4_ref_time;
 	bool m_use_energy;
 	bool m_use_extra_sigma; // extra smearing from signal processing
 

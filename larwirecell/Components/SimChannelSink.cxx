@@ -48,6 +48,7 @@ WireCell::Configuration SimChannelSink::default_configuration() const
     cfg["u_time_offset"] = 0.0*units::us;
     cfg["v_time_offset"] = 0.0*units::us;
     cfg["y_time_offset"] = 0.0*units::us;
+    cfg["g4_ref_time"] = -4050*units::us; // uboone: -4050us, pdsp: -250us
     cfg["use_energy"] = false;
     cfg["use_extra_sigma"] = false;
     return cfg;
@@ -95,6 +96,7 @@ void SimChannelSink::configure(const WireCell::Configuration& cfg)
     m_u_time_offset = get(cfg,"u_time_offset",0.0*units::us);
     m_v_time_offset = get(cfg,"v_time_offset",0.0*units::us);
     m_y_time_offset = get(cfg,"y_time_offset",0.0*units::us);
+    m_g4_ref_time = get(cfg,"g4_ref_time",-4050*units::us);
     m_use_energy = get(cfg,"use_energy",false);
     m_use_extra_sigma = get(cfg,"use_extra_sigma",false);
 
@@ -232,7 +234,7 @@ void SimChannelSink::save_as_simchannel(const WireCell::IDepo::pointer& depo){
 	    xyz[1] = depo->pos().y()/units::cm;
 	    xyz[2] = depo->pos().z()/units::cm;
 
-	    unsigned int temp_time = (unsigned int) ( (tdc/units::us+4050) / (m_tick/units::us) ); // hacked G4 to TDC
+	    unsigned int temp_time = (unsigned int) ( (tdc - m_g4_ref_time) / m_tick ); 
 	    charge = abs(charge);
 	    if(charge>1){
 	      sc.AddIonizationElectrons(id, temp_time, charge, xyz, energy*abs(charge/depo->charge()));
