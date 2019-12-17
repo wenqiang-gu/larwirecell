@@ -108,7 +108,17 @@ void SimChannelSink::produces(art::ProducesCollector& collector)
 }
 
 void SimChannelSink::save_as_simchannel(const WireCell::IDepo::pointer& depo){
-  Binning tbins(m_readout_time/m_tick, m_start_time, m_start_time+m_readout_time);
+  // Binning tbins(m_readout_time/m_tick, m_start_time, m_start_time+m_readout_time);
+
+  /*  Start the gate ealier for the depos between the response
+   *  plane and the anode plane. Those depos are anti-drifted
+   *  to the reponse plane, so the start time is earlier.
+   *  c.f. jsonnet config in wirecell toolkit: params.sim.ductor
+   */
+  double response_plane = 10.0 * units::cm;
+  double response_time_offset = response_plane / m_drift_speed;
+  int response_nticks = (int)(response_time_offset / m_tick);
+  Binning tbins(m_readout_time/m_tick + response_nticks, m_start_time - response_time_offset, m_start_time+m_readout_time);
 
   if(!depo) return;
 
