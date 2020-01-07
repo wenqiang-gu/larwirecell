@@ -18,17 +18,8 @@ SimChannelSink::SimChannelSink()
   : m_depo(nullptr)
 {
   m_mapSC.clear();
-  // uboone_u = new Pimpos(2400, -3598.5, 3598.5, Point(0,sin(Pi/6),cos(Pi/6)), Point(0,cos(5*Pi/6),sin(5*Pi/6)), Point(94,9.7,5184.98), 1);
-  // uboone_v = new Pimpos(2400, -3598.5, 3598.5, Point(0,sin(5*Pi/6),cos(5*Pi/6)), Point(0,cos(Pi/6),sin(Pi/6)), Point(94,9.7,5184.98), 1);
-  // uboone_y = new Pimpos(3456, -5182.5, 5182.5, Point(0,1,0), Point(0,0,1), Point(94,9.7,5184.98), 1);
 }
 
-// SimChannelSink::~SimChannelSink()
-// {
-//   delete uboone_u;
-//   delete uboone_v;
-//   delete uboone_y;
-// }
 
 WireCell::Configuration SimChannelSink::default_configuration() const
 {
@@ -62,6 +53,20 @@ void SimChannelSink::configure(const WireCell::Configuration& cfg)
     	auto anode = Factory::find_tn<IAnodePlane>(anode_tn.asString());
     	m_anodes.push_back(anode);
     }
+
+    //  Initialize a SimChannel map. Two assumptions are followed in
+    //  larsim::BackTracker::FindCimChannel()
+    //  1) fill all channels even with empty SimChannel
+    //  2) SimChannels are sorted in channel number
+    //  In SimChannelSink::visit(), the map is reinitialized insted of
+    //  calling map::clear() 
+    for (auto& anode: m_anodes){
+      for (auto& channel: anode->channels()){
+        // std::cout << "-> channel: " << channel << std::endl;
+        m_mapSC.emplace(channel, sim::SimChannel(channel));
+      }
+    }
+    // std::cout << "m_mapSC.size(): " << m_mapSC.size() << std::endl;
 
     if (m_anodes.empty()) {
 	    const std::string anode_tn = cfg["anode"].asString();
@@ -266,7 +271,11 @@ void SimChannelSink::visit(art::Event & event)
     }
 
     event.put(std::move(out), m_artlabel);
-    m_mapSC.clear();
+    // m_mapSC.clear();
+    for (auto& elem: m_mapSC){
+      elem.second = sim::SimChannel(elem.first); 
+    }
+
 }
 
 bool SimChannelSink::operator()(const WireCell::IDepo::pointer& indepo,
