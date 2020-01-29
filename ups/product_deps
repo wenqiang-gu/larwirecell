@@ -17,7 +17,7 @@ wirecell	v0_13_1a
 
 cetbuildtools	v7_15_01   -   only_for_build
 end_product_list
-  
+
 qualifier	larevt          wirecell	notes
 e19:py2:debug	e19:py2:debug 	e19:py2:debug
 e19:py2:prof	e19:py2:prof	e19:py2:prof
