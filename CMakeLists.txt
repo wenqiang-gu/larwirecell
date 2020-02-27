@@ -6,22 +6,16 @@
 # CMake instructions for the larwirecell package.
 #
 # ======================================================================
-# Old build instructions:
+# standalone (without mrb) build instructions:
 #  cd .../path/to/build/directory
-#  source .../path/to/dune_extensions/ups/setup_for_development <-d|-p>
-#  cmake [-DCMAKE_INSTALL_PREFIX=/install/path]
-#        -DCMAKE_BUILD_TYPE=$CETPKG_TYPE
-#        $CETPKG_SOURCE
-#  make
-#  make test
-#  make install
-#  make package (builds distribution tarfile)
+#  source .../path/to/larwirecell/ups/setup_for_development <-d|-p>
+#  buildtool [-I /install/path] -bt[i] -jN
 # ======================================================================
 
-# use cmake 2.8 or later
-cmake_minimum_required (VERSION 2.8)
+# use cmake 3.14 or later
+cmake_minimum_required (VERSION 3.12...3.14 FATAL_ERROR)
 
-project(larwirecell)
+project(larwirecell LANGUAGES CXX)
 
 # cetbuildtools contains our cmake modules
 SET ( CETBUILDTOOLS_VERSION $ENV{CETBUILDTOOLS_VERSION} )
@@ -61,7 +55,7 @@ find_ups_product( cetbuildtools )
 find_ups_product( jsoncpp )
 find_ups_product( jsonnet )
 find_ups_product( eigen )
-find_ups_product( wirecell ) 
+find_ups_product( wirecell )
 
 
 cet_find_library( WIRECELL_SIGPROC_LIB NAMES WireCellSigProc PATHS ENV WIRECELL_LIB NO_DEFAULT_PATH )
