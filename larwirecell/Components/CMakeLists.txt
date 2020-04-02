@@ -20,6 +20,7 @@ art_make_library(
     canvas
     cetlib_except
     larcorealg_Geometry
+    lardataalg_DetectorInfo
     lardataobj_RawData
     lardataobj_RecoBase
     lardataobj_Simulation

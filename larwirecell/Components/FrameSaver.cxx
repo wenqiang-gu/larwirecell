@@ -258,8 +258,9 @@ FrameSaver::save_as_raw(art::Event& event)
 {
   int nticks_want = m_nticks;
   if (nticks_want < 0) {
-    art::ServiceHandle<detinfo::DetectorPropertiesService const> dps;
-    nticks_want = dps->provider()->NumberTimeSamples();
+    auto const detProp =
+      art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event);
+    nticks_want = detProp.NumberTimeSamples();
   }
 
   size_t nftags = m_frame_tags.size();
@@ -320,8 +321,9 @@ FrameSaver::save_as_cooked(art::Event& event)
 {
   int nticks_want = m_nticks;
   if (nticks_want < 0) {
-    art::ServiceHandle<detinfo::DetectorPropertiesService const> dps;
-    nticks_want = dps->provider()->NumberTimeSamples();
+    auto const detProp =
+      art::ServiceHandle<detinfo::DetectorPropertiesService const>()->DataFor(event);
+    nticks_want = detProp.NumberTimeSamples();
     std::cerr << "wclsFrameSaver saving cooked to " << nticks_want << " ticks\n";
   }
 

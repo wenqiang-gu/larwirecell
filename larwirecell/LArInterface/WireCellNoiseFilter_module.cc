@@ -5,9 +5,9 @@
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
-#include "art_root_io/TFileService.h"
 
 #include "larcore/Geometry/Geometry.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
 #include "larevt/CalibrationDBI/Interface/ChannelStatusProvider.h"
 #include "larevt/CalibrationDBI/Interface/ChannelStatusService.h"
@@ -42,11 +42,8 @@ namespace noisefilteralg {
     void produce(art::Event& evt);
     void reconfigure(fhicl::ParameterSet const& pset);
 
-    void beginJob();
-    void endJob();
-
   private:
-    void DoNoiseFilter(unsigned int runNum,
+    void DoNoiseFilter(art::Event const& evt,
                        const std::vector<raw::RawDigit>&,
                        std::vector<raw::RawDigit>&) const;
 
@@ -82,22 +79,6 @@ namespace noisefilteralg {
 
   //-------------------------------------------------------------------
   void
-  WireCellNoiseFilter::beginJob()
-  {
-    art::ServiceHandle<art::TFileService const> tfs;
-    //art::ServiceHandle<util::LArWireCellNoiseFilterService const> larWireCellNF;
-    //larWireCellNF->print(17);
-  }
-
-  //-------------------------------------------------------------------
-  void
-  WireCellNoiseFilter::endJob()
-  {
-    art::ServiceHandle<art::TFileService const> tfs;
-  }
-
-  //-------------------------------------------------------------------
-  void
   WireCellNoiseFilter::produce(art::Event& evt)
   {
     // Recover services we will need
@@ -121,7 +102,7 @@ namespace noisefilteralg {
           << "Ticks to drop + windowsize larger than input buffer\n";
 
       if (fDoNoiseFiltering)
-        DoNoiseFilter(evt.run(), rawDigitVector, *filteredRawDigit);
+        DoNoiseFilter(evt, rawDigitVector, *filteredRawDigit);
       else {
         // Enable truncation
         size_t startBin(fNumTicksToDropFront);
@@ -152,10 +133,11 @@ namespace noisefilteralg {
   }
 
   void
-  WireCellNoiseFilter::DoNoiseFilter(unsigned int runNum,
+  WireCellNoiseFilter::DoNoiseFilter(art::Event const& e,
                                      const std::vector<raw::RawDigit>& inputWaveforms,
                                      std::vector<raw::RawDigit>& outputWaveforms) const
   {
+    auto const runNum = e.run();
 
     // Recover services we will need
     const lariov::ChannelStatusProvider& channelStatus =
@@ -165,13 +147,13 @@ namespace noisefilteralg {
     const lariov::ElectronicsCalibProvider& elec_provider =
       art::ServiceHandle<lariov::ElectronicsCalibService const>()->GetProvider();
     const geo::GeometryCore& geometry = *lar::providerFrom<geo::Geometry>();
-    const detinfo::DetectorProperties& detectorProperties =
-      *lar::providerFrom<detinfo::DetectorPropertiesService>();
+    auto const clock_data =
+      art::ServiceHandle<detinfo::DetectorClocksService const>()->DataFor(e);
 
     const unsigned int n_channels = inputWaveforms.size();
 
     // S&C microboone sampling parameter database
-    const double tick = detectorProperties.SamplingRate(); // 0.5 * units::microsecond;
+    const double tick = sampling_rate(clock_data); // 0.5 * units::microsecond;
     const size_t nsamples = inputWaveforms.at(0).NADC();
     const size_t windowSize = std::min(fWindowSize, nsamples);
 
