@@ -55,7 +55,8 @@ void CookedFrameSource::configure(const WireCell::Configuration& cfg)
 
 
 
-// is this the right way to diff an art::Timestamp?
+// this code assumes that the high part of timestamp represents number of seconds from Jan 1st, 1970 and the low part
+// represents the number of nanoseconds. 
 static
 double tdiff(const art::Timestamp& ts1, const art::Timestamp& ts2)
 {
@@ -93,8 +94,9 @@ SimpleTrace* make_trace(const recob::Wire& rw, unsigned int nticks_want)
     return strace;
 }
 
-void CookedFrameSource::visit(art::Event & event)
+void CookedFrameSource::visit(art::Event & e)
 {
+    auto const & event = e;
     // fixme: want to avoid depending on DetectorPropertiesService for now.
     const double tick = m_tick;
     art::Handle< std::vector<recob::Wire> > rwvh;
