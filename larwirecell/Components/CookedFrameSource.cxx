@@ -56,7 +56,7 @@ void CookedFrameSource::configure(const WireCell::Configuration& cfg)
 
 
 // this code assumes that the high part of timestamp represents number of seconds from Jan 1st, 1970 and the low part
-// represents the number of nanoseconds. 
+// represents the number of nanoseconds.
 static
 double tdiff(const art::Timestamp& ts1, const art::Timestamp& ts2)
 {
