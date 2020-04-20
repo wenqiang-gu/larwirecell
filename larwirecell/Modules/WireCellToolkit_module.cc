@@ -1,5 +1,5 @@
 #include "art/Framework/Core/ModuleMacros.h"
-#include "art/Framework/Core/EDProducer.h"
+#include "art/Framework/Core/SharedProducer.h"
 #include "art/Utilities/make_tool.h"
 #include "larwirecell/Interfaces/MainTool.h"
 
@@ -7,12 +7,12 @@ using namespace std;
 
 namespace wcls {
 
-    class WireCellToolkit : public art::EDProducer {
+    class WireCellToolkit : public art::SharedProducer {
     public:
-        explicit WireCellToolkit(fhicl::ParameterSet const& pset);
+        explicit WireCellToolkit(fhicl::ParameterSet const& pset, art::ProcessingFrame const&);
         virtual ~WireCellToolkit();
 
-        void produce(art::Event & evt);
+        void produce(art::Event & evt, art::ProcessingFrame const&);
         void reconfigure(fhicl::ParameterSet const& pset);
 
     private:
@@ -23,16 +23,18 @@ namespace wcls {
 }
 
 
-wcls::WireCellToolkit::WireCellToolkit(fhicl::ParameterSet const& pset)
-    : EDProducer(pset)
+wcls::WireCellToolkit::WireCellToolkit(fhicl::ParameterSet const& pset, art::ProcessingFrame const&)
+    : SharedProducer(pset)
 {
-    this->reconfigure(pset);
+  const std::string s {"WCT"};
+  serializeExternal(s);
+  this->reconfigure(pset);
 }
 wcls::WireCellToolkit::~WireCellToolkit()
 {
 }
 
-void wcls::WireCellToolkit::produce(art::Event & evt)
+void wcls::WireCellToolkit::produce(art::Event & evt, art::ProcessingFrame const&)
 {
     m_wcls->process(evt);
 }

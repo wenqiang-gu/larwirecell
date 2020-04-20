@@ -40,8 +40,8 @@ namespace wcls {
         std::deque<WireCell::IFrame::pointer> m_frames;
         art::InputTag m_inputTag;
         double m_tick;
-	int m_nticks;
-	std::vector<std::string> m_frame_tags;
+	    int m_nticks;
+	    std::vector<std::string> m_frame_tags;
 
     };
 
