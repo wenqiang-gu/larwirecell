@@ -55,6 +55,7 @@ find_ups_product( cetbuildtools )
 find_ups_product( jsoncpp )
 find_ups_product( jsonnet )
 find_ups_product( eigen )
+find_ups_product( spdlog )
 find_ups_product( wirecell )
 
 
