@@ -61,6 +61,7 @@ namespace wcls {
         bits::DepoAdapter* m_adapter;
 
         art::InputTag m_inputTag;
+        art::InputTag m_assnTag; // associated input
     };
 }
 #endif

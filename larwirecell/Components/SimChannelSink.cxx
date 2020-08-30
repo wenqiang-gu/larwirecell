@@ -247,9 +247,10 @@ void SimChannelSink::save_as_simchannel(const WireCell::IDepo::pointer& depo){
 	      // xyz[0] = depo->pos().x()/units::cm - 100*units::mm/units::cm; // m_y_to_rp/units::cm;
 	    }
 	    // xyz[0] = depo->pos().x()/units::cm + wire_response_offset/units::cm;
-	    xyz[0] = depo->prior()->pos().x()/units::cm;
-	    xyz[1] = depo->prior()->pos().y()/units::cm;
-	    xyz[2] = depo->prior()->pos().z()/units::cm;
+      WireCell::IDepo::pointer orig = depo_chain(depo).back(); // first depo in the chain
+	    xyz[0] = orig->pos().x()/units::cm;
+	    xyz[1] = orig->pos().y()/units::cm;
+	    xyz[2] = orig->pos().z()/units::cm;
 
 	    unsigned int temp_time = (unsigned int) ( (tdc - m_g4_ref_time) / m_tick ); 
 	    charge = abs(charge);

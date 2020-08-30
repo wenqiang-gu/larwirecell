@@ -110,6 +110,7 @@ WireCell::Configuration SimDepoSource::default_configuration() const
 
     // For locating input in the art::Event
     cfg["art_tag"] = "";     // eg, "plopper:bogus"
+    cfg["assn_art_tag"] = ""; // eg, "largeant"
 
     return cfg;
 }
@@ -145,6 +146,7 @@ void SimDepoSource::configure(const WireCell::Configuration& cfg)
     }
 
     m_inputTag = cfg["art_tag"].asString();
+    m_assnTag = cfg["assn_art_tag"].asString();
 }
 
 
@@ -160,7 +162,24 @@ void SimDepoSource::visit(art::Event & event)
     }
     //else if (sedvh->empty()) return;
 
+    // associate the input SED with the other set of SED (eg, without SCE)
+    art::Handle< std::vector<sim::SimEnergyDeposit> > assn_sedvh;
+    if (m_assnTag!="") {
+        okay = event.getByLabel(m_assnTag, assn_sedvh);
+        if (!okay) {
+            std::string msg = "SimDepoSource failed to get sim::SimEnergyDeposit from art tag: " + m_assnTag.encode();
+            std::cerr << msg << std::endl;
+            THROW(WireCell::RuntimeError() << WireCell::errmsg{msg});
+        }
+    }
+
     const size_t ndepos = sedvh->size();
+    // safty check for the associated SED
+    if (ndepos != assn_sedvh->size()) {
+        std::string msg = "Larwirecell::SimDepoSource Inconsistent size of SimDepoSources";
+        std::cerr << msg << std::endl;
+        THROW(WireCell::RuntimeError() << WireCell::errmsg{msg});
+    }
 
     std::cerr << "SimDepoSource got " << ndepos
               << " depos from art tag \"" << m_inputTag
@@ -182,8 +201,24 @@ void SimDepoSource::visit(art::Event & event)
         int pdg = sed.PdgCode();
         double we = sed.Energy()*units::MeV;
 
+        WireCell::IDepo::pointer prior_depo = nullptr;
+        // get prior depo from the associated SED
+        if (assn_sedvh->size()>0) {
+            auto const& sed1 = assn_sedvh->at(ind);
+            auto pt1 = sed1.MidPoint();
+            const WireCell::Point wpt1(pt1.x()*units::cm, pt1.y()*units::cm, pt1.z()*units::cm);
+            double wt1 = sed1.Time()*units::ns;
+            double wq1 = (*m_adapter)(sed1);
+            int wid1 = sed1.TrackID();
+            int pdg1 = sed1.PdgCode();
+            double we1 = sed1.Energy()*units::MeV;
+
+            prior_depo
+            = std::make_shared<WireCell::SimpleDepo>(wt1, wpt1, wq1, nullptr, 0.0, 0.0, wid1, pdg1, we1);
+        }
+
         WireCell::IDepo::pointer depo
-            = std::make_shared<WireCell::SimpleDepo>(wt, wpt, wq, nullptr, 0.0, 0.0, wid, pdg, we);
+            = std::make_shared<WireCell::SimpleDepo>(wt, wpt, wq, prior_depo, 0.0, 0.0, wid, pdg, we);
         m_depos.push_back(depo);
         // std::cerr << ind << ": t=" << wt/units::us << "us,"
         //           << " r=" << wpt/units::cm << "cm, "
