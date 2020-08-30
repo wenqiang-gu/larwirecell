@@ -7,6 +7,7 @@ art_make(
     ${WIRECELL_LIBS}
 )
 
+add_subdirectory(Geometry)
 
 install_headers()
 install_source()
