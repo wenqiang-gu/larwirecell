@@ -1,0 +1,151 @@
+###
+# Module: CTreeGeometry
+# Description: A larsoft module for dumping the wire geometry for an experiment
+#              in a Wire-Cell compatible format
+# Usage: lar -n1 -c ctree_geometry.fcl 
+##
+
+FHiCL examples for three experiments are given below.
+
+1) DUNE 10kt-1x2x6 module
+
+#include "services_dune.fcl"
+
+process_name: CtreeGeometry
+
+services:
+{
+   @table::dunefd_simulation_services
+   # TFileService: { fileName: "%ifb_detsim_hist.root" }
+   TimeTracker:       {}
+   MemoryTracker:         { } # default is one
+   RandomNumberGenerator: {} #ART native random number generator
+   # FileCatalogMetadata:  @local::art_file_catalog_mc
+   # NuRandomService:       @local::random_NuRandomService  # seedservice.fcl
+   # message:              @local::dune_message_services_prod
+}
+
+### Use the 1x2x6 geometry ###
+services.Geometry: @local::dune10kt_1x2x6_geo
+
+
+#source:
+#{
+#  module_type: RootInput
+#  fileNames:  [ "gen.root" ]
+#  firstEvent : 1
+#  maxEvents:  -1
+#}
+
+
+outputs:{}
+
+
+physics:
+{
+
+  analyzers:
+  {
+    ctree:
+    {
+      module_type:      "CTreeGeometry"
+      saveChannelWireMap: true
+    }
+  }
+  analysis: [ ctree ] //Directory for histograms
+  end_paths: [ analysis ]
+}
+
+2) ICARUS
+
+#include "services_icarus.fcl"
+
+process_name: CtreeGeometry
+
+services:
+{
+  # TFileService: { fileName: "test.root" }
+  TimeTracker:       {}
+  RandomNumberGenerator: {}
+  #message:      @local::standard_info
+                @table::icarus_basic_services
+}
+
+
+#source:
+#{
+#  module_type: RootInput
+#  fileNames:  [ "gen.root" ]
+#  firstEvent : 1
+#  maxEvents:  -1
+#}
+
+
+outputs:{}
+
+
+physics:
+{
+
+  analyzers:
+  {
+    ctree:
+    {
+      module_type:      "CTreeGeometry"
+      saveChannelWireMap: true
+    }
+  }
+  analysis: [ ctree ] //Directory for histograms
+  end_paths: [ analysis ]
+}
+
+3) protoDUNE single phase
+
+#include "services_dune.fcl"
+
+process_name: CtreeGeometry
+
+services:
+{
+   @table::protodune_simulation_services
+   # TFileService: { fileName: "%ifb_detsim_hist.root" }
+   TimeTracker:       {}
+   MemoryTracker:         { } # default is one
+   RandomNumberGenerator: {} #ART native random number generator
+   # FileCatalogMetadata:  @local::art_file_catalog_mc
+   # NuRandomService:       @local::random_NuRandomService  # seedservice.fcl
+   # message:              @local::dune_message_services_prod
+}
+
+### Use the 1x2x6 geometry ###
+# services.Geometry: @local::protodune_geo
+services.Geometry: @local::protodunev7_geo
+
+
+#source:
+#{
+#  module_type: RootInput
+#  fileNames:  [ "gen.root" ]
+#  firstEvent : 1
+#  maxEvents:  -1
+#}
+
+
+outputs:{}
+
+
+physics:
+{
+
+  analyzers:
+  {
+    ctree:
+    {
+      module_type:      "CTreeGeometry"
+      saveChannelWireMap: true
+    }
+  }
+  analysis: [ ctree ] //Directory for histograms
+  end_paths: [ analysis ]
+}
+
