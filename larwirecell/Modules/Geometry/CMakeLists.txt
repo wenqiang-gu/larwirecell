@@ -2,16 +2,11 @@
 
 art_make( MODULE_LIBRARIES larcorealg_Geometry
                            larcore_Geometry_Geometry_service
-                           # larsim_Simulation 
-                           #nutools_ParticleNavigation
                            lardataobj_Simulation
                            lardata_Utilities
                            larevt_Filters
-                           # larsim_MCCheater_BackTrackerService_service
-                           # larsim_MCCheater_ParticleInventoryService_service
                            lardataobj_RawData
                            larevt_CalibrationDBI_Providers
-                           #nutools_RandomUtils_NuRandomService_service
                            ${ART_FRAMEWORK_CORE}
                            ${ART_FRAMEWORK_PRINCIPAL}
                            ${ART_FRAMEWORK_SERVICES_REGISTRY}
@@ -32,9 +27,8 @@ art_make( MODULE_LIBRARIES larcorealg_Geometry
                            ${ROOT_XMLIO}
                            ${ROOT_GDML}
                            ${ROOT_BASIC_LIB_LIST}
-                           # icaruscode_RecoUtils
         )
 
 #install_headers()
-install_fhicl()
+# install_fhicl()
 install_source()
