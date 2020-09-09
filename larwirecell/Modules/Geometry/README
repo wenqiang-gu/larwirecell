@@ -2,7 +2,7 @@
 # Module: CTreeGeometry
 # Description: A larsoft module for dumping the wire geometry for an experiment
 #              in a Wire-Cell compatible format
-# Usage: lar -n1 -c ctree_geometry.fcl 
+# Usage: lar -n1 -c ctree_geometry.fcl
 ##
 
 FHiCL examples for three experiments are given below.

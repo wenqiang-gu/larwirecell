@@ -265,11 +265,11 @@ void CTreeGeometry::printGeometry()
     cout << endl;
     // for (geo::TPCGeo const& TPC: fGeom->IterateTPCs()) {
     //     for (geo::PlaneGeo const& plane: TPC.IteratePlanes()) {
-    //         cout << plane.ID() <<  
+    //         cout << plane.ID() <<
     //         " channels: " fGeom->PlaneWireToChannel(plane.FirstWire().node())<< endl;
     //      }
 
-    // } 
+    // }
 
     // cout << "fNplanes: " << fNplanes << endl;
     // for (int i=0; i<fNplanes; i++) {
