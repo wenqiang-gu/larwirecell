@@ -93,7 +93,7 @@ private:
     vector<float> fTPC_x;  // TPC length in x
     vector<float> fTPC_y;  // TPC length in y
     vector<float> fTPC_z;  // TPC length in z
-    int fNplanes;
+    // int fNplanes; // unused
     vector<int> fPlane_type;  // plane type: 0 == induction, 1 == collection
     vector<int> fPlane_view;  // wire orientation: 0 == U, 1 == V, 2 == X
     vector<double> fPlane_wirepitch;  // wire pitch of each plane
@@ -265,11 +265,11 @@ void CTreeGeometry::printGeometry()
     cout << endl;
     // for (geo::TPCGeo const& TPC: fGeom->IterateTPCs()) {
     //     for (geo::PlaneGeo const& plane: TPC.IteratePlanes()) {
-    //         cout << plane.ID() <<  
+    //         cout << plane.ID() <<
     //         " channels: " fGeom->PlaneWireToChannel(plane.FirstWire().node())<< endl;
     //      }
 
-    // } 
+    // }
 
     // cout << "fNplanes: " << fNplanes << endl;
     // for (int i=0; i<fNplanes; i++) {
