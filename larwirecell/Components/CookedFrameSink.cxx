@@ -2,6 +2,7 @@
 //#include "art/Framework/Principal/Handle.h"
 
 #include "lardataobj/RecoBase/Wire.h"
+#include "larcore/Geometry/Geometry.h"
 
 #include "art/Framework/Principal/Event.h"
 #include "art/Framework/Core/EDProducer.h"
@@ -128,22 +129,29 @@ void CookedFrameSink::visit(art::Event & event)
 	    recob::Wire::RegionsOfInterest_t roi(nticks);
 	    roi.add_range(tbin, charge.begin(), charge.begin() + ncharge);
 
-	    // geo::kU, geo::kV, geo::kW
-	    auto wpid = m_anode->resolve(chid);
-	    geo::View_t view;
-	    switch(wpid.layer()) {
-	    case WireCell::kUlayer:
-		view = geo::kU;
-		break;
-	    case WireCell::kVlayer:
-		view = geo::kV;
-		break;
-	    case WireCell::kWlayer:
-		view = geo::kW;
-		break;
-	    default:
-		view = geo::kUnknown;
-	    }
+	    // // geo::kU, geo::kV, geo::kW
+	    // auto wpid = m_anode->resolve(chid);
+	    // geo::View_t view;
+	    // switch(wpid.layer()) {
+	    // case WireCell::kUlayer:
+		// view = geo::kU;
+		// break;
+	    // case WireCell::kVlayer:
+		// view = geo::kV;
+		// break;
+	    // case WireCell::kWlayer:
+		// view = geo::kW;
+		// break;
+	    // default:
+		// view = geo::kUnknown;
+	    // }
+
+		// FIXME: the current assumption in this code is that LS channel
+		// numbers are identified with WCT channel IDs.
+		// Fact: the plane view for the ICARUS induction-1 is "geo::kY",
+		// instead of "geo::kU"
+		auto const& gc = *lar::providerFrom<geo::Geometry>();
+		auto view = gc.View(chid);
 
 	    // what about those pesky channel map masks?
 	    // they are dropped for now.
