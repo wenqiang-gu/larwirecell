@@ -198,7 +198,8 @@ void SimDepoSetSource::visit(art::Event & event)
     for (size_t ind=0; ind<ndepos; ++ind) {
         auto const& sed = sedvh->at(ind);
         auto pt = sed.MidPoint();
-        const WireCell::Point wpt(pt.x()*units::cm, pt.y()*units::cm, pt.z()*units::cm);
+        // const WireCell::Point wpt(pt.x()*units::cm, pt.y()*units::cm, pt.z()*units::cm);
+        const WireCell::Point wpt(pt.y()*units::cm, pt.x()*units::cm, pt.z()*units::cm);
         double wt = sed.Time()*units::ns;
         double wq = (*m_adapter)(sed);
         int wid = sed.TrackID();
@@ -217,7 +218,8 @@ void SimDepoSetSource::visit(art::Event & event)
         else {
             auto const& sed1 = assn_sedv.at(ind);
             auto pt1 = sed1.MidPoint();
-            const WireCell::Point wpt1(pt1.x()*units::cm, pt1.y()*units::cm, pt1.z()*units::cm);
+            // const WireCell::Point wpt1(pt1.x()*units::cm, pt1.y()*units::cm, pt1.z()*units::cm);
+            const WireCell::Point wpt1(pt1.y()*units::cm, pt1.x()*units::cm, pt1.z()*units::cm);
             double wt1 = sed1.Time()*units::ns;
             double wq1 = (*m_adapter)(sed1);
             int wid1 = sed1.TrackID();
